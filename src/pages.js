@@ -79,7 +79,9 @@ function fxDateLine(lang, dateStr) {
       year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC',
     }).format(d);
   } catch { s = dateStr; }
-  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}">${esc(s)}</time>`;
+  // data-date-only tells the inline script to localise the FORMAT only and
+  // keep the instant at UTC, so the fixing day never slides to the day before.
+  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}" data-ts="${esc(d.toISOString())}" data-date-only="1">${esc(s)}</time>`;
 }
 
 // ------------------------------------------------------------
@@ -349,7 +351,7 @@ export function renderPrivacy(lang, tz) {
     `<h2>${esc(s.h)}</h2><p>${esc(s.p)}</p>`).join('');
   const body = `<section class="blk"><div class="wrap prose">
   <h2 class="h2"><span class="ico">🔒</span>${esc(L.privacyTitle)}</h2>
-  <p class="sub">${esc(L.privacyUpdated)}: ${localDate(lang, tz)}</p>
+  <p class="sub">${esc(L.privacyUpdated)}: <time data-ts="${esc(new Date().toISOString())}" data-date-only="1">${esc(localDate(lang, tz))}</time></p>
   <p class="lead">${esc(L.privacyIntro)}</p>
   ${secs}
 </div></section>`;

@@ -121,9 +121,11 @@ Sitemap: ${SITE.domain}/sitemap.xml
           // Rendered timestamps are per-visitor, so the HTML must NOT be
           // shared by a public cache — otherwise one visitor's timezone
           // leaks into another's page. `private` keeps it per-browser.
-          // Page data itself is already cached in Worker memory, so
-          // re-rendering costs well under a millisecond.
-          'cache-control': 'private, max-age=60',
+          // max-age=0 forces a re-render on every load, so a timezone
+          // change takes effect immediately instead of being masked by a
+          // 60-second local copy. Data itself is cached in Worker memory,
+          // so re-rendering costs well under a millisecond.
+          'cache-control': 'private, max-age=0, must-revalidate',
           'x-content-type-options': 'nosniff',
         },
       });

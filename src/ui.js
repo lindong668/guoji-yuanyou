@@ -399,12 +399,19 @@ document.addEventListener('click',function(e){
   // Ask the browser for its real zone instead of relying on defaults.
   var tz=null;
   try{ tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null; }catch(e){}
-  // Remember the real zone in a cookie so the SERVER renders correctly on
-  // the very next request — no more "correct only after a refresh".
+  try{ if(tz) document.documentElement.setAttribute('data-ps-tz',tz); }catch(e){}
+  function ck(){
+    var m=document.cookie.match(/(?:^|;\s*)ps_tz=([^;]*)/);
+    return m?decodeURIComponent(m[1]):'';
+  }
+  // Keep the cookie in sync with the browser's CURRENT zone on every load.
+  // (It used to be written once and then never touched again, so any later
+  //  timezone change could never be undone — the server kept rendering the
+  //  very first zone forever, and no amount of refreshing fixed it.)
   function remember(){
     if(!tz) return;
     try{
-      if(document.cookie.indexOf('ps_tz=')!==-1) return;
+      if(ck()===tz) return;
       document.cookie='ps_tz='+encodeURIComponent(tz)+
         '; path=/; max-age=31536000; samesite=lax';
     }catch(e){}
@@ -414,10 +421,15 @@ document.addEventListener('click',function(e){
     for(var i=0;i<els.length;i++){
       var el=els[i],d=new Date(el.getAttribute('data-ts'));
       if(isNaN(d))continue;
+      // A plain calendar date (FX fixing day, policy date) must NOT be
+      // shifted by timezone, or it silently jumps a day backwards.
+      var dateOnly=el.getAttribute('data-date-only')==='1';
       try{
-        var opt={year:'numeric',month:'2-digit',day:'2-digit',
-          hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'};
-        if(tz)opt.timeZone=tz;
+        var opt=dateOnly
+          ? {year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'}
+          : {year:'numeric',month:'2-digit',day:'2-digit',
+             hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'};
+        if(!dateOnly&&tz)opt.timeZone=tz;
         el.textContent=new Intl.DateTimeFormat(loc,opt).format(d);
       }catch(e){/* keep the server-rendered value */}
     }
@@ -425,9 +437,13 @@ document.addEventListener('click',function(e){
   function all(){ remember(); run(); }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',all);
   else all();
-  // Back/forward restores the page from bfcache WITHOUT re-running scripts,
-  // so timestamps would stay stale until a manual refresh. Re-run on show.
-  window.addEventListener('pageshow',function(e){ if(e.persisted) run(); });
+  // Back/forward (bfcache) restores the page WITHOUT re-running scripts,
+  // and returning to a background tab may skip a re-render too — re-run in
+  // both cases so timestamps always match the browser's current zone.
+  window.addEventListener('pageshow',all);
+  document.addEventListener('visibilitychange',function(){
+    if(document.visibilityState==='visible') all();
+  });
 })();
 </script>
 </body></html>`;
