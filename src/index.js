@@ -134,7 +134,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
       case '/oil/':        return render((l, a, z) => renderOil(l, a.m, z), true, false);
       case '/gold/':       return render((l, a, z) => renderGold(l, a.m, z), true, false);
       case '/china-fuel/': return render((l, a, z) => renderCn(l, a.m, z), true, false);
-      case '/currency/':   return render((l, a) => renderFx(l, a.fx), false, true);
+      case '/currency/':   return render((l, a, z) => renderFx(l, a.fx, z), false, true);
       case '/privacy/':    return render((l, a, z) => renderPrivacy(l, z), false, false);
       case '/about/':      return render((l) => renderAbout(l), false, false);
       case '/contact/':    return render((l) => renderContact(l), false, false);

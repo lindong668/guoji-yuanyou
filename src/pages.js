@@ -83,6 +83,54 @@ function fxDateLine(lang, dateStr) {
 }
 
 // ------------------------------------------------------------
+// Trading-day note: weekends vs weekdays
+// The site refreshes once a day, so on a weekday the number on screen is
+// the PREVIOUS session's close (Mon-Fri), and on Sat/Sun it is the last
+// trading day's figure. Copying "markets closed" onto a Tuesday looked
+// wrong, so the line now follows the visitor's own calendar day.
+// Weekday is resolved in the VISITOR's zone, so a user in Auckland and a
+// user in New York each get the note that matches their local day.
+// ------------------------------------------------------------
+function localDow(date, tz) {
+  try {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit',
+    }).formatToParts(date);
+    const get = (type) => {
+      const p = parts.find(x => x.type === type);
+      return p ? Number(p.value) : NaN;
+    };
+    const y = get('year'), m = get('month'), d = get('day');
+    if (!y || !m || !d) return new Date().getUTCDay();
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  } catch {
+    return new Date().getUTCDay();
+  }
+}
+
+function marketNote(lang, tz) {
+  const L = t(lang);
+  const dow = localDow(new Date(), tz); // 0 = Sunday, 6 = Saturday
+  const weekend = (dow === 0 || dow === 6);
+  return weekend ? (L.weekendNote || '') : (L.prevCloseNote || L.weekendNote || '');
+}
+
+function isWeekendInTz(tz) {
+  const dow = localDow(new Date(), tz);
+  return dow === 0 || dow === 6;
+}
+
+// FX date, plus an honest note at weekends: no new fixing is published while
+// the interbank market is shut, so the date legitimately stays on the last
+// business day. Weekdays show the current day's rate with no extra note.
+function fxUpdatedBlock(lang, fx, tz) {
+  if (!fx || !fx.date) return '';
+  const L = t(lang);
+  const s = fxDateLine(lang, fx.date);
+  return isWeekendInTz(tz) ? `${s} · ${esc(L.fxWeekendNote)}` : s;
+}
+
+// ------------------------------------------------------------
 // HOME / OVERVIEW
 // ------------------------------------------------------------
 export function renderHome(lang, m, fx, tz) {
@@ -102,7 +150,7 @@ export function renderHome(lang, m, fx, tz) {
   const cards = `
 <section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">📊</span>${esc(L.secOverview)}</h2>
-  <p class="sub">${esc(L.weekendNote)}</p>
+  <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
     <div class="card oil">
       <h3><span class="swatch o"></span>${esc(L.secOil)}</h3>
@@ -129,7 +177,7 @@ export function renderHome(lang, m, fx, tz) {
       <h3><span class="swatch f"></span>${esc(L.secFx)}</h3>
       <div class="big">${fx ? fmt(rateOf('USD', 'EUR', fx) ?? 0, 4) : '—'}</div>
       <div class="unit">1 USD = ${fx ? fmt(rateOf('USD', 'EUR', fx), 4) : '—'} EUR</div>
-      <div class="meta"><span>${fx?.date ? fxDateLine(lang, fx.date) : ''}</span>
+      <div class="meta"><span>${fxUpdatedBlock(lang, fx, tz)}</span>
         <a href="/${lang}/currency/">${esc(L.viewAll)} →</a></div>
     </div>
   </div>
@@ -148,7 +196,7 @@ export function renderOil(lang, m, tz) {
   const p = m?.oil?.price;
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">🛢</span>${esc(L.oilTitle)}</h2>
-  <p class="sub">${esc(L.weekendNote)}</p>
+  <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
     <div class="card oil">
       <h3><span class="swatch o"></span>${esc(L.price)}</h3>
@@ -171,7 +219,7 @@ export function renderGold(lang, m, tz) {
   const u = m?.gold?.usdOz, c = m?.gold?.cnyGram;
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">🥇</span>${esc(L.goldTitle)}</h2>
-  <p class="sub">${esc(L.weekendNote)}</p>
+  <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
     <div class="card gold">
       <h3><span class="swatch"></span>${esc(L.goldUsd)}</h3>
@@ -224,7 +272,7 @@ export function renderCn(lang, m, tz) {
 // ------------------------------------------------------------
 // CURRENCY CONVERTER
 // ------------------------------------------------------------
-export function renderFx(lang, fx) {
+export function renderFx(lang, fx, tz) {
   const L = t(lang);
   const cn = (code) => esc(curName(lang, code));
   const opts = CURRENCIES.map(c =>
@@ -245,7 +293,7 @@ export function renderFx(lang, fx) {
 
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">💱</span>${esc(L.fxTitle)}</h2>
-  <p class="sub">${esc(L.fxNote)} ${fx?.date ? '· ' + fxDateLine(lang, fx.date) : ''}</p>
+  <p class="sub">${esc(L.fxNote)}${fx?.date ? ' · ' + fxUpdatedBlock(lang, fx, tz) : ''}</p>
 
   <div class="conv">
     <div class="fld"><label>${esc(L.fxAmount)}</label>

@@ -43,6 +43,8 @@ export const T = {
     thProvince: 'Province / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regions covered',
     weekendNote: 'Markets are closed on weekends — the most recent trading day figures are shown.',
+    prevCloseNote: 'Showing the closing price from the previous trading session.',
+    fxWeekendNote: 'FX markets are closed at weekends — the latest published rate is shown.',
     viewAll: 'View all',
 
     fxAmount: 'Amount', fxFrom: 'From', fxTo: 'To', fxResult: 'Result', fxBtn: 'Convert', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Rates updated', fxNote: 'Mid-market reference rates, refreshed daily. For indication only — not for settlement.', fxPopular: 'Popular conversions',
@@ -121,6 +123,8 @@ export const T = {
     thProvince: '省份 / 地区', th92: '92#', th95: '95#', th98: '98#', th0: '0# 柴油',
     provincesCount: '个地区',
     weekendNote: '周末市场休市，显示最近一个交易日数据。',
+    prevCloseNote: '显示前一交易日的收盘价格。',
+    fxWeekendNote: '外汇市场周末休市，显示最近一次公布的汇率。',
     viewAll: '查看全部',
 
     fxAmount: '金额', fxFrom: '源货币', fxTo: '目标货币', fxResult: '换算结果', fxBtn: '换算', fxRate: '1 {from} = {rate} {to}', fxUpdated: '汇率更新', fxNote: '中间市场参考汇率，每日刷新。仅供参考，不作为结算依据。', fxPopular: '常用换算',
@@ -199,6 +203,8 @@ export const T = {
     thProvince: '省・地域', th92: '92#', th95: '95#', th98: '98#', th0: '0# 軽油',
     provincesCount: '地域',
     weekendNote: '週末は市場が休場のため、直近の営業日の数値を表示しています。',
+    prevCloseNote: '前営業日の終値を表示しています。',
+    fxWeekendNote: '外国為替市場は週末休場のため、最新の公表レートを表示しています。',
     viewAll: 'すべて見る',
 
     fxAmount: '金額', fxFrom: '換算元', fxTo: '換算先', fxResult: '結果', fxBtn: '換算', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'レート更新', fxNote: '日次更新のミッドマーケット参考レートです。参考用途のみで、決済には使用できません。', fxPopular: 'よく使われる換算',
@@ -277,6 +283,8 @@ export const T = {
     thProvince: 'Provincia / Región', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diésel',
     provincesCount: 'regiones',
     weekendNote: 'Los mercados cierran el fin de semana: se muestran los datos del último día hábil.',
+    prevCloseNote: 'Se muestra el precio de cierre de la sesión anterior.',
+    fxWeekendNote: 'Los mercados de divisas cierran el fin de semana: se muestra la última cotización publicada.',
     viewAll: 'Ver todo',
 
     fxAmount: 'Importe', fxFrom: 'De', fxTo: 'A', fxResult: 'Resultado', fxBtn: 'Convertir', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Actualizado', fxNote: 'Tipos de referencia de mercado medio, renovados diariamente. Solo informativo, no válido para liquidación.', fxPopular: 'Conversiones frecuentes',
@@ -355,6 +363,8 @@ export const T = {
     thProvince: 'Province / Région', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'régions',
     weekendNote: 'Marchés fermés le week-end : les chiffres du dernier jour de cotation sont affichés.',
+    prevCloseNote: 'Affichage du cours de clôture de la séance précédente.',
+    fxWeekendNote: 'Les marchés des changes sont fermés le week-end : le dernier taux publié est affiché.',
     viewAll: 'Voir tout',
 
     fxAmount: 'Montant', fxFrom: 'De', fxTo: 'Vers', fxResult: 'Résultat', fxBtn: 'Convertir', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Mise à jour', fxNote: 'Taux de référence de marché moyen, actualisés chaque jour. Indicatif uniquement, non valable pour un règlement.', fxPopular: 'Conversions courantes',
@@ -433,6 +443,8 @@ export const T = {
     thProvince: 'Provinz / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'Regionen',
     weekendNote: 'Märkte sind am Wochenende geschlossen – es werden die Werte des letzten Handelstags angezeigt.',
+    prevCloseNote: 'Schlusskurs des vorherigen Handelstags wird angezeigt.',
+    fxWeekendNote: 'Die Devisenmärkte sind am Wochenende geschlossen – es wird der zuletzt veröffentlichte Kurs angezeigt.',
     viewAll: 'Alle ansehen',
 
     fxAmount: 'Betrag', fxFrom: 'Von', fxTo: 'Nach', fxResult: 'Ergebnis', fxBtn: 'Umrechnen', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Aktualisiert', fxNote: 'Referenzkurse (Mittelkurs), täglich erneuert. Nur zur Orientierung, nicht für Abrechnungen.', fxPopular: 'Häufige Umrechnungen',
@@ -511,6 +523,8 @@ export const T = {
     thProvince: 'Província / Região', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regiões',
     weekendNote: 'Mercados fecham no fim de semana — são exibidos os dados do último dia útil.',
+    prevCloseNote: 'Exibindo o preço de fechamento da sessão anterior.',
+    fxWeekendNote: 'Os mercados de câmbio fecham no fim de semana — é exibida a última cotação publicada.',
     viewAll: 'Ver tudo',
 
     fxAmount: 'Valor', fxFrom: 'De', fxTo: 'Para', fxResult: 'Resultado', fxBtn: 'Converter', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Atualizado', fxNote: 'Taxas de referência de mercado médio, renovadas diariamente. Apenas indicativo, não serve para liquidação.', fxPopular: 'Conversões frequentes',

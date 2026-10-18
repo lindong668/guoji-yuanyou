@@ -5,7 +5,12 @@
 // ============================================================
 
 export const SOURCE_WORKER = 'https://ss.wwok.eu.cc/data';
-export const FX_ENDPOINT = 'https://api.frankfurter.app/latest?base=USD';
+// Primary FX source: the keyless ExchangeRate-API open endpoint. It refreshes
+// every 24h at ~00:00 UTC — INCLUDING weekends — so the date on the page stays
+// current. The ECB/Frankfurter feed publishes on business days only, which was
+// why the site kept showing a stale Friday date throughout the weekend.
+export const FX_ENDPOINT = 'https://open.er-api.com/v6/latest/USD';
+export const FX_FALLBACK = 'https://api.frankfurter.app/latest?base=USD';
 
 // ============================================================
 // Daily refresh schedule (Asia/Shanghai = UTC+8)
@@ -15,14 +20,14 @@ export const FX_ENDPOINT = 'https://api.frankfurter.app/latest?base=USD';
 // Each block is refreshed INDEPENDENTLY, right after its own source update:
 //   - oil + gold ....... pull at 04:30 (UTC+8)   <- 30 min after 04:00
 //   - China fuel ....... pull at 08:30 (UTC+8)   <- after 08:00
-//   - FX ............... pull at 23:30 (UTC+8)   <- after ECB ~22:00-23:00
+//   - FX ............... pull at 09:30 (UTC+8)   <- after the ~00:00 UTC refresh
 // One stale block never delays the other.
 // ============================================================
 export const TZ_OFFSET_HOURS = 8;
 export const REFRESH_SCHEDULE = {
   oilGold: { h: 4, m: 30 },  // 04:30 Asia/Shanghai — intl oil + gold
   cnOil: { h: 8, m: 30 },    // 08:30 Asia/Shanghai — China fuel prices
-  fx: { h: 23, m: 30 },      // 23:30 Asia/Shanghai — FX (ECB via Frankfurter)
+  fx: { h: 9, m: 30 },       // 09:30 Asia/Shanghai — FX (upstream ~00:00 UTC = 08:00 UTC+8)
 };
 
 // ============================================================
@@ -289,20 +294,36 @@ export async function getMarket() {
   return lastMarket;
 }
 
-export async function getFx() {
-  try {
-    const raw = await fetchCached(
-      FX_ENDPOINT,
-      secondsUntilDailyRefresh(REFRESH_SCHEDULE.fx.h, REFRESH_SCHEDULE.fx.m)
-    ); // once per day, at 23:30 Asia/Shanghai (after ECB publishes)
-    if (raw && raw.rates) {
-      const rates = { USD: 1, ...raw.rates };
-      lastFx = { base: 'USD', date: raw.date, rates };
-      return lastFx;
-    }
-  } catch (e) {
-    /* fall through */
+// Accepts either upstream shape:
+//   er-api      -> { result, time_last_update_utc, rates }
+//   frankfurter -> { date, rates }
+// Both are normalised to { base: 'USD', date: 'YYYY-MM-DD', rates }.
+function parseFx(raw) {
+  if (!raw || !raw.rates) return null;
+  const rates = { USD: 1, ...raw.rates };
+  if (Object.keys(rates).length < 3) return null;
+  let date = null;
+  if (raw.date) {
+    date = String(raw.date).slice(0, 10);
+  } else if (raw.time_last_update_utc) {
+    const d = new Date(raw.time_last_update_utc);
+    if (!isNaN(d)) date = d.toISOString().slice(0, 10);
   }
+  if (!date) date = new Date().toISOString().slice(0, 10);
+  return { base: 'USD', date, rates };
+}
+
+export async function getFx() {
+  const ttl = secondsUntilDailyRefresh(REFRESH_SCHEDULE.fx.h, REFRESH_SCHEDULE.fx.m);
+  // once per day, at 09:30 Asia/Shanghai (right after the ~00:00 UTC refresh)
+  try {
+    const p = parseFx(await fetchCached(FX_ENDPOINT, ttl));
+    if (p) { lastFx = p; return lastFx; }
+  } catch (e) { /* try fallback */ }
+  try {
+    const p = parseFx(await fetchCached(FX_FALLBACK, ttl));
+    if (p) { lastFx = p; return lastFx; }
+  } catch (e) { /* keep last good value */ }
   return lastFx;
 }
 
