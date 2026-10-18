@@ -8,8 +8,33 @@ import { getMarket, getFx } from './data.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
-  renderPrivacy, renderAbout, renderContact, sitemap, setRenderTz,
+  renderPrivacy, renderAbout, renderContact, sitemap,
 } from './pages.js';
+
+// ------------------------------------------------------------
+// Visitor timezone resolution
+// Priority: 1) ps_tz cookie (written by the inline script on a previous
+// visit — survives VPN / wrong CF geo)  2) Cloudflare geo  3) UTC.
+// Always validated: a bogus value must never reach Intl.
+// ------------------------------------------------------------
+function isValidTz(tz) {
+  if (typeof tz !== 'string' || !tz) return false;
+  try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return true; }
+  catch { return false; }
+}
+
+function pickTz(request) {
+  const cookie = request.headers.get('Cookie') || '';
+  const m = /(?:^|;\s*)ps_tz=([^;]+)/.exec(cookie);
+  if (m) {
+    let v = m[1];
+    try { v = decodeURIComponent(v); } catch {}
+    if (isValidTz(v)) return v;
+  }
+  const cf = request.cf && request.cf.timezone;
+  if (isValidTz(cf)) return cf;
+  return 'UTC';
+}
 
 export default {
   async fetch(request, env, ctx) {
@@ -19,9 +44,10 @@ export default {
     // load AdSense / GA4 / GSC ids from Worker vars
     configure(env);
 
-    // Visitor timezone (Cloudflare geo) — used so server-rendered timestamps
-    // are already in the reader's local time before any JS runs.
-    setRenderTz((request.cf && request.cf.timezone) || 'UTC');
+    // Visitor timezone — resolved once per request and passed explicitly
+    // into every renderer (never stored in module state: Workers isolates
+    // interleave across `await` and would leak it between visitors).
+    const tz = pickTz(request);
 
     // ---------- ads.txt (required by AdSense) ----------
     if (url.pathname === '/ads.txt') {
@@ -88,23 +114,28 @@ Sitemap: ${SITE.domain}/sitemap.xml
         needsMarket ? getMarket() : Promise.resolve(null),
         needsFx ? getFx() : Promise.resolve(null),
       ]);
-      const html = fn(lang, { m, fx });
+      const html = fn(lang, { m, fx }, tz);
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
-          'cache-control': 'public, max-age=120, s-maxage=300',
+          // Rendered timestamps are per-visitor, so the HTML must NOT be
+          // shared by a public cache — otherwise one visitor's timezone
+          // leaks into another's page. `private` keeps it per-browser.
+          // Page data itself is already cached in Worker memory, so
+          // re-rendering costs well under a millisecond.
+          'cache-control': 'private, max-age=60',
           'x-content-type-options': 'nosniff',
         },
       });
     };
 
     switch (norm) {
-      case '/':            return render((l, a) => renderHome(l, a.m, a.fx), true, true);
-      case '/oil/':        return render((l, a) => renderOil(l, a.m), true, false);
-      case '/gold/':       return render((l, a) => renderGold(l, a.m), true, false);
-      case '/china-fuel/': return render((l, a) => renderCn(l, a.m), true, false);
+      case '/':            return render((l, a, z) => renderHome(l, a.m, a.fx, z), true, true);
+      case '/oil/':        return render((l, a, z) => renderOil(l, a.m, z), true, false);
+      case '/gold/':       return render((l, a, z) => renderGold(l, a.m, z), true, false);
+      case '/china-fuel/': return render((l, a, z) => renderCn(l, a.m, z), true, false);
       case '/currency/':   return render((l, a) => renderFx(l, a.fx), false, true);
-      case '/privacy/':    return render((l) => renderPrivacy(l), false, false);
+      case '/privacy/':    return render((l, a, z) => renderPrivacy(l, z), false, false);
       case '/about/':      return render((l) => renderAbout(l), false, false);
       case '/contact/':    return render((l) => renderContact(l), false, false);
       default: {

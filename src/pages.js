@@ -18,9 +18,14 @@ export const LOCALE_MAP = {
   fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR',
 };
 
-let renderTz = 'UTC';
-export function setRenderTz(tz) { renderTz = (typeof tz === 'string' && tz) || 'UTC'; }
-export function getRenderTz() { return renderTz; }
+// IMPORTANT: the timezone is now threaded through as an explicit argument.
+// It used to live in module-level state (setRenderTz) which is unsafe on
+// Cloudflare Workers: isolates interleave requests at every `await`, so one
+// visitor's timezone could overwrite another's mid-render — that produced the
+// "home shows UTC, inner page shows GMT+8, refresh flips it again" symptom.
+// Kept as no-op exports so older entry files still import cleanly.
+export function setRenderTz(_tz) { /* deprecated: pass tz explicitly */ }
+export function getRenderTz() { return 'UTC'; }
 
 function fmtStamp(iso, lang, tz) {
   const d = new Date(iso);
@@ -32,7 +37,7 @@ function fmtStamp(iso, lang, tz) {
     timeZoneName: 'short',
   };
   try {
-    return new Intl.DateTimeFormat(loc, { ...opt, timeZone: tz || renderTz }).format(d);
+    return new Intl.DateTimeFormat(loc, { ...opt, timeZone: tz || 'UTC' }).format(d);
   } catch {
     // Bad/geo-missing zone: retry as UTC rather than printing a raw ISO
     // string, which used to look like "16:15 UTC" and read as a wrong time.
@@ -44,20 +49,20 @@ function fmtStamp(iso, lang, tz) {
   }
 }
 
-function updatedLine(lang, iso) {
+function updatedLine(lang, iso, tz) {
   const L = t(lang);
   if (!iso) return '';
-  const s = fmtStamp(iso, lang, renderTz);
+  const s = fmtStamp(iso, lang, tz);
   if (!s) return '';
   // data-ts lets the inline script re-render in the browser's own zone
   return `${esc(L.updatedAt)}: <time datetime="${esc(iso)}" data-ts="${esc(iso)}">${esc(s)}</time>`;
 }
 
 // Today's date, formatted for the current interface language
-function localDate(lang) {
+function localDate(lang, tz) {
   try {
     return new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
-      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: renderTz,
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: tz || 'UTC',
     }).format(new Date());
   } catch { return new Date().toISOString().slice(0, 10); }
 }
@@ -80,7 +85,7 @@ function fxDateLine(lang, dateStr) {
 // ------------------------------------------------------------
 // HOME / OVERVIEW
 // ------------------------------------------------------------
-export function renderHome(lang, m, fx) {
+export function renderHome(lang, m, fx, tz) {
   const L = t(lang);
   const oilPrice = m?.oil?.price;
   const goldUsd = m?.gold?.usdOz;
@@ -103,7 +108,7 @@ export function renderHome(lang, m, fx) {
       <h3><span class="swatch o"></span>${esc(L.secOil)}</h3>
       <div class="big">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated)}</span>
+      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
         <a href="/${lang}/oil/">${esc(L.viewAll)} →</a></div>
     </div>
     <div class="card gold">
@@ -117,7 +122,7 @@ export function renderHome(lang, m, fx) {
       <h3><span class="swatch s"></span>${esc(L.secCn)}</h3>
       <div class="big">${a92 != null ? '¥' + fmt(a92) : '—'}</div>
       <div class="unit">92# ${esc(L.thProvince)} ${list.length ? '· ' + list.length + ' ' + esc(L.provincesCount) : ''}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.cnOil?.updated)}</span>
+      <div class="meta"><span>${updatedLine(lang, m?.cnOil?.updated, tz)}</span>
         <a href="/${lang}/china-fuel/">${esc(L.viewAll)} →</a></div>
     </div>
     <div class="card fx">
@@ -138,7 +143,7 @@ export function renderHome(lang, m, fx) {
 // ------------------------------------------------------------
 // CRUDE OIL
 // ------------------------------------------------------------
-export function renderOil(lang, m) {
+export function renderOil(lang, m, tz) {
   const L = t(lang);
   const p = m?.oil?.price;
   const body = `<section class="blk"><div class="wrap">
@@ -149,7 +154,7 @@ export function renderOil(lang, m) {
       <h3><span class="swatch o"></span>${esc(L.price)}</h3>
       <div class="big">${p != null ? '$' + fmt(p) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated)}</span></div>
+      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span></div>
     </div>
   </div>
   <p class="sub" style="margin-top:22px">${esc(m?.oil?.isSettlement ? 'Settlement price' : L.dataSource)}: ${esc(L.tagline)}</p>
@@ -161,7 +166,7 @@ export function renderOil(lang, m) {
 // ------------------------------------------------------------
 // GOLD
 // ------------------------------------------------------------
-export function renderGold(lang, m) {
+export function renderGold(lang, m, tz) {
   const L = t(lang);
   const u = m?.gold?.usdOz, c = m?.gold?.cnyGram;
   const body = `<section class="blk"><div class="wrap">
@@ -172,13 +177,13 @@ export function renderGold(lang, m) {
       <h3><span class="swatch"></span>${esc(L.goldUsd)}</h3>
       <div class="big">${u != null ? '$' + fmt(u) : '—'}</div>
       <div class="unit">USD / troy oz</div>
-      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated)}</span></div>
+      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated, tz)}</span></div>
     </div>
     <div class="card gold">
       <h3><span class="swatch"></span>${esc(L.goldCny)}</h3>
       <div class="big">${c != null ? '¥' + fmt(c) : '—'}</div>
       <div class="unit">CNY / gram</div>
-      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated)}</span></div>
+      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated, tz)}</span></div>
     </div>
   </div>
   ${adSlot('gold')}
@@ -189,7 +194,7 @@ export function renderGold(lang, m) {
 // ------------------------------------------------------------
 // CHINA FUEL (full province table — strong SEO content)
 // ------------------------------------------------------------
-export function renderCn(lang, m) {
+export function renderCn(lang, m, tz) {
   const L = t(lang);
   const list = m?.cnOil?.list || [];
   const rows = list.map(x => `<tr>
@@ -202,7 +207,7 @@ export function renderCn(lang, m) {
 
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">⛽</span>${esc(L.cnTitle)}</h2>
-  <p class="sub">${esc(L.cnNote)} ${updatedLine(lang, m?.cnOil?.updated)}</p>
+  <p class="sub">${esc(L.cnNote)} ${updatedLine(lang, m?.cnOil?.updated, tz)}</p>
   <div class="tblwrap"><table>
     <thead><tr>
       <th>${esc(L.thProvince)}</th><th>${esc(L.th92)}</th><th>${esc(L.th95)}</th>
@@ -290,13 +295,13 @@ doConvert();
 // ------------------------------------------------------------
 // PRIVACY
 // ------------------------------------------------------------
-export function renderPrivacy(lang) {
+export function renderPrivacy(lang, tz) {
   const L = t(lang);
   const secs = L.privacySections.map(s =>
     `<h2>${esc(s.h)}</h2><p>${esc(s.p)}</p>`).join('');
   const body = `<section class="blk"><div class="wrap prose">
   <h2 class="h2"><span class="ico">🔒</span>${esc(L.privacyTitle)}</h2>
-  <p class="sub">${esc(L.privacyUpdated)}: ${localDate(lang)}</p>
+  <p class="sub">${esc(L.privacyUpdated)}: ${localDate(lang, tz)}</p>
   <p class="lead">${esc(L.privacyIntro)}</p>
   ${secs}
 </div></section>`;

@@ -399,6 +399,16 @@ document.addEventListener('click',function(e){
   // Ask the browser for its real zone instead of relying on defaults.
   var tz=null;
   try{ tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null; }catch(e){}
+  // Remember the real zone in a cookie so the SERVER renders correctly on
+  // the very next request — no more "correct only after a refresh".
+  function remember(){
+    if(!tz) return;
+    try{
+      if(document.cookie.indexOf('ps_tz=')!==-1) return;
+      document.cookie='ps_tz='+encodeURIComponent(tz)+
+        '; path=/; max-age=31536000; samesite=lax';
+    }catch(e){}
+  }
   function run(){
     var els=document.querySelectorAll('time[data-ts]');
     for(var i=0;i<els.length;i++){
@@ -412,8 +422,12 @@ document.addEventListener('click',function(e){
       }catch(e){/* keep the server-rendered value */}
     }
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);
-  else run();
+  function all(){ remember(); run(); }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',all);
+  else all();
+  // Back/forward restores the page from bfcache WITHOUT re-running scripts,
+  // so timestamps would stay stale until a manual refresh. Re-run on show.
+  window.addEventListener('pageshow',function(e){ if(e.persisted) run(); });
 })();
 </script>
 </body></html>`;
