@@ -3,8 +3,77 @@
 // ============================================================
 import { LANGS, DEFAULT_LANG, SITE, t } from './i18n.js';
 
-// Google AdSense: put your own client id here after approval
-export const ADSENSE_CLIENT = 'ca-pub-0000000000000000';
+// ============================================================
+// Google AdSense / GA4 / Search Console — IDs
+// Preferred: set them as [vars] in wrangler.toml (no code edit).
+// Fallback: edit the hard-coded defaults below.
+// ============================================================
+const HARDCODED = {
+  ADSENSE_CLIENT: 'ca-pub-0000000000000000', // e.g. ca-pub-1234567890123456
+  AD_SLOT_HOME:   '',  // ad unit id, e.g. 1234567890
+  AD_SLOT_OIL:    '',
+  AD_SLOT_GOLD:   '',
+  AD_SLOT_CN:     '',
+  AD_SLOT_FX:     '',
+  AD_SLOT_LEGAL:  '',
+  GA4_ID:         '',  // e.g. G-ABCDEF1234
+  GSC_VERIFY:     '',  // google-site-verification content value
+};
+
+export const CONFIG = {
+  adsenseClient: '',
+  adSlots: {},
+  gaId: '',
+  gscVerify: '',
+};
+
+/** Called once per request from index.js with Worker env/vars. */
+export function configure(env = {}) {
+  const v = k => (env && env[k] && String(env[k]).trim()) || '';
+  CONFIG.adsenseClient = v('ADSENSE_CLIENT') || HARDCODED.ADSENSE_CLIENT;
+  CONFIG.gaId          = v('GA4_ID')         || HARDCODED.GA4_ID;
+  CONFIG.gscVerify     = v('GSC_VERIFY')     || HARDCODED.GSC_VERIFY;
+  CONFIG.adSlots = {
+    home:  v('AD_SLOT_HOME')  || HARDCODED.AD_SLOT_HOME,
+    oil:   v('AD_SLOT_OIL')   || HARDCODED.AD_SLOT_OIL,
+    gold:  v('AD_SLOT_GOLD')  || HARDCODED.AD_SLOT_GOLD,
+    cn:    v('AD_SLOT_CN')    || HARDCODED.AD_SLOT_CN,
+    fx:    v('AD_SLOT_FX')    || HARDCODED.AD_SLOT_FX,
+    legal: v('AD_SLOT_LEGAL') || HARDCODED.AD_SLOT_LEGAL,
+  };
+  return CONFIG;
+}
+
+export const ADSENSE_CLIENT = HARDCODED.ADSENSE_CLIENT; // legacy export
+
+export const adOn = () =>
+  !!CONFIG.adsenseClient && CONFIG.adsenseClient !== 'ca-pub-0000000000000000';
+
+/** ads.txt publisher id: ca-pub-1234 -> pub-1234 */
+export const adsTxtPublisher = () =>
+  adOn() ? CONFIG.adsenseClient.replace(/^ca-/, '') : '';
+
+/**
+ * Render one AdSense ad unit (or a placeholder before approval).
+ * pos: home | oil | gold | cn | fx | legal
+ */
+export function adSlot(pos = 'home') {
+  if (!adOn()) {
+    return `<div class="adslot ad-ph">Advertisement slot — enable AdSense by setting ADSENSE_CLIENT in src/ui.js</div>`;
+  }
+  const slot = CONFIG.adSlots[pos] || CONFIG.adSlots.home || '';
+  if (!slot) {
+    return `<div class="adslot ad-ph">Advertisement — set AD_SLOT_${String(pos).toUpperCase()} in wrangler.toml</div>`;
+  }
+  return `<div class="adslot">
+  <ins class="adsbygoogle" style="display:block"
+       data-ad-client="${CONFIG.adsenseClient}"
+       data-ad-slot="${slot}"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+</div>`;
+}
 
 export const CSS = `
 :root{
@@ -173,6 +242,10 @@ footer a:hover{color:var(--gold2)}
   .logo span{font-size:1rem}
   .hero{padding:40px 0 34px}
 }
+.adslot{margin:22px 0;text-align:center;min-height:90px}
+.adslot ins.adsbygoogle{display:block;min-height:90px}
+.ad-ph{border:1px dashed var(--line);border-radius:12px;padding:14px;
+  color:var(--dim);font-size:.78rem;line-height:1.6}
 `;
 
 // ------------------------------------------------------------
@@ -219,7 +292,10 @@ export function head({ lang, title, desc, path, noindex }) {
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(desc)}">
 <meta name="theme-color" content="#070b18">
-${ADSENSE_CLIENT && ADSENSE_CLIENT !== 'ca-pub-0000000000000000' ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}" crossorigin="anonymous"></script>` : '<!-- AdSense: set ADSENSE_CLIENT in src/ui.js after approval -->'}
+${CONFIG.gscVerify ? `<meta name="google-site-verification" content="${CONFIG.gscVerify}">` : ''}
+${adOn() ? `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CONFIG.adsenseClient}" crossorigin="anonymous"></script>` : '<!-- AdSense: set ADSENSE_CLIENT in wrangler.toml [vars] after approval -->'}
+${CONFIG.gaId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${CONFIG.gaId}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${CONFIG.gaId}');</script>` : ''}
 <style>${CSS}</style>
 <script type="application/ld+json">${ld}</script>
 </head>`;

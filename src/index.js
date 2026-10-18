@@ -5,7 +5,7 @@
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
 import { getMarket, getFx } from './data.js';
-import { page, esc } from './ui.js';
+import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
   renderPrivacy, renderAbout, renderContact, sitemap,
@@ -15,6 +15,20 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const seg = url.pathname.split('/').filter(Boolean);
+
+    // load AdSense / GA4 / GSC ids from Worker vars
+    configure(env);
+
+    // ---------- ads.txt (required by AdSense) ----------
+    if (url.pathname === '/ads.txt') {
+      const pub = adsTxtPublisher();
+      const body = pub
+        ? `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`
+        : '# ads.txt — set ADSENSE_CLIENT in wrangler.toml [vars] after AdSense approval\n';
+      return new Response(body, {
+        headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=86400' },
+      });
+    }
 
     // ---------- robots.txt ----------
     if (url.pathname === '/robots.txt') {

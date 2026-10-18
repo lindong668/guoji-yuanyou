@@ -2,19 +2,8 @@
 // PriceScope — Page renderers (SSR, so crawlers read real numbers)
 // ============================================================
 import { t, provName, LANGS } from './i18n.js';
-import { page, hero, esc, ADSENSE_CLIENT } from './ui.js';
+import { page, hero, esc, adSlot } from './ui.js';
 import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
-
-const AD_ON = ADSENSE_CLIENT && ADSENSE_CLIENT !== 'ca-pub-0000000000000000';
-
-function adSlot() {
-  if (!AD_ON) return `<div class="ad">Advertisement slot — enable AdSense by setting ADSENSE_CLIENT in src/ui.js</div>`;
-  return `<div class="ad">
-  <ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}"
-       data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
-  <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
-</div>`;
-}
 
 function updatedLine(lang, iso) {
   const L = t(lang);
@@ -77,7 +66,7 @@ export function renderHome(lang, m, fx) {
         <a href="/${lang}/currency/">${esc(L.viewAll)} →</a></div>
     </div>
   </div>
-  ${adSlot()}
+  ${adSlot('home')}
 </div></section>`;
 
   const body = hero(lang) + cards;
@@ -102,7 +91,7 @@ export function renderOil(lang, m) {
     </div>
   </div>
   <p class="sub" style="margin-top:22px">${esc(m?.oil?.isSettlement ? 'Settlement price' : L.dataSource)}: ${esc(L.tagline)}</p>
-  ${adSlot()}
+  ${adSlot('oil')}
 </div></section>`;
   return page({ lang, title: L.oilMetaTitle, desc: L.oilMetaDesc, path: '/oil/', active: '/oil/', body });
 }
@@ -130,7 +119,7 @@ export function renderGold(lang, m) {
       <div class="meta"><span>${updatedLine(lang, m?.gold?.updated)}</span></div>
     </div>
   </div>
-  ${adSlot()}
+  ${adSlot('gold')}
 </div></section>`;
   return page({ lang, title: L.goldMetaTitle, desc: L.goldMetaDesc, path: '/gold/', active: '/gold/', body });
 }
@@ -160,7 +149,7 @@ export function renderCn(lang, m) {
     <tbody>${rows || `<tr><td colspan="5">—</td></tr>`}</tbody>
   </table></div>
   <p class="sub" style="margin-top:14px">${esc(list.length)} ${esc(L.provincesCount)} · ${esc(L.dataSource)}: showapi</p>
-  ${adSlot()}
+  ${adSlot('cn')}
 </div></section>`;
   return page({ lang, title: L.cnMetaTitle, desc: L.cnMetaDesc, path: '/china-fuel/', active: '/china-fuel/', body });
 }
@@ -209,7 +198,7 @@ export function renderFx(lang, fx) {
 
   <h2 class="h2" style="margin-top:38px"><span class="ico">🌍</span>${esc(L.fxPopular)}</h2>
   <div class="pairs">${pairs}</div>
-  ${adSlot()}
+  ${adSlot('fx')}
 </div></section>
 
 <script>
