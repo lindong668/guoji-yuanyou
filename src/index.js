@@ -72,8 +72,10 @@ Sitemap: ${SITE.domain}/sitemap.xml
     const rest = '/' + (seg.slice(1).join('/') || '');
     const norm = rest.endsWith('/') ? rest : rest + '/';
 
-    // canonical redirect for trailing slash
-    if (rest !== norm && seg.length > 1) {
+    // canonical redirect: ensure trailing slash (compare against the REAL
+    // pathname — seg[] has already been stripped by filter(Boolean), so
+    // comparing rest/norm would redirect /zh/oil/ to itself forever)
+    if (!url.pathname.endsWith('/')) {
       return Response.redirect(`${SITE.domain}/${lang}${norm}`, 301);
     }
 
