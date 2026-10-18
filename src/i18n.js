@@ -628,3 +628,49 @@ export function detectLang(header) {
 export function t(lang) {
   return T[lang] || T[DEFAULT_LANG];
 }
+
+// ------------------------------------------------------------
+// Localised currency names (code -> display name per language)
+// ------------------------------------------------------------
+const CUR_ROWS = [
+  ['USD','US Dollar','美元','米ドル','Dólar estadounidense','Dollar américain','US-Dollar','Dólar americano'],
+  ['EUR','Euro','欧元','ユーロ','Euro','Euro','Euro','Euro'],
+  ['CNY','Chinese Yuan','人民币','人民元','Yuan chino','Yuan chinois','Chinesischer Yuan','Yuan chinês'],
+  ['JPY','Japanese Yen','日元','日本円','Yen japonés','Yen japonais','Japanischer Yen','Iene japonês'],
+  ['GBP','British Pound','英镑','英ポンド','Libra esterlina','Livre sterling','Pfund Sterling','Libra esterlina'],
+  ['AUD','Australian Dollar','澳元','豪ドル','Dólar australiano','Dollar australien','Australischer Dollar','Dólar australiano'],
+  ['CAD','Canadian Dollar','加元','カナダドル','Dólar canadiense','Dollar canadien','Kanadischer Dollar','Dólar canadense'],
+  ['CHF','Swiss Franc','瑞士法郎','スイスフラン','Franco suizo','Franc suisse','Schweizer Franken','Franco suíço'],
+  ['HKD','Hong Kong Dollar','港元','香港ドル','Dólar de Hong Kong','Dollar de Hong Kong','Hongkong-Dollar','Dólar de Hong Kong'],
+  ['SGD','Singapore Dollar','新加坡元','シンガポールドル','Dólar de Singapur','Dollar de Singapour','Singapur-Dollar','Dólar de Cingapura'],
+  ['KRW','South Korean Won','韩元','韓国ウォン','Won surcoreano','Won sud-coréen','Südkoreanischer Won','Won sul-coreano'],
+  ['INR','Indian Rupee','印度卢比','インドルピー','Rupia india','Roupie indienne','Indische Rupie','Rúpia indiana'],
+  ['BRL','Brazilian Real','巴西雷亚尔','ブラジルレアル','Real brasileño','Real brésilien','Brasilianischer Real','Real brasileiro'],
+  ['RUB','Russian Ruble','俄罗斯卢布','ロシアルーブル','Rublo ruso','Rouble russe','Russischer Rubel','Rublo russo'],
+  ['MXN','Mexican Peso','墨西哥比索','メキシコペソ','Peso mexicano','Peso mexicain','Mexikanischer Peso','Peso mexicano'],
+  ['IDR','Indonesian Rupiah','印尼盾','インドネシアルピア','Rupia indonesia','Roupie indonésienne','Indonesische Rupiah','Rúpia indonésia'],
+  ['THB','Thai Baht','泰铢','タイバーツ','Baht tailandés','Baht thaïlandais','Thailändischer Baht','Baht tailandês'],
+  ['VND','Vietnamese Dong','越南盾','ベトナムドン','Dong vietnamita','Dong vietnamien','Vietnamesischer Dong','Dong vietnamita'],
+  ['MYR','Malaysian Ringgit','马来西亚林吉特','マレーシアリンギット','Ringgit malayo','Ringgit malaisien','Malaysischer Ringgit','Ringgit malaio'],
+  ['PHP','Philippine Peso','菲律宾比索','フィリピンペソ','Peso filipino','Peso philippin','Philippinischer Peso','Peso filipino'],
+  ['TRY','Turkish Lira','土耳其里拉','トルコリラ','Lira turca','Livre turque','Türkische Lira','Lira turca'],
+  ['ZAR','South African Rand','南非兰特','南アフリカランド','Rand sudafricano','Rand sud-africain','Südafrikanischer Rand','Rand sul-africano'],
+  ['AED','UAE Dirham','阿联酋迪拉姆','UAEディルハム','Dírham de los EAU','Dirham des ÉAU','VAE-Dirham','Dirham dos EAU'],
+  ['SAR','Saudi Riyal','沙特里亚尔','サウジリヤル','Riyal saudí','Riyal saoudien','Saudi-Riyal','Rial saudita'],
+  ['NZD','New Zealand Dollar','新西兰元','ニュージーランドドル','Dólar neozelandés','Dollar néo-zélandais','Neuseeland-Dollar','Dólar neozelandês'],
+  ['SEK','Swedish Krona','瑞典克朗','スウェーデンクローナ','Corona sueca','Couronne suédoise','Schwedische Krone','Coroa sueca'],
+  ['NOK','Norwegian Krone','挪威克朗','ノルウェークローネ','Corona noruega','Couronne norvégienne','Norwegische Krone','Coroa norueguesa'],
+  ['PLN','Polish Zloty','波兰兹罗提','ポーランドズウォティ','Zloty polaco','Zloty polonais','Polnischer Zloty','Zloty polonês'],
+  ['TWD','New Taiwan Dollar','新台币','ニュー台湾ドル','Dólar taiwanés','Dollar taïwanais','Taiwan-Dollar','Dólar taiwanês'],
+  ['NGN','Nigerian Naira','尼日利亚奈拉','ナイジェリアナイラ','Naira nigeriana','Naira nigérian','Nigerianische Naira','Naira nigeriana'],
+];
+
+export const CUR_NAMES = Object.fromEntries(
+  CUR_ROWS.map(([code, ...names]) => [code, Object.fromEntries(LANGS.map((lg, i) => [lg, names[i]]))])
+);
+
+/** Localised currency name, e.g. curName('zh','USD') -> '美元' */
+export function curName(lang, code) {
+  const byLang = CUR_NAMES[code];
+  return (byLang && byLang[lang]) || (byLang && byLang[DEFAULT_LANG]) || code;
+}

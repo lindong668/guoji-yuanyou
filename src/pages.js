@@ -4,6 +4,7 @@
 import { t, provName, LANGS } from './i18n.js';
 import { page, hero, esc, adSlot } from './ui.js';
 import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
+import { curName } from './i18n.js';
 
 function updatedLine(lang, iso) {
   const L = t(lang);
@@ -159,15 +160,16 @@ export function renderCn(lang, m) {
 // ------------------------------------------------------------
 export function renderFx(lang, fx) {
   const L = t(lang);
+  const cn = (code) => esc(curName(lang, code));
   const opts = CURRENCIES.map(c =>
-    `<option value="${c.c}">${c.c} — ${esc(c.n)}</option>`).join('');
+    `<option value="${c.c}">${cn(c.c)} (${c.c})</option>`).join('');
   const opts2 = CURRENCIES.map(c =>
-    `<option value="${c.c}"${c.c === 'CNY' ? ' selected' : ''}>${c.c} — ${esc(c.n)}</option>`).join('');
+    `<option value="${c.c}"${c.c === 'CNY' ? ' selected' : ''}>${cn(c.c)} (${c.c})</option>`).join('');
 
   const pairs = POPULAR_PAIRS.map(([a, b]) => {
     const r = rateOf(a, b, fx);
     return `<div class="pair">
-      <div class="p">${a} → ${b}</div>
+      <div class="p">${esc(curName(lang, a))} (${a}) → ${esc(curName(lang, b))} (${b})</div>
       <div class="v">${r != null ? fmt(r, 4) : '—'}</div>
     </div>`;
   }).join('');
@@ -204,6 +206,7 @@ export function renderFx(lang, fx) {
 <script>
 const RATES = ${ratesJson};
 const CURS = ${curJson};
+const NAMES = ${JSON.stringify(Object.fromEntries(CURRENCIES.map(c => [c.c, curName(lang, c.c)])))};
 const F = document.getElementById('from'), T = document.getElementById('to'),
       A = document.getElementById('amt'), O = document.getElementById('out'),
       RT = document.getElementById('rt');
@@ -213,8 +216,8 @@ function doConvert(){
   const f = RATES[F.value], t2 = RATES[T.value];
   if(f==null||t2==null){ O.textContent='—'; return; }
   const v = (a/f)*t2;
-  O.textContent = v.toLocaleString(undefined,{maximumFractionDigits:4}) + ' ' + T.value;
-  RT.textContent = '1 ' + F.value + ' = ' + (t2/f).toLocaleString(undefined,{maximumFractionDigits:6}) + ' ' + T.value;
+  O.textContent = v.toLocaleString(undefined,{maximumFractionDigits:4}) + ' ' + (NAMES[T.value]||T.value);
+  RT.textContent = '1 ' + (NAMES[F.value]||F.value) + ' (' + F.value + ') = ' + (t2/f).toLocaleString(undefined,{maximumFractionDigits:6}) + ' ' + (NAMES[T.value]||T.value) + ' (' + T.value + ')';
 }
 [F,T,A].forEach(el=>el.addEventListener('input',doConvert));
 doConvert();
