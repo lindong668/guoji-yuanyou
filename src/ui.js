@@ -392,28 +392,24 @@ document.addEventListener('click',function(e){
 // only refines it when the visitor's real zone differs (VPN, travel, wrong geo).
 (function(){
   var MAP={en:'en-US',zh:'zh-CN',ja:'ja-JP',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR'};
-  // html lang may be "zh-CN"/"pt-BR" — take the base subtag, else every
-  // non-English page would silently fall back to US date format (10/18/2026).
-  var hl=(document.documentElement.lang||'en').toLowerCase().slice(0,2);
-  var loc=MAP[hl]||'en-US';
+  // html lang is "zh-CN" / "pt-BR" etc — match on the first 2 chars only,
+  // otherwise the lookup misses and silently falls back to en-US.
+  var raw=document.documentElement.lang||'en';
+  var loc=MAP[raw.slice(0,2).toLowerCase()]||'en-US';
+  // Ask the browser for its real zone instead of relying on defaults.
+  var tz=null;
+  try{ tz=Intl.DateTimeFormat().resolvedOptions().timeZone||null; }catch(e){}
   function run(){
     var els=document.querySelectorAll('time[data-ts]');
     for(var i=0;i<els.length;i++){
-      var el=els[i];
-      var raw=el.getAttribute('data-ts');
-      var isDate=el.getAttribute('data-ts-type')==='date';
-      var d=new Date(isDate&&raw.length<=10?raw+'T00:00:00Z':raw);
+      var el=els[i],d=new Date(el.getAttribute('data-ts'));
       if(isNaN(d))continue;
       try{
-        // date-only stamps stay in UTC so the calendar day never shifts;
-        // full timestamps use the BROWSER's own zone (no timeZone option).
-        el.textContent=new Intl.DateTimeFormat(loc,isDate?{
-          year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'
-        }:{
-          year:'numeric',month:'2-digit',day:'2-digit',
-          hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'
-        }).format(d);
-      }catch(e){}
+        var opt={year:'numeric',month:'2-digit',day:'2-digit',
+          hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'};
+        if(tz)opt.timeZone=tz;
+        el.textContent=new Intl.DateTimeFormat(loc,opt).format(d);
+      }catch(e){/* keep the server-rendered value */}
     }
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);

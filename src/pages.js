@@ -25,14 +25,22 @@ export function getRenderTz() { return renderTz; }
 function fmtStamp(iso, lang, tz) {
   const d = new Date(iso);
   if (isNaN(d)) return null;
+  const loc = LOCALE_MAP[lang] || 'en-US';
+  const opt = {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+    timeZoneName: 'short',
+  };
   try {
-    return new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
-      year: 'numeric', month: '2-digit', day: '2-digit',
-      hour: '2-digit', minute: '2-digit', hour12: false,
-      timeZone: tz || renderTz, timeZoneName: 'short',
-    }).format(d);
+    return new Intl.DateTimeFormat(loc, { ...opt, timeZone: tz || renderTz }).format(d);
   } catch {
-    return d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+    // Bad/geo-missing zone: retry as UTC rather than printing a raw ISO
+    // string, which used to look like "16:15 UTC" and read as a wrong time.
+    try {
+      return new Intl.DateTimeFormat(loc, { ...opt, timeZone: 'UTC' }).format(d);
+    } catch {
+      return d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+    }
   }
 }
 
@@ -66,9 +74,7 @@ function fxDateLine(lang, dateStr) {
       year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC',
     }).format(d);
   } catch { s = dateStr; }
-  // data-ts + data-ts-type=date lets the inline script re-format per locale
-  // (date-only, so it must NOT be shifted into another timezone)
-  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}" data-ts="${esc(dateStr)}" data-ts-type="date">${esc(s)}</time>`;
+  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}">${esc(s)}</time>`;
 }
 
 // ------------------------------------------------------------
