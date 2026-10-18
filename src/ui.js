@@ -158,6 +158,9 @@ section.blk{padding:46px 0}
 .card{position:relative;border-radius:18px;padding:22px;overflow:hidden;
   background:linear-gradient(160deg,var(--card),var(--card2));
   border:1px solid var(--line);transition:.22s}
+a.card{display:block;color:inherit;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
 .card::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
   background:radial-gradient(420px 130px at 92% -12%,var(--c,rgba(255,255,255,.08)),transparent 70%)}
@@ -166,6 +169,8 @@ section.blk{padding:46px 0}
 .card .unit{font-size:.8rem;color:var(--dim)}
 .card .meta{margin-top:12px;font-size:.76rem;color:var(--dim);
   display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:10px}
+.card .go{display:inline-block;color:var(--gold2);white-space:nowrap;transition:.22s}
+.card:hover .go{transform:translateX(3px)}
 .card.gold{--c:rgba(245,179,1,.2)} .card.oil{--c:rgba(255,122,69,.2)}
 .card.cn{--c:rgba(34,211,238,.2)}  .card.fx{--c:rgba(167,139,250,.2)}
 .swatch{width:9px;height:9px;border-radius:3px;background:var(--gold)}

@@ -154,34 +154,34 @@ export function renderHome(lang, m, fx, tz) {
   <h2 class="h2"><span class="ico">📊</span>${esc(L.secOverview)}</h2>
   <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
-    <div class="card oil">
+    <a class="card oil" href="/${lang}/oil/">
       <h3><span class="swatch o"></span>${esc(L.secOil)}</h3>
       <div class="big">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
-        <a href="/${lang}/oil/">${esc(L.viewAll)} →</a></div>
-    </div>
-    <div class="card gold">
+        <span class="go">${esc(L.viewAll)} →</span></div>
+    </a>
+    <a class="card gold" href="/${lang}/gold/">
       <h3><span class="swatch"></span>${esc(L.secGold)}</h3>
       <div class="big">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
       <div class="meta"><span>${goldCny != null ? '¥' + fmt(goldCny) + ' / g' : ''}</span>
-        <a href="/${lang}/gold/">${esc(L.viewAll)} →</a></div>
-    </div>
-    <div class="card cn">
+        <span class="go">${esc(L.viewAll)} →</span></div>
+    </a>
+    <a class="card cn" href="/${lang}/china-fuel/">
       <h3><span class="swatch s"></span>${esc(L.secCn)}</h3>
       <div class="big">${a92 != null ? '¥' + fmt(a92) : '—'}</div>
       <div class="unit">92# ${esc(L.thProvince)} ${list.length ? '· ' + list.length + ' ' + esc(L.provincesCount) : ''}</div>
       <div class="meta"><span>${updatedLine(lang, m?.cnOil?.updated, tz)}</span>
-        <a href="/${lang}/china-fuel/">${esc(L.viewAll)} →</a></div>
-    </div>
-    <div class="card fx">
+        <span class="go">${esc(L.viewAll)} →</span></div>
+    </a>
+    <a class="card fx" href="/${lang}/currency/">
       <h3><span class="swatch f"></span>${esc(L.secFx)}</h3>
       <div class="big">${fx ? fmt(rateOf('USD', 'EUR', fx) ?? 0, 4) : '—'}</div>
       <div class="unit">1 USD = ${fx ? fmt(rateOf('USD', 'EUR', fx), 4) : '—'} EUR</div>
       <div class="meta"><span>${fxUpdatedBlock(lang, fx, tz)}</span>
-        <a href="/${lang}/currency/">${esc(L.viewAll)} →</a></div>
-    </div>
+        <span class="go">${esc(L.viewAll)} →</span></div>
+    </a>
   </div>
   ${adSlot('home')}
 </div></section>`;
