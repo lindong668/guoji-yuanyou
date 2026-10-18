@@ -79,10 +79,26 @@ Sitemap: ${SITE.domain}/sitemap.xml
       });
     }
 
-    // ---------- root: detect browser language, redirect ----------
+    // ---------- root: render the landing page IN PLACE (200, no redirect) ----------
+    // This used to 302 to /{lang}/. Google Search Console kept reporting
+    // "Redirect error" on https://you.piccalc.com/ and never indexed the
+    // entry URL. Serving 200 removes the hop entirely.
+    // The canonical tag inside renderHome() already points at /{lang}/ , so
+    // Google consolidates ranking on the language URL — no duplicate content,
+    // no redirect for the crawler to trip over.
     if (seg.length === 0) {
-      const lang = detectLang(request.headers.get('Accept-Language'));
-      return Response.redirect(`${SITE.domain}/${lang}/`, 302);
+      const langR = detectLang(request.headers.get('Accept-Language'));
+      const [mR, fxR] = await Promise.all([getMarket(), getFx()]);
+      const html = renderHome(langR, mR, fxR, tz);
+      return new Response(html, {
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+          'cache-control': 'private, max-age=0, must-revalidate',
+          // Content varies by Accept-Language, so caches must key on it.
+          'vary': 'Accept-Language',
+          'x-content-type-options': 'nosniff',
+        },
+      });
     }
 
     // ---------- optional JSON API (handy for debugging) ----------
