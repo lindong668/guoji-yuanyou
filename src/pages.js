@@ -66,7 +66,9 @@ function fxDateLine(lang, dateStr) {
       year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC',
     }).format(d);
   } catch { s = dateStr; }
-  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}">${esc(s)}</time>`;
+  // data-ts + data-ts-type=date lets the inline script re-format per locale
+  // (date-only, so it must NOT be shifted into another timezone)
+  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}" data-ts="${esc(dateStr)}" data-ts-type="date">${esc(s)}</time>`;
 }
 
 // ------------------------------------------------------------

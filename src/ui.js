@@ -392,14 +392,24 @@ document.addEventListener('click',function(e){
 // only refines it when the visitor's real zone differs (VPN, travel, wrong geo).
 (function(){
   var MAP={en:'en-US',zh:'zh-CN',ja:'ja-JP',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR'};
-  var loc=MAP[document.documentElement.lang]||'en-US';
+  // html lang may be "zh-CN"/"pt-BR" — take the base subtag, else every
+  // non-English page would silently fall back to US date format (10/18/2026).
+  var hl=(document.documentElement.lang||'en').toLowerCase().slice(0,2);
+  var loc=MAP[hl]||'en-US';
   function run(){
     var els=document.querySelectorAll('time[data-ts]');
     for(var i=0;i<els.length;i++){
-      var el=els[i],d=new Date(el.getAttribute('data-ts'));
+      var el=els[i];
+      var raw=el.getAttribute('data-ts');
+      var isDate=el.getAttribute('data-ts-type')==='date';
+      var d=new Date(isDate&&raw.length<=10?raw+'T00:00:00Z':raw);
       if(isNaN(d))continue;
       try{
-        el.textContent=new Intl.DateTimeFormat(loc,{
+        // date-only stamps stay in UTC so the calendar day never shifts;
+        // full timestamps use the BROWSER's own zone (no timeZone option).
+        el.textContent=new Intl.DateTimeFormat(loc,isDate?{
+          year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'
+        }:{
           year:'numeric',month:'2-digit',day:'2-digit',
           hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'
         }).format(d);
