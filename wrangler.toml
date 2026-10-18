@@ -1,0 +1,15 @@
+name = "pricescope"
+main = "src/index.js"
+compatibility_date = "2024-12-01"
+
+# Custom domain (add this route in Cloudflare dashboard after first deploy)
+# workers_dev = true
+
+# Uncomment and fill after `wrangler kv:namespace create PRICESCOPE_CACHE`
+# if you later want persistent caching:
+# [[kv_namespaces]]
+# binding = "PRICESCOPE_CACHE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[observability]
+enabled = true

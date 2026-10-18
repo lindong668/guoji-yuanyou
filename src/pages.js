@@ -1,0 +1,310 @@
+// ============================================================
+// PriceScope — Page renderers (SSR, so crawlers read real numbers)
+// ============================================================
+import { t, provName, LANGS } from './i18n.js';
+import { page, hero, esc, ADSENSE_CLIENT } from './ui.js';
+import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
+
+const AD_ON = ADSENSE_CLIENT && ADSENSE_CLIENT !== 'ca-pub-0000000000000000';
+
+function adSlot() {
+  if (!AD_ON) return `<div class="ad">Advertisement slot — enable AdSense by setting ADSENSE_CLIENT in src/ui.js</div>`;
+  return `<div class="ad">
+  <ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}"
+       data-ad-slot="0000000000" data-ad-format="auto" data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+</div>`;
+}
+
+function updatedLine(lang, iso) {
+  const L = t(lang);
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    const s = d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+    return `${esc(L.updatedAt)}: <time datetime="${esc(iso)}">${esc(s)}</time>`;
+  } catch { return ''; }
+}
+
+// ------------------------------------------------------------
+// HOME / OVERVIEW
+// ------------------------------------------------------------
+export function renderHome(lang, m, fx) {
+  const L = t(lang);
+  const oilPrice = m?.oil?.price;
+  const goldUsd = m?.gold?.usdOz;
+  const goldCny = m?.gold?.cnyGram;
+
+  // national average from province list
+  const list = m?.cnOil?.list || [];
+  const avg = k => {
+    const v = list.map(x => parseFloat(x[k])).filter(n => !isNaN(n));
+    return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+  };
+  const a92 = avg('p92');
+
+  const cards = `
+<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">📊</span>${esc(L.secOverview)}</h2>
+  <p class="sub">${esc(L.weekendNote)}</p>
+  <div class="grid">
+    <div class="card oil">
+      <h3><span class="swatch o"></span>${esc(L.secOil)}</h3>
+      <div class="big">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
+      <div class="unit">${esc(L.unitBarrel)}</div>
+      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated)}</span>
+        <a href="/${lang}/oil/">${esc(L.viewAll)} →</a></div>
+    </div>
+    <div class="card gold">
+      <h3><span class="swatch"></span>${esc(L.secGold)}</h3>
+      <div class="big">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
+      <div class="unit">${esc(L.goldUsd)}</div>
+      <div class="meta"><span>${goldCny != null ? '¥' + fmt(goldCny) + ' / g' : ''}</span>
+        <a href="/${lang}/gold/">${esc(L.viewAll)} →</a></div>
+    </div>
+    <div class="card cn">
+      <h3><span class="swatch s"></span>${esc(L.secCn)}</h3>
+      <div class="big">${a92 != null ? '¥' + fmt(a92) : '—'}</div>
+      <div class="unit">92# ${esc(L.thProvince)} ${list.length ? '· ' + list.length + ' ' + esc(L.provincesCount) : ''}</div>
+      <div class="meta"><span>${updatedLine(lang, m?.cnOil?.updated)}</span>
+        <a href="/${lang}/china-fuel/">${esc(L.viewAll)} →</a></div>
+    </div>
+    <div class="card fx">
+      <h3><span class="swatch f"></span>${esc(L.secFx)}</h3>
+      <div class="big">${fx ? fmt(rateOf('USD', 'EUR', fx) ?? 0, 4) : '—'}</div>
+      <div class="unit">1 USD = ${fx ? fmt(rateOf('USD', 'EUR', fx), 4) : '—'} EUR</div>
+      <div class="meta"><span>${fx?.date ? esc(L.fxUpdated) + ': ' + esc(fx.date) : ''}</span>
+        <a href="/${lang}/currency/">${esc(L.viewAll)} →</a></div>
+    </div>
+  </div>
+  ${adSlot()}
+</div></section>`;
+
+  const body = hero(lang) + cards;
+  return page({ lang, title: L.homeTitle, desc: L.homeDesc, path: '/', active: '/', body });
+}
+
+// ------------------------------------------------------------
+// CRUDE OIL
+// ------------------------------------------------------------
+export function renderOil(lang, m) {
+  const L = t(lang);
+  const p = m?.oil?.price;
+  const body = `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">🛢</span>${esc(L.oilTitle)}</h2>
+  <p class="sub">${esc(L.weekendNote)}</p>
+  <div class="grid">
+    <div class="card oil">
+      <h3><span class="swatch o"></span>${esc(L.price)}</h3>
+      <div class="big">${p != null ? '$' + fmt(p) : '—'}</div>
+      <div class="unit">${esc(L.unitBarrel)}</div>
+      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated)}</span></div>
+    </div>
+  </div>
+  <p class="sub" style="margin-top:22px">${esc(m?.oil?.isSettlement ? 'Settlement price' : L.dataSource)}: ${esc(L.tagline)}</p>
+  ${adSlot()}
+</div></section>`;
+  return page({ lang, title: L.oilMetaTitle, desc: L.oilMetaDesc, path: '/oil/', active: '/oil/', body });
+}
+
+// ------------------------------------------------------------
+// GOLD
+// ------------------------------------------------------------
+export function renderGold(lang, m) {
+  const L = t(lang);
+  const u = m?.gold?.usdOz, c = m?.gold?.cnyGram;
+  const body = `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">🥇</span>${esc(L.goldTitle)}</h2>
+  <p class="sub">${esc(L.weekendNote)}</p>
+  <div class="grid">
+    <div class="card gold">
+      <h3><span class="swatch"></span>${esc(L.goldUsd)}</h3>
+      <div class="big">${u != null ? '$' + fmt(u) : '—'}</div>
+      <div class="unit">USD / troy oz</div>
+      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated)}</span></div>
+    </div>
+    <div class="card gold">
+      <h3><span class="swatch"></span>${esc(L.goldCny)}</h3>
+      <div class="big">${c != null ? '¥' + fmt(c) : '—'}</div>
+      <div class="unit">CNY / gram</div>
+      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated)}</span></div>
+    </div>
+  </div>
+  ${adSlot()}
+</div></section>`;
+  return page({ lang, title: L.goldMetaTitle, desc: L.goldMetaDesc, path: '/gold/', active: '/gold/', body });
+}
+
+// ------------------------------------------------------------
+// CHINA FUEL (full province table — strong SEO content)
+// ------------------------------------------------------------
+export function renderCn(lang, m) {
+  const L = t(lang);
+  const list = m?.cnOil?.list || [];
+  const rows = list.map(x => `<tr>
+    <td class="pv">${esc(provName(x.prov, lang))}</td>
+    <td class="num">${x.p92 != null ? fmt(x.p92) : '—'}</td>
+    <td class="num">${x.p95 != null ? fmt(x.p95) : '—'}</td>
+    <td class="num hi">${x.p98 != null ? fmt(x.p98) : '—'}</td>
+    <td class="num">${x.p0 != null ? fmt(x.p0) : '—'}</td>
+  </tr>`).join('');
+
+  const body = `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">⛽</span>${esc(L.cnTitle)}</h2>
+  <p class="sub">${esc(L.cnNote)} ${updatedLine(lang, m?.cnOil?.updated)}</p>
+  <div class="tblwrap"><table>
+    <thead><tr>
+      <th>${esc(L.thProvince)}</th><th>${esc(L.th92)}</th><th>${esc(L.th95)}</th>
+      <th>${esc(L.th98)}</th><th>${esc(L.th0)}</th>
+    </tr></thead>
+    <tbody>${rows || `<tr><td colspan="5">—</td></tr>`}</tbody>
+  </table></div>
+  <p class="sub" style="margin-top:14px">${esc(list.length)} ${esc(L.provincesCount)} · ${esc(L.dataSource)}: showapi</p>
+  ${adSlot()}
+</div></section>`;
+  return page({ lang, title: L.cnMetaTitle, desc: L.cnMetaDesc, path: '/china-fuel/', active: '/china-fuel/', body });
+}
+
+// ------------------------------------------------------------
+// CURRENCY CONVERTER
+// ------------------------------------------------------------
+export function renderFx(lang, fx) {
+  const L = t(lang);
+  const opts = CURRENCIES.map(c =>
+    `<option value="${c.c}">${c.c} — ${esc(c.n)}</option>`).join('');
+  const opts2 = CURRENCIES.map(c =>
+    `<option value="${c.c}"${c.c === 'CNY' ? ' selected' : ''}>${c.c} — ${esc(c.n)}</option>`).join('');
+
+  const pairs = POPULAR_PAIRS.map(([a, b]) => {
+    const r = rateOf(a, b, fx);
+    return `<div class="pair">
+      <div class="p">${a} → ${b}</div>
+      <div class="v">${r != null ? fmt(r, 4) : '—'}</div>
+    </div>`;
+  }).join('');
+
+  const ratesJson = fx ? JSON.stringify(fx.rates) : '{}';
+  const curJson = JSON.stringify(CURRENCIES.map(c => c.c));
+
+  const body = `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">💱</span>${esc(L.fxTitle)}</h2>
+  <p class="sub">${esc(L.fxNote)} ${fx?.date ? '· ' + esc(L.fxUpdated) + ' ' + esc(fx.date) : ''}</p>
+
+  <div class="conv">
+    <div class="fld"><label>${esc(L.fxAmount)}</label>
+      <input id="amt" type="number" value="100" min="0" step="any" inputmode="decimal"></div>
+    <div class="fld"><label>${esc(L.fxFrom)}</label>
+      <select id="from">${opts}</select></div>
+    <div class="fld"><label>${esc(L.fxTo)}</label>
+      <select id="to">${opts2}</select></div>
+    <div class="fld"><label>&nbsp;</label>
+      <button class="btn" onclick="doConvert()">${esc(L.fxBtn)}</button></div>
+  </div>
+
+  <div class="result">
+    <div class="lbl">${esc(L.fxResult)}</div>
+    <div class="val" id="out">—</div>
+    <div class="rate" id="rt">—</div>
+  </div>
+
+  <h2 class="h2" style="margin-top:38px"><span class="ico">🌍</span>${esc(L.fxPopular)}</h2>
+  <div class="pairs">${pairs}</div>
+  ${adSlot()}
+</div></section>
+
+<script>
+const RATES = ${ratesJson};
+const CURS = ${curJson};
+const F = document.getElementById('from'), T = document.getElementById('to'),
+      A = document.getElementById('amt'), O = document.getElementById('out'),
+      RT = document.getElementById('rt');
+function doConvert(){
+  const a = parseFloat(A.value);
+  if(isNaN(a)){ O.textContent='—'; return; }
+  const f = RATES[F.value], t2 = RATES[T.value];
+  if(f==null||t2==null){ O.textContent='—'; return; }
+  const v = (a/f)*t2;
+  O.textContent = v.toLocaleString(undefined,{maximumFractionDigits:4}) + ' ' + T.value;
+  RT.textContent = '1 ' + F.value + ' = ' + (t2/f).toLocaleString(undefined,{maximumFractionDigits:6}) + ' ' + T.value;
+}
+[F,T,A].forEach(el=>el.addEventListener('input',doConvert));
+doConvert();
+</script>`;
+  return page({ lang, title: L.fxMetaTitle, desc: L.fxMetaDesc, path: '/currency/', active: '/currency/', body });
+}
+
+// ------------------------------------------------------------
+// PRIVACY
+// ------------------------------------------------------------
+export function renderPrivacy(lang) {
+  const L = t(lang);
+  const secs = L.privacySections.map(s =>
+    `<h2>${esc(s.h)}</h2><p>${esc(s.p)}</p>`).join('');
+  const body = `<section class="blk"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">🔒</span>${esc(L.privacyTitle)}</h2>
+  <p class="sub">${esc(L.privacyUpdated)}: ${new Date().toISOString().slice(0, 10)}</p>
+  <p class="lead">${esc(L.privacyIntro)}</p>
+  ${secs}
+</div></section>`;
+  return page({ lang, title: `${L.privacyTitle} — ${L.brand}`, desc: L.privacyMetaDesc,
+    path: '/privacy/', active: '/privacy/', body });
+}
+
+// ------------------------------------------------------------
+// ABOUT
+// ------------------------------------------------------------
+export function renderAbout(lang) {
+  const L = t(lang);
+  const secs = L.aboutSections.map(s =>
+    `<h2>${esc(s.h)}</h2><p>${esc(s.p)}</p>`).join('');
+  const body = `<section class="blk"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">ℹ️</span>${esc(L.aboutTitle)}</h2>
+  <p class="lead">${esc(L.aboutIntro)}</p>
+  ${secs}
+</div></section>`;
+  return page({ lang, title: `${L.aboutTitle} — ${L.brand}`, desc: L.aboutMetaDesc,
+    path: '/about/', active: '/about/', body });
+}
+
+// ------------------------------------------------------------
+// CONTACT
+// ------------------------------------------------------------
+export function renderContact(lang) {
+  const L = t(lang);
+  const { contactEmail } = { contactEmail: 'FENG91111@gmail.com' };
+  const body = `<section class="blk"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">✉️</span>${esc(L.contactTitle)}</h2>
+  <p class="lead">${esc(L.contactIntro)}</p>
+  <h2>${esc(L.contactEmailLabel)}</h2>
+  <a class="mailto" href="mailto:${contactEmail}">✉️ ${contactEmail}</a>
+  <p>${esc(L.contactNote)}</p>
+  <h2>${esc(L.nav.about)}</h2>
+  <p>${esc(L.contactTopics)}</p>
+</div></section>`;
+  return page({ lang, title: `${L.contactTitle} — ${L.brand}`, desc: L.contactMetaDesc,
+    path: '/contact/', active: '/contact/', body });
+}
+
+// ------------------------------------------------------------
+// SITEMAP (multilingual, hreflang)
+// ------------------------------------------------------------
+export function sitemap() {
+  const paths = ['/', '/oil/', '/gold/', '/china-fuel/', '/currency/', '/about/', '/privacy/', '/contact/'];
+  const today = new Date().toISOString().slice(0, 10);
+  const urls = [];
+  for (const p of paths) {
+    for (const l of LANGS) {
+      const loc = `https://you.piccalc.com/${l}${p}`;
+      const alts = LANGS.map(x =>
+        `<xhtml:link rel="alternate" hreflang="${x}" href="https://you.piccalc.com/${x}${p}"/>`).join('');
+      urls.push(`<url><loc>${loc}</loc><lastmod>${today}</lastmod>
+    <changefreq>${p === '/' ? 'hourly' : 'daily'}</changefreq>
+    <priority>${p === '/' ? '1.0' : '0.8'}</priority>${alts}</url>`);
+    }
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+${urls.join('\n')}
+</urlset>`;
+}
