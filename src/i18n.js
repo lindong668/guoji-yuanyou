@@ -20,16 +20,16 @@ export const T = {
   en: {
     htmlLang: 'en', label: 'English', flag: '🇺🇸',
     brand: 'PriceScope',
-    tagline: 'Live Brent Crude Oil, Gold, Fuel & Currency Rates',
-    homeTitle: 'PriceScope — Live Brent Crude Oil, Gold, China Fuel & Currency Rates',
-    homeDesc: 'Track Brent crude oil prices, gold rates in USD/oz and CNY/gram, China retail fuel prices by province, and live currency exchange rates. Free, fast, updated worldwide.',
+    tagline: 'Daily Updated Brent Crude Oil, Gold, Fuel & Currency Rates',
+    homeTitle: 'PriceScope — Daily Updated Brent Crude Oil, Gold, China Fuel & Currency Rates',
+    homeDesc: 'Track Brent crude oil prices, gold rates in USD/oz and CNY/gram, China retail fuel prices by province, and daily updated currency exchange rates. Free, fast, updated worldwide.',
 
     nav: { overview: 'Overview', oil: 'Brent Crude', gold: 'Gold', cn: 'China Fuel', fx: 'Currency', about: 'About', privacy: 'Privacy', contact: 'Contact' },
 
-    heroBadge: 'Live Market Data',
+    heroBadge: 'Daily Updated Market Data',
     heroTitle: 'Global Brent Crude Oil, Gold & Currency Prices in One Place',
-    heroSub: 'Real-time Brent crude oil, gold and China retail fuel prices — plus a free currency converter. Data refreshes automatically, served from a global edge network for visitors worldwide.',
-    heroCta: 'See Live Prices',
+    heroSub: 'Brent crude oil, gold and China retail fuel prices, updated once every day — plus a free currency converter. Data is refreshed on a daily schedule and served from a global edge network for visitors worldwide.',
+    heroCta: "See Today's Prices",
 
     secOverview: 'Market Overview',
     secOil: 'Brent Crude Oil',
@@ -50,17 +50,17 @@ export const T = {
     fxAmount: 'Amount', fxFrom: 'From', fxTo: 'To', fxResult: 'Result', fxBtn: 'Convert', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Rates updated', fxNote: 'Mid-market reference rates, refreshed daily. For indication only — not for settlement.', fxPopular: 'Popular conversions',
 
     oilTitle: 'Brent Crude Oil Price',
-    oilMetaTitle: 'Brent Crude Oil Price Today — Live Global Benchmark Rate | PriceScope',
-    oilMetaDesc: 'Live Brent crude oil price per barrel with automatic updates. Brent is the leading global oil benchmark used by markets worldwide.',
+    oilMetaTitle: 'Brent Crude Oil Price Today — Daily Updated Benchmark Rate | PriceScope',
+    oilMetaDesc: 'Daily updated Brent crude oil price per barrel, refreshed once every day. Brent is the leading global oil benchmark used by markets worldwide.',
     goldTitle: 'International Gold Price',
-    goldMetaTitle: 'Gold Price Today — Live USD/oz & CNY/gram | PriceScope',
-    goldMetaDesc: 'Live international gold price in US dollars per troy ounce and Chinese yuan per gram. Updated automatically from global market data.',
+    goldMetaTitle: 'Gold Price Today — Daily Updated USD/oz & CNY/gram | PriceScope',
+    goldMetaDesc: 'Daily updated international gold price in US dollars per troy ounce and Chinese yuan per gram, refreshed once every day from global market data.',
     cnTitle: 'China Retail Fuel Prices',
     cnMetaTitle: 'China Fuel Price Today — 92, 95, 98 & Diesel by Province | PriceScope',
     cnMetaDesc: 'Latest China retail fuel prices for 92#, 95#, 98# gasoline and 0# diesel across all provinces. Provincial maximum retail prices, updated regularly.',
     fxTitle: 'Currency Converter & Exchange Rates',
-    fxMetaTitle: 'Currency Converter — Live Exchange Rates | PriceScope',
-    fxMetaDesc: 'Free currency converter with live mid-market exchange rates. Convert between major world currencies instantly, with daily refreshed reference rates.',
+    fxMetaTitle: 'Currency Converter — Daily Updated Exchange Rates | PriceScope',
+    fxMetaDesc: 'Free currency converter with daily updated mid-market exchange rates. Convert between major world currencies instantly, with daily refreshed reference rates.',
 
     privacyTitle: 'Privacy Policy',
     privacyMetaDesc: 'How PriceScope collects, uses and protects your information, including the use of cookies and advertising partners.',
@@ -100,16 +100,16 @@ export const T = {
   zh: {
     htmlLang: 'zh-CN', label: '简体中文', flag: '🇨🇳',
     brand: 'PriceScope',
-    tagline: '实时布伦特原油 · 黄金 · 油价 · 汇率',
-    homeTitle: 'PriceScope — 实时布伦特原油、黄金、国内油价与汇率',
-    homeDesc: '一站式查看布伦特原油价格、国际金价（美元/盎司 与 人民币/克）、中国各省份成品油零售价，以及实时货币汇率。免费、快速、面向全球用户。',
+    tagline: '每日更新布伦特原油 · 黄金 · 油价 · 汇率',
+    homeTitle: 'PriceScope — 每日更新布伦特原油、黄金、国内油价与汇率',
+    homeDesc: '一站式查看布伦特原油价格、国际金价（美元/盎司 与 人民币/克）、中国各省份成品油零售价，以及每日更新的货币汇率。免费、快速、面向全球用户。',
 
     nav: { overview: '总览', oil: '布伦特原油', gold: '国际黄金', cn: '国内油价', fx: '汇率换算', about: '关于本站', privacy: '隐私政策', contact: '联系我们' },
 
-    heroBadge: '实时行情数据',
+    heroBadge: '每日更新行情数据',
     heroTitle: '全球布伦特原油、黄金与汇率，一站掌握',
-    heroSub: '实时布伦特原油、黄金与中国成品油价格，并内置免费汇率换算工具。数据自动更新，依托全球边缘网络为各地访客快速加载。',
-    heroCta: '查看实时价格',
+    heroSub: '布伦特原油、黄金与中国成品油价格每日更新，并内置免费汇率换算工具。数据每日刷新一次，依托全球边缘网络为各地访客快速加载。',
+    heroCta: '查看当日价格',
 
     secOverview: '行情总览',
     secOil: '布伦特原油',
@@ -130,17 +130,17 @@ export const T = {
     fxAmount: '金额', fxFrom: '源货币', fxTo: '目标货币', fxResult: '换算结果', fxBtn: '换算', fxRate: '1 {from} = {rate} {to}', fxUpdated: '汇率更新', fxNote: '中间市场参考汇率，每日刷新。仅供参考，不作为结算依据。', fxPopular: '常用换算',
 
     oilTitle: '布伦特原油价格',
-    oilMetaTitle: '今日布伦特原油价格 — 实时国际油价查询 | PriceScope',
-    oilMetaDesc: '实时布伦特原油每桶价格，自动更新。布伦特原油是全球市场最通用的原油基准报价。',
+    oilMetaTitle: '今日布伦特原油价格 — 每日更新国际油价查询 | PriceScope',
+    oilMetaDesc: '布伦特原油每桶价格，每日更新一次。布伦特原油是全球市场最通用的原油基准报价。',
     goldTitle: '国际黄金价格',
-    goldMetaTitle: '今日国际金价 — 美元/盎司 与 人民币/克 实时查询 | PriceScope',
-    goldMetaDesc: '实时国际黄金价格，同时以美元/金衡盎司与人民币/克显示，数据自动更新。',
+    goldMetaTitle: '今日国际金价 — 美元/盎司 与 人民币/克 每日更新 | PriceScope',
+    goldMetaDesc: '国际黄金价格，同时以美元/金衡盎司与人民币/克显示，数据每日更新一次。',
     cnTitle: '中国国内成品油价格',
     cnMetaTitle: '今日国内油价 — 全国各省份 92、95、98 及柴油价格 | PriceScope',
     cnMetaDesc: '全国各省份 92#、95#、98# 汽油与 0# 柴油最新零售价，省级最高零售限价，定期更新。',
     fxTitle: '汇率换算与外币牌价',
-    fxMetaTitle: '汇率换算器 — 实时外币汇率 | PriceScope',
-    fxMetaDesc: '免费汇率换算工具，提供实时中间市场汇率，支持全球主要货币即时换算，参考汇率每日刷新。',
+    fxMetaTitle: '汇率换算器 — 每日更新外币汇率 | PriceScope',
+    fxMetaDesc: '免费汇率换算工具，提供每日更新的中间市场汇率，支持全球主要货币换算，参考汇率每日刷新。',
 
     privacyTitle: '隐私政策',
     privacyMetaDesc: 'PriceScope 如何收集、使用与保护您的信息，包括 Cookie 与广告合作方的相关说明。',
@@ -186,10 +186,10 @@ export const T = {
 
     nav: { overview: '概要', oil: 'ブレント原油', gold: '金', cn: '中国燃料', fx: '為替', about: '当サイトについて', privacy: 'プライバシー', contact: 'お問い合わせ' },
 
-    heroBadge: 'ライブ市場データ',
+    heroBadge: '毎日更新の市場データ',
     heroTitle: '世界のブレント原油・金・為替をひとつに',
-    heroSub: 'ブレント原油・金・中国燃料価格をリアルタイムで表示し、無料の通貨換算ツールも搭載。データは自動更新され、グローバルエッジネットワークから高速配信されます。',
-    heroCta: '価格を見る',
+    heroSub: 'ブレント原油・金・中国燃料価格を毎日更新で表示し、無料の通貨換算ツールも搭載。データは1日1回更新され、グローバルエッジネットワークから高速配信されます。',
+    heroCta: '本日の価格を見る',
 
     secOverview: 'マーケット概要',
     secOil: 'ブレント原油',
@@ -260,16 +260,16 @@ export const T = {
   es: {
     htmlLang: 'es', label: 'Español', flag: '🇪🇸',
     brand: 'PriceScope',
-    tagline: 'Petróleo Brent, oro, combustible y divisas en vivo',
-    homeTitle: 'PriceScope — Petróleo Brent, oro, combustible en China y divisas en vivo',
-    homeDesc: 'Consulta el precio del crudo Brent, el oro en USD/onza y CNY/gramo, los precios minoristas de combustible en China por provincia y los tipos de cambio en vivo. Gratis, rápido y disponible en todo el mundo.',
+    tagline: 'Petróleo Brent, oro, combustible y divisas — actualizados a diario',
+    homeTitle: 'PriceScope — Petróleo Brent, oro, combustible en China y divisas, actualizados a diario',
+    homeDesc: 'Consulta el precio del crudo Brent, el oro en USD/onza y CNY/gramo, los precios minoristas de combustible en China por provincia y los tipos de cambio actualizados a diario. Gratis, rápido y disponible en todo el mundo.',
 
     nav: { overview: 'Resumen', oil: 'Petróleo Brent', gold: 'Oro', cn: 'Combustible China', fx: 'Divisas', about: 'Quiénes somos', privacy: 'Privacidad', contact: 'Contacto' },
 
-    heroBadge: 'Datos de mercado en vivo',
+    heroBadge: 'Datos de mercado actualizados a diario',
     heroTitle: 'Petróleo Brent, oro y divisas mundiales en un solo lugar',
-    heroSub: 'Precios en tiempo real del crudo Brent, oro y combustible en China, además de un conversor de divisas gratuito. Actualización automática y distribución global desde la red perimetral.',
-    heroCta: 'Ver precios',
+    heroSub: 'Precios del crudo Brent, oro y combustible en China actualizados una vez al día, además de un conversor de divisas gratuito. Los datos se renuevan a diario y se distribuyen desde la red perimetral global.',
+    heroCta: 'Ver los precios de hoy',
 
     secOverview: 'Resumen del mercado',
     secOil: 'Petróleo crudo Brent',
@@ -290,16 +290,16 @@ export const T = {
     fxAmount: 'Importe', fxFrom: 'De', fxTo: 'A', fxResult: 'Resultado', fxBtn: 'Convertir', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Actualizado', fxNote: 'Tipos de referencia de mercado medio, renovados diariamente. Solo informativo, no válido para liquidación.', fxPopular: 'Conversiones frecuentes',
 
     oilTitle: 'Precio del petróleo crudo Brent',
-    oilMetaTitle: 'Precio del crudo Brent hoy — cotización internacional en vivo | PriceScope',
+    oilMetaTitle: 'Precio del crudo Brent hoy — cotización internacional actualizada a diario | PriceScope',
     oilMetaDesc: 'Precio del crudo Brent por barril con actualización automática. El Brent es la referencia global utilizada por los mercados.',
     goldTitle: 'Precio internacional del oro',
-    goldMetaTitle: 'Precio del oro hoy — USD/onza y CNY/gramo en vivo | PriceScope',
+    goldMetaTitle: 'Precio del oro hoy — USD/onza y CNY/gramo actualizado a diario | PriceScope',
     goldMetaDesc: 'Precio internacional del oro en dólares por onza troy y yuanes por gramo, actualizado automáticamente.',
     cnTitle: 'Precios de combustible en China',
     cnMetaTitle: 'Precio del combustible en China — 92, 95, 98 y diésel por provincia | PriceScope',
     cnMetaDesc: 'Últimos precios minoristas de gasolina 92#, 95#, 98# y diésel 0# en todas las provincias de China. Precios máximos provinciales, actualizados periódicamente.',
     fxTitle: 'Conversor de divisas y tipos de cambio',
-    fxMetaTitle: 'Conversor de divisas — tipos de cambio en vivo | PriceScope',
+    fxMetaTitle: 'Conversor de divisas — tipos de cambio actualizados a diario | PriceScope',
     fxMetaDesc: 'Conversor de divisas gratuito con tipos de cambio de mercado medio. Convierte entre las principales monedas del mundo al instante, con referencias renovadas cada día.',
 
     privacyTitle: 'Política de privacidad',
@@ -340,16 +340,16 @@ export const T = {
   fr: {
     htmlLang: 'fr', label: 'Français', flag: '🇫🇷',
     brand: 'PriceScope',
-    tagline: 'Pétrole Brent, or, carburant et devises en direct',
-    homeTitle: 'PriceScope — Pétrole Brent, or, carburant en Chine et devises en direct',
-    homeDesc: 'Suivez le prix du brut Brent, le cours de l\'or en USD/once et CNY/gramme, les prix de détail des carburants en Chine par province et les taux de change en direct. Gratuit, rapide, accessible dans le monde entier.',
+    tagline: 'Pétrole Brent, or, carburant et devises — mis à jour chaque jour',
+    homeTitle: 'PriceScope — Pétrole Brent, or, carburant en Chine et devises, mis à jour chaque jour',
+    homeDesc: 'Suivez le prix du brut Brent, le cours de l\'or en USD/once et CNY/gramme, les prix de détail des carburants en Chine par province et les taux de change mis à jour chaque jour. Gratuit, rapide, accessible dans le monde entier.',
 
     nav: { overview: 'Aperçu', oil: 'Pétrole Brent', gold: 'Or', cn: 'Carburant Chine', fx: 'Devises', about: 'À propos', privacy: 'Confidentialité', contact: 'Contact' },
 
-    heroBadge: 'Données de marché en direct',
+    heroBadge: 'Données de marché mises à jour chaque jour',
     heroTitle: 'Pétrole Brent, or et devises mondiaux en un seul endroit',
-    heroSub: 'Prix en temps réel du brut Brent, de l\'or et des carburants en Chine, plus un convertisseur de devises gratuit. Mise à jour automatique, diffusé depuis un réseau périphérique mondial.',
-    heroCta: 'Voir les prix',
+    heroSub: 'Prix du brut Brent, de l\'or et des carburants en Chine, actualisés une fois par jour, plus un convertisseur de devises gratuit. Les données sont renouvelées chaque jour et diffusées depuis un réseau périphérique mondial.',
+    heroCta: 'Voir les prix du jour',
 
     secOverview: 'Aperçu du marché',
     secOil: 'Pétrole brut Brent',
@@ -370,7 +370,7 @@ export const T = {
     fxAmount: 'Montant', fxFrom: 'De', fxTo: 'Vers', fxResult: 'Résultat', fxBtn: 'Convertir', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Mise à jour', fxNote: 'Taux de référence de marché moyen, actualisés chaque jour. Indicatif uniquement, non valable pour un règlement.', fxPopular: 'Conversions courantes',
 
     oilTitle: 'Prix du pétrole brut Brent',
-    oilMetaTitle: 'Prix du brut Brent aujourd\'hui — cours international en direct | PriceScope',
+    oilMetaTitle: 'Prix du brut Brent aujourd\'hui — cours international mis à jour chaque jour | PriceScope',
     oilMetaDesc: 'Prix du brut Brent au baril avec mise à jour automatique. Le Brent est la référence mondiale utilisée par les marchés.',
     goldTitle: 'Prix international de l\'or',
     goldMetaTitle: 'Prix de l\'or aujourd\'hui — USD/once et CNY/gramme | PriceScope',
@@ -379,7 +379,7 @@ export const T = {
     cnMetaTitle: 'Prix du carburant en Chine — 92, 95, 98 et diesel par province | PriceScope',
     cnMetaDesc: 'Derniers prix de détail de l\'essence 92#, 95#, 98# et du diesel 0# dans toutes les provinces chinoises. Plafonds provinciaux, mis à jour régulièrement.',
     fxTitle: 'Convertisseur de devises et taux de change',
-    fxMetaTitle: 'Convertisseur de devises — taux de change en direct | PriceScope',
+    fxMetaTitle: 'Convertisseur de devises — taux de change mis à jour chaque jour | PriceScope',
     fxMetaDesc: 'Convertisseur de devises gratuit avec taux de marché moyen. Convertissez instantanément entre les principales monnaies mondiales, références actualisées chaque jour.',
 
     privacyTitle: 'Politique de confidentialité',
@@ -420,16 +420,16 @@ export const T = {
   de: {
     htmlLang: 'de', label: 'Deutsch', flag: '🇩🇪',
     brand: 'PriceScope',
-    tagline: 'Brent-Öl, Gold, Kraftstoff & Währungen live',
-    homeTitle: 'PriceScope — Brent-Ölpreis, Goldpreis, chinesische Kraftstoffpreise & Wechselkurse live',
+    tagline: 'Brent-Öl, Gold, Kraftstoff & Währungen – täglich aktualisiert',
+    homeTitle: 'PriceScope — Brent-Ölpreis, Goldpreis, chinesische Kraftstoffpreise & Wechselkurse, täglich aktualisiert',
     homeDesc: 'Verfolgen Sie den Brent-Rohölpreis, Gold in USD/Unze und CNY/Gramm, chinesische Einzelhandelspreise für Kraftstoff nach Provinz sowie aktuelle Wechselkurse. Kostenlos, schnell, weltweit verfügbar.',
 
     nav: { overview: 'Überblick', oil: 'Brent-Rohöl', gold: 'Gold', cn: 'Kraftstoff China', fx: 'Währungen', about: 'Über uns', privacy: 'Datenschutz', contact: 'Kontakt' },
 
-    heroBadge: 'Live-Marktdaten',
+    heroBadge: 'Täglich aktualisierte Marktdaten',
     heroTitle: 'Brent-Öl, Gold und Währungen weltweit an einem Ort',
-    heroSub: 'Echtzeitpreise für Brent-Rohöl, Gold und chinesische Kraftstoffe – plus ein kostenloser Währungsrechner. Automatische Aktualisierung, weltweit über ein Edge-Netzwerk ausgeliefert.',
-    heroCta: 'Preise ansehen',
+    heroSub: 'Einmal täglich aktualisierte Preise für Brent-Rohöl, Gold und chinesische Kraftstoffe – plus ein kostenloser Währungsrechner. Die Daten werden jeden Tag erneuert und weltweit über ein Edge-Netzwerk ausgeliefert.',
+    heroCta: 'Preise des Tages ansehen',
 
     secOverview: 'Marktüberblick',
     secOil: 'Brent-Rohöl',
@@ -450,10 +450,10 @@ export const T = {
     fxAmount: 'Betrag', fxFrom: 'Von', fxTo: 'Nach', fxResult: 'Ergebnis', fxBtn: 'Umrechnen', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Aktualisiert', fxNote: 'Referenzkurse (Mittelkurs), täglich erneuert. Nur zur Orientierung, nicht für Abrechnungen.', fxPopular: 'Häufige Umrechnungen',
 
     oilTitle: 'Brent-Rohölpreis',
-    oilMetaTitle: 'Brent-Ölpreis heute — internationaler Rohölkurs live | PriceScope',
+    oilMetaTitle: 'Brent-Ölpreis heute — internationaler Rohölkurs, täglich aktualisiert | PriceScope',
     oilMetaDesc: 'Brent-Rohölpreis pro Barrel mit automatischer Aktualisierung. Brent ist die weltweite Referenznotierung der Märkte.',
     goldTitle: 'Internationaler Goldpreis',
-    goldMetaTitle: 'Goldpreis heute — USD/Unze & CNY/Gramm live | PriceScope',
+    goldMetaTitle: 'Goldpreis heute — USD/Unze & CNY/Gramm, täglich aktualisiert | PriceScope',
     goldMetaDesc: 'Internationaler Goldpreis in US-Dollar pro Feinunze und Renminbi pro Gramm, automatisch aktualisiert.',
     cnTitle: 'Kraftstoffpreise in China',
     cnMetaTitle: 'Kraftstoffpreise China — 92, 95, 98 und Diesel nach Provinz | PriceScope',
@@ -500,16 +500,16 @@ export const T = {
   pt: {
     htmlLang: 'pt', label: 'Português', flag: '🇧🇷',
     brand: 'PriceScope',
-    tagline: 'Petróleo Brent, ouro, combustível e câmbio ao vivo',
-    homeTitle: 'PriceScope — Petróleo Brent, ouro, combustível na China e câmbio ao vivo',
-    homeDesc: 'Acompanhe o preço do petróleo bruto Brent, o ouro em USD/onça e CNY/grama, os preços de combustível na China por província e as taxas de câmbio ao vivo. Grátis, rápido e disponível mundialmente.',
+    tagline: 'Petróleo Brent, ouro, combustível e câmbio — atualizados diariamente',
+    homeTitle: 'PriceScope — Petróleo Brent, ouro, combustível na China e câmbio, atualizados diariamente',
+    homeDesc: 'Acompanhe o preço do petróleo bruto Brent, o ouro em USD/onça e CNY/grama, os preços de combustível na China por província e as taxas de câmbio atualizadas diariamente. Grátis, rápido e disponível mundialmente.',
 
     nav: { overview: 'Visão geral', oil: 'Petróleo Brent', gold: 'Ouro', cn: 'Combustível China', fx: 'Moedas', about: 'Sobre', privacy: 'Privacidade', contact: 'Contato' },
 
-    heroBadge: 'Dados de mercado ao vivo',
+    heroBadge: 'Dados de mercado atualizados diariamente',
     heroTitle: 'Petróleo Brent, ouro e câmbio mundiais em um só lugar',
-    heroSub: 'Preços em tempo real do petróleo bruto Brent, ouro e combustível na China, além de um conversor de moedas gratuito. Atualização automática, entregue por uma rede de borda global.',
-    heroCta: 'Ver preços',
+    heroSub: 'Preços do petróleo bruto Brent, ouro e combustível na China atualizados uma vez por dia, além de um conversor de moedas gratuito. Os dados são renovados diariamente e entregues por uma rede de borda global.',
+    heroCta: 'Ver os preços de hoje',
 
     secOverview: 'Visão geral do mercado',
     secOil: 'Petróleo bruto Brent',
@@ -530,7 +530,7 @@ export const T = {
     fxAmount: 'Valor', fxFrom: 'De', fxTo: 'Para', fxResult: 'Resultado', fxBtn: 'Converter', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Atualizado', fxNote: 'Taxas de referência de mercado médio, renovadas diariamente. Apenas indicativo, não serve para liquidação.', fxPopular: 'Conversões frequentes',
 
     oilTitle: 'Preço do petróleo bruto Brent',
-    oilMetaTitle: 'Preço do petróleo Brent hoje — cotação internacional ao vivo | PriceScope',
+    oilMetaTitle: 'Preço do petróleo Brent hoje — cotação internacional atualizada diariamente | PriceScope',
     oilMetaDesc: 'Preço do petróleo bruto Brent por barril com atualização automática. O Brent é a referência global usada pelos mercados.',
     goldTitle: 'Preço internacional do ouro',
     goldMetaTitle: 'Preço do ouro hoje — USD/onça e CNY/grama | PriceScope',
@@ -539,7 +539,7 @@ export const T = {
     cnMetaTitle: 'Preço do combustível na China — 92, 95, 98 e diesel por província | PriceScope',
     cnMetaDesc: 'Últimos preços de varejo da gasolina 92#, 95#, 98# e do diesel 0# em todas as províncias chinesas. Tetos provinciais, atualizados regularmente.',
     fxTitle: 'Conversor de moedas e taxas de câmbio',
-    fxMetaTitle: 'Conversor de moedas — taxas de câmbio ao vivo | PriceScope',
+    fxMetaTitle: 'Conversor de moedas — taxas de câmbio atualizadas diariamente | PriceScope',
     fxMetaDesc: 'Conversor de moedas gratuito com taxas de mercado médio. Converta instantaneamente entre as principais moedas do mundo, com referências renovadas diariamente.',
 
     privacyTitle: 'Política de privacidade',
