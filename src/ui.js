@@ -387,6 +387,28 @@ ${footer(lang, year)}
 document.addEventListener('click',function(e){
   if(!e.target.closest('#ls')) document.getElementById('ls')?.classList.remove('open');
 });
+// Re-render every timestamp in the BROWSER's own timezone + interface locale.
+// The server already rendered a correct value (via request.cf.timezone); this
+// only refines it when the visitor's real zone differs (VPN, travel, wrong geo).
+(function(){
+  var MAP={en:'en-US',zh:'zh-CN',ja:'ja-JP',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR'};
+  var loc=MAP[document.documentElement.lang]||'en-US';
+  function run(){
+    var els=document.querySelectorAll('time[data-ts]');
+    for(var i=0;i<els.length;i++){
+      var el=els[i],d=new Date(el.getAttribute('data-ts'));
+      if(isNaN(d))continue;
+      try{
+        el.textContent=new Intl.DateTimeFormat(loc,{
+          year:'numeric',month:'2-digit',day:'2-digit',
+          hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'
+        }).format(d);
+      }catch(e){}
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);
+  else run();
+})();
 </script>
 </body></html>`;
 }

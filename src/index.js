@@ -8,7 +8,7 @@ import { getMarket, getFx } from './data.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
-  renderPrivacy, renderAbout, renderContact, sitemap,
+  renderPrivacy, renderAbout, renderContact, sitemap, setRenderTz,
 } from './pages.js';
 
 export default {
@@ -18,6 +18,10 @@ export default {
 
     // load AdSense / GA4 / GSC ids from Worker vars
     configure(env);
+
+    // Visitor timezone (Cloudflare geo) — used so server-rendered timestamps
+    // are already in the reader's local time before any JS runs.
+    setRenderTz((request.cf && request.cf.timezone) || 'UTC');
 
     // ---------- ads.txt (required by AdSense) ----------
     if (url.pathname === '/ads.txt') {

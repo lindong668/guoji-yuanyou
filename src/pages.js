@@ -6,14 +6,67 @@ import { page, hero, esc, adSlot } from './ui.js';
 import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
 import { curName } from './i18n.js';
 
+// ------------------------------------------------------------
+// Localised, timezone-aware timestamps
+// Server renders in the visitor's zone (request.cf.timezone) so crawlers
+// and first paint are correct; a tiny inline script then re-renders using
+// the BROWSER's real zone + the interface language (fixes VPN / wrong CF
+// geo data, and formats dates per locale: 2026/10/18 vs 18/10/2026 ...)
+// ------------------------------------------------------------
+export const LOCALE_MAP = {
+  en: 'en-US', zh: 'zh-CN', ja: 'ja-JP', es: 'es-ES',
+  fr: 'fr-FR', de: 'de-DE', pt: 'pt-BR',
+};
+
+let renderTz = 'UTC';
+export function setRenderTz(tz) { renderTz = (typeof tz === 'string' && tz) || 'UTC'; }
+export function getRenderTz() { return renderTz; }
+
+function fmtStamp(iso, lang, tz) {
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  try {
+    return new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+      timeZone: tz || renderTz, timeZoneName: 'short',
+    }).format(d);
+  } catch {
+    return d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
+  }
+}
+
 function updatedLine(lang, iso) {
   const L = t(lang);
   if (!iso) return '';
+  const s = fmtStamp(iso, lang, renderTz);
+  if (!s) return '';
+  // data-ts lets the inline script re-render in the browser's own zone
+  return `${esc(L.updatedAt)}: <time datetime="${esc(iso)}" data-ts="${esc(iso)}">${esc(s)}</time>`;
+}
+
+// Today's date, formatted for the current interface language
+function localDate(lang) {
   try {
-    const d = new Date(iso);
-    const s = d.toISOString().slice(0, 16).replace('T', ' ') + ' UTC';
-    return `${esc(L.updatedAt)}: <time datetime="${esc(iso)}">${esc(s)}</time>`;
-  } catch { return ''; }
+    return new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: renderTz,
+    }).format(new Date());
+  } catch { return new Date().toISOString().slice(0, 10); }
+}
+
+// FX rates are a plain date (YYYY-MM-DD) — localise the format only
+function fxDateLine(lang, dateStr) {
+  const L = t(lang);
+  if (!dateStr) return '';
+  const d = new Date(dateStr.length <= 10 ? dateStr + 'T00:00:00Z' : dateStr);
+  if (isNaN(d)) return esc(L.fxUpdated) + ': ' + esc(dateStr);
+  let s;
+  try {
+    s = new Intl.DateTimeFormat(LOCALE_MAP[lang] || 'en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC',
+    }).format(d);
+  } catch { s = dateStr; }
+  return `${esc(L.fxUpdated)}: <time datetime="${esc(dateStr)}">${esc(s)}</time>`;
 }
 
 // ------------------------------------------------------------
@@ -63,7 +116,7 @@ export function renderHome(lang, m, fx) {
       <h3><span class="swatch f"></span>${esc(L.secFx)}</h3>
       <div class="big">${fx ? fmt(rateOf('USD', 'EUR', fx) ?? 0, 4) : '—'}</div>
       <div class="unit">1 USD = ${fx ? fmt(rateOf('USD', 'EUR', fx), 4) : '—'} EUR</div>
-      <div class="meta"><span>${fx?.date ? esc(L.fxUpdated) + ': ' + esc(fx.date) : ''}</span>
+      <div class="meta"><span>${fx?.date ? fxDateLine(lang, fx.date) : ''}</span>
         <a href="/${lang}/currency/">${esc(L.viewAll)} →</a></div>
     </div>
   </div>
@@ -179,7 +232,7 @@ export function renderFx(lang, fx) {
 
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">💱</span>${esc(L.fxTitle)}</h2>
-  <p class="sub">${esc(L.fxNote)} ${fx?.date ? '· ' + esc(L.fxUpdated) + ' ' + esc(fx.date) : ''}</p>
+  <p class="sub">${esc(L.fxNote)} ${fx?.date ? '· ' + fxDateLine(lang, fx.date) : ''}</p>
 
   <div class="conv">
     <div class="fld"><label>${esc(L.fxAmount)}</label>
@@ -205,6 +258,7 @@ export function renderFx(lang, fx) {
 
 <script>
 const RATES = ${ratesJson};
+const UILOCALE = ${JSON.stringify(LOCALE_MAP[lang] || 'en-US')};
 const CURS = ${curJson};
 const NAMES = ${JSON.stringify(Object.fromEntries(CURRENCIES.map(c => [c.c, curName(lang, c.c)])))};
 const F = document.getElementById('from'), T = document.getElementById('to'),
@@ -216,8 +270,8 @@ function doConvert(){
   const f = RATES[F.value], t2 = RATES[T.value];
   if(f==null||t2==null){ O.textContent='—'; return; }
   const v = (a/f)*t2;
-  O.textContent = v.toLocaleString(undefined,{maximumFractionDigits:4}) + ' ' + (NAMES[T.value]||T.value);
-  RT.textContent = '1 ' + (NAMES[F.value]||F.value) + ' (' + F.value + ') = ' + (t2/f).toLocaleString(undefined,{maximumFractionDigits:6}) + ' ' + (NAMES[T.value]||T.value) + ' (' + T.value + ')';
+  O.textContent = v.toLocaleString(UILOCALE,{maximumFractionDigits:4}) + ' ' + (NAMES[T.value]||T.value);
+  RT.textContent = '1 ' + (NAMES[F.value]||F.value) + ' (' + F.value + ') = ' + (t2/f).toLocaleString(UILOCALE,{maximumFractionDigits:6}) + ' ' + (NAMES[T.value]||T.value) + ' (' + T.value + ')';
 }
 [F,T,A].forEach(el=>el.addEventListener('input',doConvert));
 doConvert();
@@ -234,7 +288,7 @@ export function renderPrivacy(lang) {
     `<h2>${esc(s.h)}</h2><p>${esc(s.p)}</p>`).join('');
   const body = `<section class="blk"><div class="wrap prose">
   <h2 class="h2"><span class="ico">🔒</span>${esc(L.privacyTitle)}</h2>
-  <p class="sub">${esc(L.privacyUpdated)}: ${new Date().toISOString().slice(0, 10)}</p>
+  <p class="sub">${esc(L.privacyUpdated)}: ${localDate(lang)}</p>
   <p class="lead">${esc(L.privacyIntro)}</p>
   ${secs}
 </div></section>`;
