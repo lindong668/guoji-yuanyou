@@ -5,6 +5,182 @@ import { t, provName, LANGS } from './i18n.js';
 import { page, hero, esc, adSlot } from './ui.js';
 import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
 import { curName } from './i18n.js';
+import { CONTENT } from './content.js';
+import { ARTICLES, articlesFor, relatedFor, blogStr } from './articles.js';
+
+// ------------------------------------------------------------
+// Editorial content helpers
+// Every market page now ships with an original explainer + FAQ, and a
+// data-source / disclaimer block. This is what turns a bare number card
+// into a page with genuine informational value.
+// ------------------------------------------------------------
+function contentFor(lang, key) {
+  return (CONTENT[lang] && CONTENT[lang][key]) || (CONTENT.en && CONTENT.en[key]) || null;
+}
+function commonFor(lang) {
+  return (CONTENT[lang] && CONTENT[lang].common) || CONTENT.en.common;
+}
+
+/** Explainer sections rendered as <h2> + <p> blocks. */
+function explainer(lang, key) {
+  const c = contentFor(lang, key);
+  if (!c) return '';
+  const secs = c.sections.map(s =>
+    `<h2 class="h3">${esc(s.h)}</h2><p class="prose-p">${esc(s.p)}</p>`).join('');
+  return `<section class="blk alt"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">📖</span>${esc(commonFor(lang).aboutThisData)}</h2>
+  <p class="lead">${esc(c.intro)}</p>
+  ${secs}
+</div></section>`;
+}
+
+/** Page-specific FAQ. */
+function faqBlock(lang, key) {
+  const c = contentFor(lang, key);
+  if (!c || !c.faq) return '';
+  const items = c.faq.map(f =>
+    `<details class="faq"><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
+  return `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">❓</span>${esc(commonFor(lang).faqHeading)}</h2>
+  <div class="faq-list">${items}</div>
+</div></section>`;
+}
+
+/** Data sources + disclaimer — required on every page that shows figures. */
+function sourceBlock(lang) {
+  const C = commonFor(lang);
+  return `<section class="blk alt"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">🔎</span>${esc(C.dataSources)}</h2>
+  <p class="prose-p">${esc(C.sourcesBody)}</p>
+  <h2 class="h3">${esc(C.disclaimerTitle)}</h2>
+  <p class="prose-p disc">${esc(C.disclaimerBody)}</p>
+</div></section>`;
+}
+
+// ------------------------------------------------------------
+// ARTICLES / BLOG
+// Long-form pieces live on their own URLs so each can be indexed
+// and ranked independently. Only languages that actually have a
+// translation are ever rendered — a missing one falls back to the
+// article index rather than serving machine-translated text.
+// ------------------------------------------------------------
+function catLabel(lang, cat) {
+  const S = blogStr(lang);
+  return { oil: S.catOil, gold: S.catGold, cn: S.catCn, fx: S.catFx }[cat] || cat;
+}
+
+function readLabel(lang, n) {
+  return blogStr(lang).read.replace('{n}', String(n));
+}
+
+/** Article index — /blog/ */
+export function renderBlogList(lang) {
+  const S = blogStr(lang);
+  // A language with no translation yet falls back to the English set with a
+  // visible note. Better than an empty page, and the articles are never
+  // silently machine-translated.
+  let list = articlesFor(lang);
+  let artLang = lang;
+  let note = '';
+  if (!list.length) {
+    list = articlesFor('en');
+    artLang = 'en';
+    note = `<p class="fbnote">${esc(blogStr(lang).fallbackNote)}</p>`;
+  }
+  const cards = list.map(a => {
+    const A = a.i18n[artLang];
+    return `<a class="card art" href="/${artLang}/blog/${a.slug}/">
+      <span class="artcat">${esc(catLabel(lang, a.cat))}</span>
+      <h3>${esc(A.title)}</h3>
+      <p class="artdesc">${esc(A.desc)}</p>
+      <div class="artmeta">
+        <span>${esc(S.published)} ${esc(a.date)}</span>
+        <span>·</span>
+        <span>${esc(readLabel(artLang, a.readMin))}</span>
+      </div>
+      <span class="go">→</span>
+    </a>`;
+  }).join('');
+
+  const body = `<section class="blk"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">📚</span>${esc(S.title)}</h2>
+  <p class="lead">${esc(S.lead)}</p>
+  ${note}
+</div></section>
+
+<section class="blk"><div class="wrap">
+  <div class="artgrid">${cards}</div>
+</div></section>
+${adSlot('blog')}
+${sourceBlock(lang)}`;
+
+  return page({
+    lang, title: S.metaTitle, desc: S.metaDesc,
+    path: '/blog/', active: '/blog/', body,
+  });
+}
+
+/** Single article — /blog/{slug}/ */
+export function renderArticle(lang, slug) {
+  const a = ARTICLES.find(x => x.slug === slug);
+  // Unknown slug, or no translation in this language -> index page (404 would
+  // be more correct for the slug, but sending the reader to the list is the
+  // friendlier outcome and keeps crawlers off a dead end).
+  if (!a || !a.i18n[lang]) return null;
+  const A = a.i18n[lang];
+  const S = blogStr(lang);
+
+  const secs = A.body.map(s =>
+    `<h2 class="h3">${esc(s.h)}</h2><p class="prose-p">${esc(s.p)}</p>`).join('');
+
+  const more = relatedFor(lang, a.cat, 3)
+    .filter(x => x.slug !== slug)
+    .slice(0, 2)
+    .map(x => `<a class="card art" href="/${lang}/blog/${x.slug}/">
+      <span class="artcat">${esc(catLabel(lang, x.cat))}</span>
+      <h3>${esc(x.i18n[lang].title)}</h3>
+      <p class="artdesc">${esc(x.i18n[lang].desc)}</p>
+    </a>`).join('');
+
+  const back = `<a class="backlink" href="/${lang}/blog/">${esc(S.backToList)}</a>`;
+
+  const body = `<section class="blk"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">📖</span>${esc(A.title)}</h2>
+  <p class="sub">${esc(S.published)} ${esc(a.date)} · ${esc(readLabel(lang, a.readMin))} · ${esc(catLabel(lang, a.cat))}</p>
+  <p class="lead">${esc(A.desc)}</p>
+  ${secs}
+  <p class="artback">${back}</p>
+</div></section>
+${adSlot('article')}
+${more ? `<section class="blk alt"><div class="wrap">
+  <h2 class="h2"><span class="ico">🔗</span>${esc(S.related)}</h2>
+  <div class="artgrid">${more}</div>
+</div></section>` : ''}
+${sourceBlock(lang)}`;
+
+  return page({
+    lang, title: `${A.title} — PriceScope`, desc: A.desc,
+    path: `/blog/${slug}/`, active: '/blog/', body,
+  });
+}
+
+/** "Related reading" block appended to market pages (internal linking). */
+export function relatedBlock(lang, cat) {
+  const S = blogStr(lang);
+  const items = relatedFor(lang, cat, 2);
+  if (!items.length) return '';
+  const cards = items.map(a => `<a class="card art" href="/${lang}/blog/${a.slug}/">
+      <span class="artcat">${esc(catLabel(lang, a.cat))}</span>
+      <h3>${esc(a.i18n[lang].title)}</h3>
+      <p class="artdesc">${esc(a.i18n[lang].desc)}</p>
+      <div class="artmeta"><span>${esc(readLabel(lang, a.readMin))}</span></div>
+    </a>`).join('');
+  return `<section class="blk alt"><div class="wrap">
+  <h2 class="h2"><span class="ico">📚</span>${esc(S.related)}</h2>
+  <div class="artgrid">${cards}</div>
+  <p class="artmore"><a class="backlink" href="/${lang}/blog/">${esc(S.title)} →</a></p>
+</div></section>`;
+}
 
 // ------------------------------------------------------------
 // Localised, timezone-aware timestamps
@@ -186,7 +362,19 @@ export function renderHome(lang, m, fx, tz) {
   ${adSlot('home')}
 </div></section>`;
 
-  const body = hero(lang) + cards;
+  const fp = contentFor(lang, 'faqPage');
+  const homeFaq = (fp?.items || []).slice(0, 5).map(f =>
+    `<details class="faq"><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
+  const body = hero(lang) + cards
+    + `<section class="blk alt"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">📖</span>${esc(commonFor(lang).aboutThisData)}</h2>
+  <p class="lead">${esc(fp?.lead || '')}</p>
+</div></section>`
+    + `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">❓</span>${esc(commonFor(lang).faqHeading)}</h2>
+  <div class="faq-list">${homeFaq}</div>
+</div></section>`
+    + sourceBlock(lang);
   return page({ lang, title: L.homeTitle, desc: L.homeDesc, path: '/', active: '/', body });
 }
 
@@ -209,7 +397,11 @@ export function renderOil(lang, m, tz) {
   </div>
   <p class="sub" style="margin-top:22px">${esc(m?.oil?.isSettlement ? 'Settlement price' : L.dataSource)}: ${esc(L.tagline)}</p>
   ${adSlot('oil')}
-</div></section>`;
+</div></section>
+${explainer(lang, 'oil')}
+${faqBlock(lang, 'oil')}
+${relatedBlock(lang, 'oil')}
+${sourceBlock(lang)}`;
   return page({ lang, title: L.oilMetaTitle, desc: L.oilMetaDesc, path: '/oil/', active: '/oil/', body });
 }
 
@@ -237,7 +429,11 @@ export function renderGold(lang, m, tz) {
     </div>
   </div>
   ${adSlot('gold')}
-</div></section>`;
+</div></section>
+${explainer(lang, 'gold')}
+${faqBlock(lang, 'gold')}
+${relatedBlock(lang, 'gold')}
+${sourceBlock(lang)}`;
   return page({ lang, title: L.goldMetaTitle, desc: L.goldMetaDesc, path: '/gold/', active: '/gold/', body });
 }
 
@@ -267,7 +463,11 @@ export function renderCn(lang, m, tz) {
   </table></div>
   <p class="sub" style="margin-top:14px">${esc(list.length)} ${esc(L.provincesCount)} · ${esc(L.dataSource)}: showapi</p>
   ${adSlot('cn')}
-</div></section>`;
+</div></section>
+${explainer(lang, 'cn')}
+${faqBlock(lang, 'cn')}
+${relatedBlock(lang, 'cn')}
+${sourceBlock(lang)}`;
   return page({ lang, title: L.cnMetaTitle, desc: L.cnMetaDesc, path: '/china-fuel/', active: '/china-fuel/', body });
 }
 
@@ -338,8 +538,31 @@ function doConvert(){
 }
 [F,T,A].forEach(el=>el.addEventListener('input',doConvert));
 doConvert();
-</script>`;
+</script>
+${explainer(lang, 'fx')}
+${faqBlock(lang, 'fx')}
+${relatedBlock(lang, 'fx')}
+${sourceBlock(lang)}`;
   return page({ lang, title: L.fxMetaTitle, desc: L.fxMetaDesc, path: '/currency/', active: '/currency/', body });
+}
+
+// ------------------------------------------------------------
+// SITE-WIDE FAQ
+// ------------------------------------------------------------
+export function renderFaq(lang) {
+  const C = commonFor(lang);
+  const fp = contentFor(lang, 'faqPage');
+  const items = (fp?.items || []).map(f =>
+    `<details class="faq"><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
+  const body = `<section class="blk"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">❓</span>${esc(C.faqHeading)}</h2>
+  <p class="lead">${esc(fp?.lead || '')}</p>
+  <div class="faq-list">${items}</div>
+</div></section>
+${sourceBlock(lang)}`;
+  const title = `${C.faqHeading} — PriceScope`;
+  const desc = fp?.lead || C.faqHeading;
+  return page({ lang, title, desc, path: '/faq/', active: '/faq/', body });
 }
 
 // ------------------------------------------------------------
@@ -398,7 +621,7 @@ export function renderContact(lang) {
 // SITEMAP (multilingual, hreflang)
 // ------------------------------------------------------------
 export function sitemap() {
-  const paths = ['/', '/oil/', '/gold/', '/china-fuel/', '/currency/', '/about/', '/privacy/', '/contact/'];
+  const paths = ['/', '/oil/', '/gold/', '/china-fuel/', '/currency/', '/faq/', '/about/', '/privacy/', '/contact/'];
   const today = new Date().toISOString().slice(0, 10);
   const urls = [];
   for (const p of paths) {
@@ -411,6 +634,35 @@ export function sitemap() {
     <priority>${p === '/' ? '1.0' : '0.8'}</priority>${alts}</url>`);
     }
   }
+  // ------------------------------------------------------------
+  // Articles — only languages that actually carry a translation are
+  // emitted, so hreflang never points at an untranslated page and the
+  // sitemap stays honest about what exists.
+  // ------------------------------------------------------------
+  for (const a of ARTICLES) {
+    const artLangs = LANGS.filter(l => a.i18n[l]);
+    if (!artLangs.length) continue;
+    for (const l of artLangs) {
+      const path = `/blog/${a.slug}/`;
+      const loc = `https://you.piccalc.com/${l}${path}`;
+      const alts = artLangs.map(x =>
+        `<xhtml:link rel="alternate" hreflang="${x}" href="https://you.piccalc.com/${x}${path}"/>`).join('');
+      urls.push(`<url><loc>${loc}</loc><lastmod>${a.date}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>${alts}</url>`);
+    }
+  }
+  // Article index — same language set as the articles themselves.
+  const blogLangs = LANGS.filter(l => articlesFor(l).length);
+  for (const l of blogLangs) {
+    const loc = `https://you.piccalc.com/${l}/blog/`;
+    const alts = blogLangs.map(x =>
+      `<xhtml:link rel="alternate" hreflang="${x}" href="https://you.piccalc.com/${x}/blog/"/>`).join('');
+    urls.push(`<url><loc>${loc}</loc><lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>${alts}</url>`);
+  }
+
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">

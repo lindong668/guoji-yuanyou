@@ -8,7 +8,8 @@ import { getMarket, getFx } from './data.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
-  renderPrivacy, renderAbout, renderContact, sitemap,
+  renderPrivacy, renderAbout, renderContact, renderFaq, sitemap,
+  renderBlogList, renderArticle,
 } from './pages.js';
 
 // ------------------------------------------------------------
@@ -147,12 +148,31 @@ Sitemap: ${SITE.domain}/sitemap.xml
       });
     };
 
+    // ---------- article detail: /blog/{slug}/ ----------
+    // Checked before the switch because the slug varies. A slug with no
+    // translation in this language is sent to the index rather than 404 —
+    // it keeps crawlers and readers off a dead end.
+    const artM = /^\/blog\/([a-z0-9-]+)\/$/.exec(norm);
+    if (artM) {
+      const html = renderArticle(lang, artM[1]);
+      if (!html) return Response.redirect(`${SITE.domain}/${lang}/blog/`, 302);
+      return new Response(html, {
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+          'cache-control': 'public, max-age=600',
+          'x-content-type-options': 'nosniff',
+        },
+      });
+    }
+
     switch (norm) {
       case '/':            return render((l, a, z) => renderHome(l, a.m, a.fx, z), true, true);
       case '/oil/':        return render((l, a, z) => renderOil(l, a.m, z), true, false);
       case '/gold/':       return render((l, a, z) => renderGold(l, a.m, z), true, false);
       case '/china-fuel/': return render((l, a, z) => renderCn(l, a.m, z), true, false);
       case '/currency/':   return render((l, a, z) => renderFx(l, a.fx, z), false, true);
+      case '/blog/':       return render((l) => renderBlogList(l), false, false);
+      case '/faq/':        return render((l, a, z) => renderFaq(l), false, false);
       case '/privacy/':    return render((l, a, z) => renderPrivacy(l, z), false, false);
       case '/about/':      return render((l) => renderAbout(l), false, false);
       case '/contact/':    return render((l) => renderContact(l), false, false);

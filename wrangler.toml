@@ -23,6 +23,8 @@ AD_SLOT_OIL    = ""
 AD_SLOT_GOLD   = ""
 AD_SLOT_CN     = ""
 AD_SLOT_FX     = ""
+AD_SLOT_BLOG   = ""
+AD_SLOT_ARTICLE= ""
 AD_SLOT_LEGAL  = ""
 GA4_ID         = ""   # G-ABCDEF1234
 GSC_VERIFY     = ""   # google-site-verification=...

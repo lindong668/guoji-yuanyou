@@ -2,6 +2,13 @@
 // PriceScope — Layout, design system & SEO head
 // ============================================================
 import { LANGS, DEFAULT_LANG, SITE, t } from './i18n.js';
+import { CONTENT } from './content.js';
+import { blogStr } from './articles.js';
+
+/** Localised "FAQ" label for nav/footer (sourced from the content module). */
+export function faqLabel(lang) {
+  return (CONTENT[lang]?.common?.faqHeading) || CONTENT.en.common.faqHeading;
+}
 
 // ============================================================
 // Google AdSense / GA4 / Search Console — IDs
@@ -16,6 +23,8 @@ const HARDCODED = {
   AD_SLOT_CN:     '',
   AD_SLOT_FX:     '',
   AD_SLOT_LEGAL:  '',
+  AD_SLOT_BLOG:    '',
+  AD_SLOT_ARTICLE: '',
   GA4_ID:         '',  // e.g. G-ABCDEF1234
   GSC_VERIFY:     '',  // google-site-verification content value
 };
@@ -40,6 +49,8 @@ export function configure(env = {}) {
     cn:    v('AD_SLOT_CN')    || HARDCODED.AD_SLOT_CN,
     fx:    v('AD_SLOT_FX')    || HARDCODED.AD_SLOT_FX,
     legal: v('AD_SLOT_LEGAL') || HARDCODED.AD_SLOT_LEGAL,
+    blog:    v('AD_SLOT_BLOG')    || HARDCODED.AD_SLOT_BLOG,
+    article: v('AD_SLOT_ARTICLE') || HARDCODED.AD_SLOT_ARTICLE,
   };
   return CONFIG;
 }
@@ -173,6 +184,22 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card:hover .go{transform:translateX(3px)}
 .card.gold{--c:rgba(245,179,1,.2)} .card.oil{--c:rgba(255,122,69,.2)}
 .card.cn{--c:rgba(34,211,238,.2)}  .card.fx{--c:rgba(167,139,250,.2)}
+/* ---- article cards & blog chrome ---- */
+.artgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card.art{--c:rgba(255,255,255,.07);display:flex;flex-direction:column;gap:2px}
+.card.art h3{font-size:1.02rem;line-height:1.45;margin:10px 0 6px;font-weight:650}
+.artcat{display:inline-block;align-self:flex-start;font-size:.72rem;font-weight:650;
+  padding:3px 10px;border-radius:999px;background:rgba(255,255,255,.09);color:var(--gold2)}
+.artdesc{color:var(--muted);font-size:.88rem;line-height:1.68;margin:0 0 12px}
+.artmeta{display:flex;gap:8px;align-items:center;margin-top:auto;padding-top:10px;font-size:.76rem;color:var(--dim)}
+.card.art .go{margin-top:12px;font-weight:650}
+.backlink{color:var(--gold2);text-decoration:none;font-weight:600}
+.backlink:hover{text-decoration:underline}
+.artback{margin-top:32px;padding-top:8px}
+.artmore{margin-top:18px;text-align:right}
+.fbnote{margin-top:14px;font-size:.85rem;color:var(--dim);padding:10px 14px;border-left:3px solid var(--gold2);background:rgba(255,255,255,.04);border-radius:0 8px 8px 0}
+@media(max-width:640px){.artgrid{grid-template-columns:1fr}}
+
 .swatch{width:9px;height:9px;border-radius:3px;background:var(--gold)}
 .swatch.o{background:var(--oil)} .s{background:var(--cn)} .f{background:var(--fx)}
 
@@ -220,6 +247,27 @@ td.pv{color:#fff;font-weight:600}
 .mailto{display:inline-flex;align-items:center;gap:9px;padding:13px 20px;border-radius:12px;
   background:rgba(245,179,1,.12);border:1px solid rgba(245,179,1,.34);
   color:var(--gold2);font-weight:700;margin:6px 0 4px}
+
+/* ---------- editorial content blocks ---------- */
+.blk.alt{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.prose .h3,.h3{font-size:1.02rem;margin:22px 0 8px;font-weight:700;color:#e8eefc}
+.prose-p{color:var(--muted);margin:0 0 14px;font-size:.95rem;line-height:1.75}
+.prose .prose-p{color:var(--muted);margin:0 0 14px;font-size:.95rem;line-height:1.75}
+.prose-p.disc{padding:14px 16px;border-radius:10px;border-left:3px solid rgba(245,179,1,.5);
+  background:rgba(245,179,1,.06);font-size:.9rem}
+
+/* ---------- FAQ accordion ---------- */
+.faq-list{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+details.faq{background:var(--bg2);border:1px solid var(--line);border-radius:12px;
+  padding:0;overflow:hidden;transition:border-color .15s}
+details.faq:hover{border-color:rgba(245,179,1,.4)}
+details.faq summary{cursor:pointer;padding:15px 18px;font-weight:650;font-size:.97rem;
+  color:#e8eefc;list-style:none;display:flex;align-items:center;gap:10px}
+details.faq summary::-webkit-details-marker{display:none}
+details.faq summary::before{content:'＋';color:var(--gold2);font-weight:700;flex:none}
+details.faq[open] summary::before{content:'−'}
+details.faq[open] summary{border-bottom:1px solid var(--line)}
+details.faq p{padding:14px 18px 17px;margin:0;color:var(--muted);font-size:.93rem;line-height:1.75}
 
 /* ---------- footer ---------- */
 footer{margin-top:46px;background:var(--bg2);border-top:1px solid var(--line);padding:44px 0 26px}
@@ -314,6 +362,7 @@ export function topbar(lang, active) {
   const items = [
     ['/', L.nav.overview], ['/oil/', L.nav.oil], ['/gold/', L.nav.gold],
     ['/china-fuel/', L.nav.cn], ['/currency/', L.nav.fx],
+    ['/blog/', blogStr(lang).nav],
   ];
   const links = items.map(([p, label]) =>
     `<a href="/${lang}${p}" class="${active === p ? 'on' : ''}">${esc(label)}</a>`).join('');
@@ -359,6 +408,7 @@ export function footer(lang, year) {
       ${link('/china-fuel/', L.nav.cn)}${link('/currency/', L.nav.fx)}
     </ul></div>
     <div><h4>${esc(L.footerCompany)}</h4><ul>
+      ${link('/faq/', faqLabel(lang))}
       ${link('/about/', L.nav.about)}${link('/contact/', L.nav.contact)}
     </ul></div>
     <div><h4>${esc(L.footerLegal)}</h4><ul>
