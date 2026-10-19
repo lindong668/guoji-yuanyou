@@ -30,13 +30,13 @@ export const ARTICLES = [
     i18n: {
       zh: {
         title: '为什么布伦特原油是全球油价的基准？',
-        desc: '全球三分之二的原油贸易以布伦特为定价锚。它凭什么取代 WTI 成为"国际油价"的代名词？本文解释布伦特的产地、品质与交易机制。',
+        desc: '全球三分之二的原油贸易以布伦特为定价锚。它凭什么取代 WTI 成为“国际油价”的代名词？本文解释布伦特的产地、品质与交易机制。',
         body: [
-          { h: '布伦特到底是什么', p: '布伦特不是某一个油田的原油，而是产自北海（英国与挪威之间海域）多个油田的混合原油。它属于轻质低硫原油——密度低、含硫量少，炼厂加工起来更容易，出产的汽油、柴油等轻质油品比例更高。这种"好炼"的特性，是它成为基准的物理前提。' },
+          { h: '布伦特到底是什么', p: '布伦特不是某一个油田的原油，而是产自北海（英国与挪威之间海域）多个油田的混合原油。它属于轻质低硫原油——密度低、含硫量少，炼厂加工起来更容易，出产的汽油、柴油等轻质油品比例更高。这种“好炼”的特性，是它成为基准的物理前提。' },
           { h: '海运属性决定了它的命运', p: '真正让布伦特胜出的，是它的运输方式。北海油田的原油可以通过海底管道直接输送到设得兰群岛的装船终端，装船后能立刻运往世界任何地方。相比之下，美国 WTI 原油的交割地在俄克拉何马州库欣，是一个内陆罐区——买家要提货得依赖管道运力，灵活性差得多。原油贸易本质是海运生意，能自由装船的品种天然更容易成为全球定价参照。' },
-          { h: '期货市场给了它定价权', p: '洲际交易所（ICE）上的布伦特原油期货是全球流动性最好的能源合约之一。期货市场把全球买家、卖家、投机者和套保者聚集在一个公开价格上，这个价格反过来成为现货贸易的定价基准。中东销往欧洲和亚洲的原油，合同条款里普遍写着"以布伦特期货结算价加减升贴水"——这就是布伦特影响力的真正来源。' },
+          { h: '期货市场给了它定价权', p: '洲际交易所（ICE）上的布伦特原油期货是全球流动性最好的能源合约之一。期货市场把全球买家、卖家、投机者和套保者聚集在一个公开价格上，这个价格反过来成为现货贸易的定价基准。中东销往欧洲和亚洲的原油，合同条款里普遍写着“以布伦特期货结算价加减升贴水”——这就是布伦特影响力的真正来源。' },
           { h: '布伦特与 WTI 的关系', p: '两者都是轻质低硫原油，价格长期高度相关，但价差不固定。当美国管道运力紧张、库欣库存积压时，WTI 会明显低于布伦特；当美国原油出口能力提升、页岩油产量大增时，价差又会收窄。观察这两个价格的价差，本身就是判断全球原油物流是否顺畅的一个窗口。' },
-          { h: '"国际油价"通常指哪个', p: '新闻报道里说的"国际油价上涨"或"油价跌破某关口"，绝大多数时候指的是布伦特。原因很简单：它覆盖的贸易量更大、地理代表性更强。中国成品油调价机制所跟踪的一篮子国际原油，也包含布伦特。所以如果你想用一个数字理解全球原油走势，看布伦特比看 WTI 更合适。' },
+          { h: '“国际油价”通常指哪个', p: '新闻报道里说的“国际油价上涨”或“油价跌破某关口”，绝大多数时候指的是布伦特。原因很简单：它覆盖的贸易量更大、地理代表性更强。中国成品油调价机制所跟踪的一篮子国际原油，也包含布伦特。所以如果你想用一个数字理解全球原油走势，看布伦特比看 WTI 更合适。' },
           { h: '读价格时需要注意什么', p: '布伦特以美元每桶报价，一桶等于 42 美加仑，约 159 升。这个报价是现货市场的参考价，不是交易所的官方结算价，通常带有数分钟的延迟。周末全球市场休市，此时看到的价格是上一个交易日的收盘水平。用它判断趋势完全够用，但不要拿它做结算或交易依据。' },
         ],
       },
@@ -126,13 +126,13 @@ export const ARTICLES = [
     i18n: {
       zh: {
         title: '国际金价怎么读：盎司、克与成色换算',
-        desc: '国际金价用"美元/金衡盎司"报价，金店却按"克"卖。两者怎么换算？18K 金的价值又该怎么估？一文讲清楚贵金属的计量单位。',
+        desc: '国际金价用“美元/金衡盎司”报价，金店却按“克”卖。两者怎么换算？18K 金的价值又该怎么估？一文讲清楚贵金属的计量单位。',
         body: [
-          { h: '金衡盎司不是普通盎司', p: '贵金属使用的是金衡盎司（troy ounce），约等于 31.1035 克；而日常说的盎司（常衡盎司）约 28.35 克，两者相差约 10%。所以看到"1 盎司黄金"时千万别用 28.35 去算，否则会低估约一成。把克价换算成盎司价，乘以 31.1035 即可；反过来把盎司价换成克价，除以 31.1035。' },
-          { h: '为什么报价用美元', p: '国际金价 XAU/USD 指的是"一盎司黄金值多少美元"，由伦敦、纽约、苏黎世等主要交易中心连续交易形成。美元计价意味着金价与美元强弱高度相关：美元走弱时，同样一盎司黄金需要更多美元购买，价格通常上行；美元走强则相反。这也是为什么金价常被视为美元的镜像。' },
+          { h: '金衡盎司不是普通盎司', p: '贵金属使用的是金衡盎司（troy ounce），约等于 31.1035 克；而日常说的盎司（常衡盎司）约 28.35 克，两者相差约 10%。所以看到“1 盎司黄金”时千万别用 28.35 去算，否则会低估约一成。把克价换算成盎司价，乘以 31.1035 即可；反过来把盎司价换成克价，除以 31.1035。' },
+          { h: '为什么报价用美元', p: '国际金价 XAU/USD 指的是“一盎司黄金值多少美元”，由伦敦、纽约、苏黎世等主要交易中心连续交易形成。美元计价意味着金价与美元强弱高度相关：美元走弱时，同样一盎司黄金需要更多美元购买，价格通常上行；美元走强则相反。这也是为什么金价常被视为美元的镜像。' },
           { h: '成色：24K 才是纯金', p: '国际报价对应的是纯度 99.9% 以上的纯金，也就是 24K。市售首饰多为合金，因为纯金太软不适合镶嵌和佩戴。18K 金含金量 75%，14K 约 58.5%。估算一件金饰的黄金价值，公式是：重量 × 成色比例 × 当日金价。例如 10 克 18K 金，含金部分是 7.5 克，按当日克价相乘就是它的金属价值。' },
-          { h: '为什么金店报价比你看到的高', p: '金店零售价包含工费、设计费、品牌溢价、税费和商家利润，通常在国际金价基础上加价 10%~30% 甚至更多；而回收价则低于国际金价，因为回收商要承担检测、熔炼和资金成本。所以"买入价高于国际价、卖出价低于国际价"是正常的双向价差，不是商家欺诈。' },
-          { h: '本页的克价是怎么来的', p: '本站显示的"人民币/克"是由美元盎司价经过两步换算得到的：先按当日汇率把美元折算成人民币，再除以 31.1035 得到每克价格。这是一个理论金属价，不含任何工费和溢价，适合用来横向比较、判断金价大致水平，不能直接等同于金店柜台价。' },
+          { h: '为什么金店报价比你看到的高', p: '金店零售价包含工费、设计费、品牌溢价、税费和商家利润，通常在国际金价基础上加价 10%~30% 甚至更多；而回收价则低于国际金价，因为回收商要承担检测、熔炼和资金成本。所以“买入价高于国际价、卖出价低于国际价”是正常的双向价差，不是商家欺诈。' },
+          { h: '本页的克价是怎么来的', p: '本站显示的“人民币/克”是由美元盎司价经过两步换算得到的：先按当日汇率把美元折算成人民币，再除以 31.1035 得到每克价格。这是一个理论金属价，不含任何工费和溢价，适合用来横向比较、判断金价大致水平，不能直接等同于金店柜台价。' },
           { h: '金价受什么影响', p: '实际利率（名义利率减去通胀预期）是最核心的驱动：实际利率走低时，持有无息资产黄金的机会成本下降，金价倾向上行。此外，央行购金、地缘不确定性带来的避险需求、美元强弱以及实物消费（尤其亚洲市场）都会影响金价。另外，免费数据源通常按日更新，盘中剧烈波动不会即时反映。' },
         ],
       },
@@ -221,14 +221,14 @@ export const ARTICLES = [
     readMin: 6,
     i18n: {
       zh: {
-        title: '中国成品油为什么"十个工作日一调"？',
-        desc: '国内油价不是加油站随意定的。本文拆解成品油调价机制：一篮子原油、十个工作日、调价红线，以及为什么国际油价大跌时国内却"调不动"。',
+        title: '中国成品油为什么“十个工作日一调”？',
+        desc: '国内油价不是加油站随意定的。本文拆解成品油调价机制：一篮子原油、十个工作日、调价红线，以及为什么国际油价大跌时国内却“调不动”。',
         body: [
-          { h: '调价依据：一篮子原油均价', p: '国内成品油价格挂钩的不是某一个油田的报价，而是多种国际原油的加权平均价。采用"一篮子"而非单一品种，是为了平滑个别油种的剧烈波动，让国内价格更贴近真实的进口成本结构。每当这一篮子原油的均价相对上一轮调价出现明显变化，机制就会触发调整。' },
-          { h: '十个工作日：为什么是这个数', p: '调价周期设定为十个工作日，是一个在"及时反映成本"与"避免频繁扰动"之间取平衡的结果。周期太短，加油站价格天天变动，既增加运营成本也容易引发公众困扰；周期太长，价格又会长期脱离国际行情。十个工作日约合两周，既能跟上趋势，又不至于日日调价。' },
-          { h: '调价红线与上下限', p: '机制设有明确的阈值：当一篮子原油均价变动幅度低于设定水平时，本次不作调整，差额累积到下一轮。更重要的是，机制还设有上下限——当国际油价高于某一水平时，会适当压缩加工利润、少调甚至不调，以减轻下游负担；当国际油价低于某一水平时，不再继续下调，这部分称为"地板价"。这两道设计的目的都是避免极端行情直接冲击国内经济。' },
+          { h: '调价依据：一篮子原油均价', p: '国内成品油价格挂钩的不是某一个油田的报价，而是多种国际原油的加权平均价。采用“一篮子”而非单一品种，是为了平滑个别油种的剧烈波动，让国内价格更贴近真实的进口成本结构。每当这一篮子原油的均价相对上一轮调价出现明显变化，机制就会触发调整。' },
+          { h: '十个工作日：为什么是这个数', p: '调价周期设定为十个工作日，是一个在“及时反映成本”与“避免频繁扰动”之间取平衡的结果。周期太短，加油站价格天天变动，既增加运营成本也容易引发公众困扰；周期太长，价格又会长期脱离国际行情。十个工作日约合两周，既能跟上趋势，又不至于日日调价。' },
+          { h: '调价红线与上下限', p: '机制设有明确的阈值：当一篮子原油均价变动幅度低于设定水平时，本次不作调整，差额累积到下一轮。更重要的是，机制还设有上下限——当国际油价高于某一水平时，会适当压缩加工利润、少调甚至不调，以减轻下游负担；当国际油价低于某一水平时，不再继续下调，这部分称为“地板价”。这两道设计的目的都是避免极端行情直接冲击国内经济。' },
           { h: '为什么各省价格不一样', p: '国家公布的是各省的最高零售限价，不是统一定价。各省在此基础上根据自身情况确定具体价格，差异主要来自：炼厂与港口的运输距离、区域配送成本、地方税费与市场供需。内陆省份远离主要炼化基地和进口口岸，运费更高，价格通常略高于沿海地区。' },
-          { h: '92、95、98 到底差在哪', p: '这些数字是研究法辛烷值，衡量汽油抗爆震能力的指标。数值越高，越适合高压缩比发动机。关键在于：标号代表抗爆性，不代表"更纯净"或"更耐烧"。正确做法是按车辆说明书或油箱盖标注的推荐标号加油，盲目加高标号通常不会带来实际收益，反而多花钱。' },
+          { h: '92、95、98 到底差在哪', p: '这些数字是研究法辛烷值，衡量汽油抗爆震能力的指标。数值越高，越适合高压缩比发动机。关键在于：标号代表抗爆性，不代表“更纯净”或“更耐烧”。正确做法是按车辆说明书或油箱盖标注的推荐标号加油，盲目加高标号通常不会带来实际收益，反而多花钱。' },
           { h: '使用本站数据时要注意', p: '本站展示的是各省份的最高零售指导价，实际加油时加油站常有促销或会员优惠，实付价格可能略低。数据按日更新，与官方调价发布之间可能存在短暂延迟，遇到调价窗口期请以当地加油站实际标价为准。' },
         ],
       },
@@ -320,10 +320,10 @@ export const ARTICLES = [
         title: '中间价、现汇买入价、现钞卖出价有什么区别？',
         desc: '同一个货币对，银行为什么给出四五个不同的汇率？本文解释中间价、买入价、卖出价与现钞现汇的差别，以及换算时该用哪一个。',
         body: [
-          { h: '中间价：最公平的那一个', p: '中间价是银行间市场买入价与卖出价的平均数，可以理解为"这一刻这种货币真正值多少"。它不含零售加价，是大多数公开汇率表采用的数字，也是判断汇率走势时最合适的参照。本站的换算器使用的就是中间价，因此结果会略好于你在银行实际能拿到的价格。' },
-          { h: '买入价与卖出价：方向很重要', p: '银行的报价永远有两侧。买入价是银行向你买入外币的价格，卖出价是银行把外币卖给你的价格。两者之差就是银行的利润来源，通常称为点差。关键在于方向是站在银行的角度说的：你去换汇时，实际上是在"买"外币，适用的是卖出价——这个价格比中间价差一些。' },
+          { h: '中间价：最公平的那一个', p: '中间价是银行间市场买入价与卖出价的平均数，可以理解为“这一刻这种货币真正值多少”。它不含零售加价，是大多数公开汇率表采用的数字，也是判断汇率走势时最合适的参照。本站的换算器使用的就是中间价，因此结果会略好于你在银行实际能拿到的价格。' },
+          { h: '买入价与卖出价：方向很重要', p: '银行的报价永远有两侧。买入价是银行向你买入外币的价格，卖出价是银行把外币卖给你的价格。两者之差就是银行的利润来源，通常称为点差。关键在于方向是站在银行的角度说的：你去换汇时，实际上是在“买”外币，适用的是卖出价——这个价格比中间价差一些。' },
           { h: '现汇与现钞为什么不同', p: '现汇指账户里的电子货币，现钞指实体纸币。银行处理现钞要承担运输、保管、保险和残损回收的成本，所以现钞价通常比现汇价更不利。如果你打算换的是旅行用的现金，应该用现钞价估算；如果只是跨境转账或刷卡消费，参考现汇价更准确。' },
-          { h: '刷卡还会再多一层成本', p: '通过银行卡在境外消费，除了汇率本身，还可能叠加两笔费用：一是卡组织（如 Visa、Mastercard）的清算汇率，通常接近中间价但略有加点；二是发卡行收取的货币转换费，常见为交易金额的 1%~1.5%。所以实际到手汇率 = 卡组织汇率 ×（1 + 转换费率）。部分商户提供的"动态货币转换"会把汇率换成你的本国货币结算，往往汇率更差，一般建议选择以当地货币计价。' },
+          { h: '刷卡还会再多一层成本', p: '通过银行卡在境外消费，除了汇率本身，还可能叠加两笔费用：一是卡组织（如 Visa、Mastercard）的清算汇率，通常接近中间价但略有加点；二是发卡行收取的货币转换费，常见为交易金额的 1%~1.5%。所以实际到手汇率 = 卡组织汇率 ×（1 + 转换费率）。部分商户提供的“动态货币转换”会把汇率换成你的本国货币结算，往往汇率更差，一般建议选择以当地货币计价。' },
           { h: '为什么不同机构报价不一样', p: '即使是同一时刻，不同银行、不同平台的报价也会有细微差异，原因在于各自的定价时点、加点策略和库存情况不同。这属于正常现象，不代表某一方报错。对于大额换汇，多比较几家是值得的；对于日常小额，差异通常可以忽略。' },
           { h: '本站换算器的定位', p: '本站提供的是基于中间价的快速估算，适合旅行前做预算、看账单大致折合多少、或者判断汇率大致走势。它不能用作记账、结算或报税依据——那些场景必须使用你实际成交时银行给出的确切汇率。' },
         ],
@@ -414,13 +414,13 @@ export const ARTICLES = [
     i18n: {
       zh: {
         title: '一桶原油能炼出多少汽油？',
-        desc: '油价涨跌到底怎样传导到加油站？本文用炼厂产出结构解释一桶原油的去向，以及为什么国际油价下跌时零售油价总是"慢半拍"。',
+        desc: '油价涨跌到底怎样传导到加油站？本文用炼厂产出结构解释一桶原油的去向，以及为什么国际油价下跌时零售油价总是“慢半拍”。',
         body: [
-          { h: '一桶有多大', p: '先明确单位：一桶原油等于 42 美加仑，约 159 升。这是石油行业沿用至今的计量标准。不过炼油不是简单的"等量分装"——原油进入常减压装置后按沸点被分离成不同组分，再经过催化裂化、加氢等二次加工，最终产出结构完全取决于原油品质和炼厂配置。' },
-          { h: '典型产出结构', p: '以一座配置完整的现代炼厂加工轻质低硫原油为例，一桶原油大致产出的比例是：汽油约 45%，柴油与取暖油约 25%，航空煤油约 8%，液化石油气与其他轻烃约 5%，重质燃料油与沥青等残余物约 10%，其余为石化原料和加工损耗。也就是说，一桶 159 升原油大约能产出 70 升左右的汽油，比很多人直觉认为的"几乎全是汽油"要少不少。' },
-          { h: '为什么不是固定数字', p: '这个比例会随三个因素变化。一是原油品质：重质高硫原油的轻质组分少，汽油收率明显更低。二是炼厂配置：拥有深度催化裂化、焦化装置的炼厂能把更多重质组分转化为轻质油品，收率更高。三是季节与市场需求：夏季汽油需求旺盛，炼厂会调整操作提高汽油收率；冬季则偏向柴油和取暖油。所以"一桶出多少汽油"没有唯一答案，只能给典型区间。' },
+          { h: '一桶有多大', p: '先明确单位：一桶原油等于 42 美加仑，约 159 升。这是石油行业沿用至今的计量标准。不过炼油不是简单的“等量分装”——原油进入常减压装置后按沸点被分离成不同组分，再经过催化裂化、加氢等二次加工，最终产出结构完全取决于原油品质和炼厂配置。' },
+          { h: '典型产出结构', p: '以一座配置完整的现代炼厂加工轻质低硫原油为例，一桶原油大致产出的比例是：汽油约 45%，柴油与取暖油约 25%，航空煤油约 8%，液化石油气与其他轻烃约 5%，重质燃料油与沥青等残余物约 10%，其余为石化原料和加工损耗。也就是说，一桶 159 升原油大约能产出 70 升左右的汽油，比很多人直觉认为的“几乎全是汽油”要少不少。' },
+          { h: '为什么不是固定数字', p: '这个比例会随三个因素变化。一是原油品质：重质高硫原油的轻质组分少，汽油收率明显更低。二是炼厂配置：拥有深度催化裂化、焦化装置的炼厂能把更多重质组分转化为轻质油品，收率更高。三是季节与市场需求：夏季汽油需求旺盛，炼厂会调整操作提高汽油收率；冬季则偏向柴油和取暖油。所以“一桶出多少汽油”没有唯一答案，只能给典型区间。' },
           { h: '原油成本占油价的多少', p: '在完全市场化的成品油定价体系里，原油成本通常占汽油零售价的 50%~65%，其余是炼制成本、运输配送、税费和加油站利润。其中税费在许多国家占比很高——欧洲部分国家的燃油税占到零售价一半以上。这个结构解释了一个常见困惑：为什么国际油价跌三成，加油站价格只跌一成？因为下跌只作用在原油成本这一部分，税费和下游成本是刚性的。' },
-          { h: '"慢半拍"的传导', p: '国际原油价格变化传导到零售端通常有两到四周的滞后，原因是多重的：炼厂采购的是先前订购的原油，库存成本尚未反映最新价格；成品油批发合同有既定周期；在实行调价机制的国家，调价本身就有固定周期。因此看到原油大涨就预期加油站立刻跟涨，或原油大跌就预期立刻跟跌，都不符合实际的传导节奏。' },
+          { h: '“慢半拍”的传导', p: '国际原油价格变化传导到零售端通常有两到四周的滞后，原因是多重的：炼厂采购的是先前订购的原油，库存成本尚未反映最新价格；成品油批发合同有既定周期；在实行调价机制的国家，调价本身就有固定周期。因此看到原油大涨就预期加油站立刻跟涨，或原油大跌就预期立刻跟跌，都不符合实际的传导节奏。' },
           { h: '这对看油价有什么用', p: '理解了产出结构和成本构成，看油价时会更从容：原油价格只是成品油成本的一部分，且有传导滞后；零售价里税费占比往往很大。本站提供的原油与成品油价格可以对照着看——跟踪原油判断趋势，查看各省成品油指导价了解当前实际水平，两者结合比单看一个数字更有参考价值。' },
         ],
       },
@@ -542,9 +542,9 @@ export const ARTICLES = [
         body: [
           { h: '标号不是纯度，是抗爆性', p: '最大的误解是以为标号代表油品好坏或干净程度。92、95、98 这些数字是研究法辛烷值（RON），衡量的是汽油抵抗爆震的能力，跟纯度、清洁度、能量含量基本无关。98 号汽油并不比 92 号更干净，也不含更多能量，它只是在被压缩时更不容易自己烧起来。' },
           { h: '为什么要抗爆', p: '汽油机工作时，活塞把混合气压缩，火花塞点火，火焰应当从火花塞向外稳定传播。如果压缩得太厉害，混合气会在火花塞点火前自己着起来，这就是爆震——你会听到金属敲击声，长期下来会损伤活塞和气门。压缩比越高的发动机越容易出现这个问题，也就越需要高辛烷值的汽油。所以标号是跟着发动机走的，不是跟着钱包走的。' },
-          { h: '该加几号，看油箱盖', p: '最靠谱的依据是车辆说明书或者油箱盖内侧的标注。写"请使用 92 号及以上"的车，加 92 就够，加 95、98 不会让动力变大也不会更省油。写"请使用 95 号及以上"的车，加 92 就可能爆震。现在的电喷发动机有爆震传感器，检测到爆震会自动推迟点火来保护发动机，代价是动力下降、油耗上升——所以加低标号不会立刻坏车，但你会用更高的油耗把省下的钱还回去。' },
+          { h: '该加几号，看油箱盖', p: '最靠谱的依据是车辆说明书或者油箱盖内侧的标注。写“请使用 92 号及以上”的车，加 92 就够，加 95、98 不会让动力变大也不会更省油。写“请使用 95 号及以上”的车，加 92 就可能爆震。现在的电喷发动机有爆震传感器，检测到爆震会自动推迟点火来保护发动机，代价是动力下降、油耗上升——所以加低标号不会立刻坏车，但你会用更高的油耗把省下的钱还回去。' },
           { h: '涡轮车为什么普遍要 95', p: '涡轮增压发动机实际进入气缸的压力远高于同排量自然吸气机型，爆震风险大得多，所以多数涡轮车要求 95 号起步。部分高功率性能车，以及像马自达创驰蓝天这类高压缩比机型，手册会直接写 98。这不是矫情，是设计工况决定的。' },
-          { h: '混加有没有事', p: '偶尔把 92 和 95 混着加，问题不大，辛烷值大致按体积加权平均，混出来的是个中间值。真正要避免的是长期给要求 95 的车喂 92。反过来，一直加 98 的车偶尔加一次 95，只要不低于手册下限，也不会伤车。至于加油站常说"加高标号能清积碳"，这个说法没有依据，积碳主要跟机油品质、行驶工况和短途行驶有关。' },
+          { h: '混加有没有事', p: '偶尔把 92 和 95 混着加，问题不大，辛烷值大致按体积加权平均，混出来的是个中间值。真正要避免的是长期给要求 95 的车喂 92。反过来，一直加 98 的车偶尔加一次 95，只要不低于手册下限，也不会伤车。至于加油站常说“加高标号能清积碳”，这个说法没有依据，积碳主要跟机油品质、行驶工况和短途行驶有关。' },
           { h: '省钱的正确姿势', p: '别为了省钱降级，也别为了爱车升级。按手册下限加是性价比最高的选择，把省下的钱用在按时换机油上，对发动机的好处比加高标号大得多。本站把各省 92、95、98 的指导价列在一起，你可以直接算出自己所在地区每升差多少钱，再决定要不要往上升。' },
         ],
       },
@@ -572,8 +572,8 @@ export const ARTICLES = [
         title: '现货黄金、期货黄金、纸黄金、黄金TD 到底有什么区别？',
         desc: '看到金价不等于在投资黄金。本文对比现货、期货、纸黄金、TD、金条与 ETF 六种方式的成本结构、杠杆、流动性和适合人群。',
         body: [
-          { h: '先分清报价和交易品种', p: '你在财经网站上看到的"国际金价"，绝大多数是现货黄金的报价，也就是 XAU/USD，一盎司多少美元。这是个报价，看着它不等于在投资黄金。真要买，得选一个品种：实物金条、纸黄金、黄金TD、黄金期货、黄金ETF，它们的成本结构、杠杆、流动性和风险完全不是一回事。' },
-          { h: '现货黄金（伦敦金）', p: '严格来说现货黄金是场外市场，银行和机构之间双边报价，没有统一的交易所，24 小时连续交易，标准单位通常是 100 盎司一手。散户接触到的"现货黄金"多为经纪商提供的保证金合约，杠杆常见 20 到 100 倍。杠杆是这个品种最大的风险来源：金价波动 1%，20 倍杠杆下本金就动了 20%。' },
+          { h: '先分清报价和交易品种', p: '你在财经网站上看到的“国际金价”，绝大多数是现货黄金的报价，也就是 XAU/USD，一盎司多少美元。这是个报价，看着它不等于在投资黄金。真要买，得选一个品种：实物金条、纸黄金、黄金TD、黄金期货、黄金ETF，它们的成本结构、杠杆、流动性和风险完全不是一回事。' },
+          { h: '现货黄金（伦敦金）', p: '严格来说现货黄金是场外市场，银行和机构之间双边报价，没有统一的交易所，24 小时连续交易，标准单位通常是 100 盎司一手。散户接触到的“现货黄金”多为经纪商提供的保证金合约，杠杆常见 20 到 100 倍。杠杆是这个品种最大的风险来源：金价波动 1%，20 倍杠杆下本金就动了 20%。' },
           { h: '期货黄金', p: 'COMEX 的黄金期货是交易所标准化合约，一手 100 盎司，有明确的到期月份，到期要平仓或移仓换月。优点是流动性和透明度都极高，报价公开可查；缺点同样来自保证金——交易所要求的初始保证金通常只覆盖合约价值的百分之几，等效杠杆很高，方向错了会被追缴保证金。它适合套保和有经验的交易者，不适合放着不管。' },
           { h: '纸黄金', p: '纸黄金是商业银行的账户黄金，按银行报出的买入卖出价记账，起点很低，不少银行 1 克就能买，但不能提取实物。它赚的是点差——买入价和卖出价之间通常差 0.5 到 1 元每克，买进去立刻就浮亏这部分。没有杠杆，风险可控，但交易时间由银行规定，不是 24 小时，而且不产生利息。适合想跟住金价、又不想碰杠杆和实物交割的人。' },
           { h: '黄金TD', p: 'TD 是上海黄金交易所的延期交割品种，保证金交易，比例一般在 10% 到 20%，可以当天交割也可以无限期递延，递延要付递延费，费用由当天多空双方的持仓量对比决定支付方向。它有明确的交易时段（含夜盘），双向可交易，也能申请提取实物金锭。特点介于期货和纸黄金之间：有杠杆，但比期货温和；有交割机制，但比实物灵活。' },
@@ -594,6 +594,198 @@ export const ARTICLES = [
       },
     },
   },
+  /* ================================================================
+     9 — Brent vs WTI spread
+     ================================================================ */
+  {
+    slug: 'wti-vs-brent-spread-explained',
+    cat: 'wti',
+    date: '2026-10-17',
+    readMin: 6,
+    i18n: {
+      zh: {
+        title: "布伦特和 WTI 的价差，到底说明了什么？",
+        desc: "同为轻质低硫原油，两个价格却常年不同。价差不是误差，而是全球原油物流、管道运力与出口能力共同写出的答案。",
+        body: [
+          { h: "两个价格，一桶油的两种处境", p: "打开任何财经页面，你都会看到两个“国际油价”：布伦特和 WTI。它们都是轻质低硫原油，炼厂都爱用，品质差别很小。那为什么价格不一样？答案不在油本身，而在油所在的位置——一个在海边随时能装船，一个困在美国中部内陆，只能靠管道往外运。位置决定了它们面对的是两个不同的市场。" },
+          { h: "价差的本质是运费与运力", p: "把布伦特想象成停在港口的货，谁都能来拉；WTI 则是停在仓库里的货，出仓只有一条通道。当这条通道畅通时，两地价格接近；通道一旦堵死，仓库里的货就只能降价求人拉走。所以价差扩大的直接含义通常不是“美国的油更差”，而是“美国的油运不出去”。这也是为什么价差被业内当作管道运力的晴雨表。" },
+          { h: "库欣库存：最直接的观察窗口", p: "库欣是 WTI 期货的交割地，也是全美最重要的原油集散枢纽。那里的库存数据每周公布一次，几乎每次都会引发价格波动。逻辑很直白：罐子快满了，新来的油没地方放，卖家只能压价；罐子见底了，买家争抢，价格自然回升。看懂库存趋势，就看懂了 WTI 相对强弱的大半。" },
+          { h: "出口能力改变了游戏规则", p: "美国曾长期禁止原油出口，WTI 因此被困在国内市场，与布伦特的价差一度非常大。出口解禁后，墨西哥湾沿岸的码头开始把美国原油装船运往欧洲和亚洲，WTI 与全球市场的连接被打通，价差显著收窄。这个变化说明：价差不由地质条件决定，而由基础设施和政策决定。" },
+          { h: "价差收窄意味着什么", p: "当两者价差缩到很小，通常有两种可能。一是原油物流顺畅，美国原油能顺利出海参与全球竞争；二是全球供应整体偏紧，各地买家都在抢货，区域差异被抹平。反过来，价差突然拉大往往意味着某个环节出了问题——管道检修、港口拥堵、或是某个产区产量暴增。" },
+          { h: "怎么用这两个价格", p: "如果你关心的是全球宏观和通货膨胀，看布伦特更合适，它覆盖的贸易量更大。如果你关心的是美国本土能源产业、页岩油盈亏，WTI 更贴近现实。而把两者放在一起看价差，能告诉你全球原油的流动是否顺畅——这是单独看任何一个价格都得不出的信息。本站同时提供两个报价，正是为了让你能做这个对比。" },
+        ],
+      },
+      en: {
+        title: "What the Brent–WTI Spread Actually Tells You",
+        desc: "Two light sweet crudes, two different prices — and the gap is not an error. It is a running read on pipelines, exports and how freely oil can move around the world.",
+        body: [
+          { h: "Two prices, two situations", p: "Open any financial page and you will see two “international oil prices”: Brent and WTI. Both are light sweet crudes that refiners value highly; in quality terms the difference is small. So why do the prices differ? The answer is not in the oil — it is in where the oil sits. One waits at a seaport, ready to load onto any tanker. The other sits landlocked in the American mid-continent and can only leave through a pipeline. Location puts them in two different markets." },
+          { h: "The spread is really freight and capacity", p: "Think of Brent as cargo on a dock that anyone can collect, and WTI as cargo in a warehouse with a single exit. When that exit flows freely, the two prices converge. When it clogs, whoever holds the warehouse cargo must discount it to get anyone to take it away. So a widening spread rarely means American crude got worse — it means American crude cannot get out. That is why traders read the spread as a barometer of pipeline capacity." },
+          { h: "Cushing inventories: the clearest window", p: "Cushing, Oklahoma is the delivery point for the WTI futures contract and the most important crude storage hub in the United States. Its inventory figures are published weekly and move prices almost every time. The logic is plain: when the tanks fill up, new barrels have nowhere to go and sellers must cut prices; when tanks run low, buyers compete and prices rise. Follow the inventory trend and you understand most of WTI’s relative strength." },
+          { h: "Export access changed the game", p: "For decades the United States banned crude oil exports, which trapped WTI inside the domestic market and kept the gap to Brent unusually wide. After the ban was lifted, terminals along the Gulf Coast began loading American crude onto ships bound for Europe and Asia. WTI became connected to the global market, and the spread narrowed markedly. The lesson: the gap is set by infrastructure and policy, not by geology." },
+          { h: "What a narrow spread signals", p: "When the two prices come close together, there are usually two possible reasons. Either crude logistics are running smoothly and American oil can reach global buyers, or global supply is tight enough that everyone is competing for the same barrels and regional differences flatten out. Conversely, a spread that suddenly widens usually means something has broken — pipeline maintenance, port congestion, or an unexpected surge in output from one region." },
+          { h: "How to use both numbers", p: "If you care about global macro and inflation, Brent is the better single number: it covers a larger share of traded volume. If you care about the US energy sector and shale economics, WTI is closer to the reality on the ground. Reading the two together tells you whether crude is flowing freely around the world — information neither price gives you alone. This site publishes both side by side precisely so that comparison is possible." },
+        ],
+      },
+      ja: {
+        title: "ブレントとWTIの価格差は何を語っているのか",
+        desc: "同じ軽質スイート原油なのに、二つの価格は常に異なります。その差は誤差ではなく、パイプライン・輸出能力・原油物流の状態を映す生きた指標です。",
+        body: [
+          { h: "二つの価格、二つの置かれた状況", p: "どんな金融ページを開いても、「国際原油価格」は二つ表示されます。ブレントとWTIです。どちらも製油所が高く評価する軽質スイート原油で、品質面の差はわずかです。ではなぜ価格が違うのか。答えは原油そのものではなく、原油の「置かれている場所」にあります。一方は港にあり、いつでもタンカーに積めます。もう一方は米国中部の内陸にあり、パイプラインでしか外に出られません。この立地の違いが、二つを別の市場に置いているのです。" },
+          { h: "価格差の正体は運賃と輸送能力", p: "ブレントを「誰でも取りに来られる波止場の荷物」、WTIを「出口が一つしかない倉庫の荷物」と考えてみてください。出口がスムーズに流れていれば両者の価格は近づきます。出口が詰まれば、倉庫の荷物を抱えた売り手は値を下げてでも引き取ってもらわなければなりません。つまり価格差の拡大は、米国の原油が劣化したサインではなく、外に運び出せないサインなのです。業界がこの価格差をパイプライン輸送能力のバロメーターとして読む理由はここにあります。" },
+          { h: "クッシング在庫——最も分かりやすい観察窓", p: "米オクラホマ州クッシングはWTI先物の受渡地であり、全米で最も重要な原油貯蔵拠点です。ここは在庫統計が毎週公表され、そのたびに価格が動きます。論理は単純です。タンクが満杯に近づけば新しい原油の置き場がなくなり、売り手は値を下げざるを得ない。タンクが空に近づけば買い手が競り合い、価格は上がる。在庫のトレンドを追えば、WTIの相対的な強さの大部分が見えてきます。" },
+          { h: "輸出解禁がルールを変えた", p: "米国は長く原油輸出を禁止しており、そのためWTIは国内市場に閉じ込められ、ブレントとの価格差は異例の大きさでした。輸出が解禁されると、メキシコ湾岸のターミナルが欧州やアジア向けに米国産原油を船積みし始め、WTIは世界市場とつながりました。価格差は大きく縮小しました。この変化が示すのは、価格差は地質条件ではなく、インフラと政策が決めるということです。" },
+          { h: "価格差の縮小が意味するもの", p: "二つの価格が接近するとき、理由はおおむね二つです。原油物流が順調で米国産原油が世界の買い手に届いているか、あるいは世界的な供給が逼迫して各地の買い手が同じ原油を奪い合い、地域差が解消されているかです。逆に価格差が急拡大するときは、たいていどこかが壊れています。パイプラインの補修、港湾の混雑、あるいは特定地域の生産急増です。" },
+          { h: "二つの価格をどう使うか", p: "世界のマクロ動向やインフレに関心があるなら、ブレントを見るほうが適切です。取引量に占める割合が大きいからです。米国のエネルギー産業やシェールオイルの採算に関心があるなら、WTIのほうが現実に近い。そして二つを並べて見ることで、世界の原油が滞りなく流れているかどうかが分かります。どちらか一方だけでは得られない情報です。本サイトが両方の価格を並べて掲載しているのは、まさにこの比較を可能にするためです。" },
+        ],
+      },
+      es: {
+        title: "Qué revela realmente el diferencial Brent-WTI",
+        desc: "Dos crudos ligeros y dulces, dos precios distintos — y la brecha no es un error. Es una lectura constante de oleoductos, exportaciones y de lo libremente que circula el petróleo.",
+        body: [
+          { h: "Dos precios, dos situaciones", p: "Abra cualquier página financiera y verá dos “precios internacionales del petróleo”: Brent y WTI. Ambos son crudos ligeros y dulces que las refinerías valoran; en calidad la diferencia es pequeña. Entonces, ¿por qué cotizan distinto? La respuesta no está en el crudo, sino en dónde está. Uno aguarda en un puerto marítimo, listo para cargar en cualquier buque. El otro queda tierra adentro, en el centro del continente americano, y solo puede salir por oleoducto. La ubicación los coloca en dos mercados distintos." },
+          { h: "El diferencial es, en el fondo, flete y capacidad", p: "Piense en el Brent como carga en un muelle al que cualquiera puede acudir, y en el WTI como carga en un almacén con una sola salida. Cuando esa salida fluye, los dos precios convergen. Cuando se atasca, quien tiene el crudo en el almacén debe rebajarlo para que alguien se lo lleve. Por eso una brecha que se amplía rara vez significa que el crudo estadounidense empeoró: significa que no puede salir. De ahí que los operadores lean el diferencial como un barómetro de la capacidad de los oleoductos." },
+          { h: "Los inventarios de Cushing: la ventana más clara", p: "Cushing, Oklahoma, es el punto de entrega del contrato de futuros del WTI y el mayor centro de almacenamiento de crudo de Estados Unidos. Sus cifras de inventario se publican semanalmente y casi siempre mueven los precios. La lógica es sencilla: si los tanques se llenan, los barriles nuevos no caben y el vendedor debe bajar el precio; si se vacían, los compradores compiten y el precio sube. Seguir la tendencia de inventarios explica gran parte de la fuerza relativa del WTI." },
+          { h: "El acceso a la exportación cambió las reglas", p: "Durante décadas Estados Unidos prohibió exportar crudo, lo que dejó al WTI atrapado en su mercado interno y mantuvo una brecha inusualmente amplia frente al Brent. Tras levantarse la prohibición, las terminales de la costa del Golfo empezaron a cargar crudo estadounidense rumbo a Europa y Asia. El WTI se conectó al mercado global y el diferencial se estrechó de forma notable. La lección: la brecha la determinan la infraestructura y la política, no la geología." },
+          { h: "Qué indica un diferencial estrecho", p: "Cuando ambos precios se acercan, suele haber dos explicaciones. O la logística funciona bien y el crudo estadounidense llega a los compradores globales, o la oferta mundial está tan ajustada que todos compiten por los mismos barriles y las diferencias regionales se aplanan. En sentido contrario, una brecha que se abre de golpe suele significar que algo se ha roto: mantenimiento de oleoductos, congestión portuaria o un aumento inesperado de producción en alguna región." },
+          { h: "Cómo usar los dos números", p: "Si le preocupa el panorama macroeconómico y la inflación, el Brent es el mejor número único: cubre una porción mayor del volumen negociado. Si le interesa el sector energético estadounidense y la rentabilidad del esquisto, el WTI está más cerca de la realidad. Y leerlos juntos indica si el crudo circula libremente por el mundo, información que ninguno aporta por separado. Este sitio publica ambos precisamente para que esa comparación sea posible." },
+        ],
+      },
+      fr: {
+        title: "Ce que révèle vraiment l’écart Brent-WTI",
+        desc: "Deux bruts légers et doux, deux prix différents — et cet écart n’est pas une erreur. Il livre une lecture continue des oléoducs, des exportations et de la fluidité du pétrole dans le monde.",
+        body: [
+          { h: "Deux prix, deux situations", p: "Ouvrez n’importe quelle page financière et vous verrez deux « prix internationaux du pétrole » : le Brent et le WTI. Ce sont tous deux des bruts légers et doux que les raffineurs apprécient ; leur différence de qualité est faible. Pourquoi, dès lors, des prix différents ? La réponse n’est pas dans le brut, mais dans son emplacement. L’un attend dans un port maritime, prêt à charger sur n’importe quel navire. L’autre se trouve à l’intérieur des terres, au centre du continent américain, et ne peut sortir que par oléoduc. L’emplacement les place sur deux marchés distincts." },
+          { h: "L’écart est, au fond, du fret et de la capacité", p: "Voyez le Brent comme une marchandise sur un quai accessible à tous, et le WTI comme une marchandise dans un entrepôt à une seule sortie. Quand la sortie coule librement, les deux prix convergent. Quand elle se bouche, celui qui détient le brut en entrepôt doit le brader pour que quelqu’un l’emporte. Un écart qui se creuse signifie donc rarement que le brut américain s’est dégradé : il signifie qu’il ne peut pas sortir. C’est pourquoi les opérateurs lisent l’écart comme un baromètre de la capacité des oléoducs." },
+          { h: "Les stocks de Cushing : la fenêtre la plus claire", p: "Cushing, en Oklahoma, est le point de livraison du contrat à terme du WTI et le plus grand centre de stockage de brut des États-Unis. Ses chiffres de stocks sont publiés chaque semaine et font presque toujours bouger les prix. La logique est simple : quand les réservoirs se remplissent, les barils nouveaux n’ont plus de place et le vendeur doit baisser son prix ; quand ils se vident, les acheteurs se disputent et le prix monte. Suivre la tendance des stocks explique l’essentiel de la force relative du WTI." },
+          { h: "L’accès à l’exportation a changé les règles", p: "Pendant des décennies, les États-Unis ont interdit l’exportation de brut, ce qui a enfermé le WTI dans son marché intérieur et maintenu un écart inhabituellement large face au Brent. Une fois l’interdiction levée, les terminaux de la côte du Golfe ont commencé à charger du brut américain vers l’Europe et l’Asie. Le WTI s’est connecté au marché mondial et l’écart s’est nettement resserré. La leçon : l’écart est déterminé par les infrastructures et la politique, non par la géologie." },
+          { h: "Ce que signale un écart resserré", p: "Quand les deux prix se rapprochent, il y a généralement deux explications. Soit la logistique fonctionne bien et le brut américain atteint les acheteurs mondiaux, soit l’offre mondiale est si tendue que tous se disputent les mêmes barils et que les écarts régionaux s’effacent. À l’inverse, un écart qui s’ouvre brusquement signifie souvent que quelque chose s’est cassé : maintenance d’oléoduc, congestion portuaire ou hausse inattendue de la production d’une région." },
+          { h: "Comment utiliser les deux chiffres", p: "Si vous suivez la conjoncture macroéconomique et l’inflation, le Brent est le meilleur chiffre unique : il couvre une part plus large des volumes échangés. Si vous vous intéressez au secteur énergétique américain et à la rentabilité du schiste, le WTI est plus proche du terrain. Et les lire ensemble indique si le brut circule librement dans le monde, une information qu’aucun des deux ne donne seul. Ce site publie les deux précisément pour rendre cette comparaison possible." },
+        ],
+      },
+      de: {
+        title: "Was der Brent-WTI-Spread wirklich aussagt",
+        desc: "Zwei leichte Süßrohöle, zwei unterschiedliche Preise — und der Abstand ist kein Fehler. Er liest sich als fortlaufender Bericht über Pipelines, Exporte und darüber, wie frei Öl zirkulieren kann.",
+        body: [
+          { h: "Zwei Preise, zwei Lagen", p: "Öffnen Sie eine beliebige Finanzseite und Sie sehen zwei „internationale Ölpreise“: Brent und WTI. Beides sind leichte Süßrohöle, die Raffinerien schätzen; qualitativ ist der Unterschied gering. Warum also unterschiedliche Preise? Die Antwort liegt nicht im Öl, sondern im Standort. Das eine wartet in einem Seehafen, bereit zur Verladung auf jeden Tanker. Das andere liegt im Binnenland, im amerikanischen Mittelkontinent, und kann nur per Pipeline heraus. Der Standort setzt sie zwei verschiedenen Märkten aus." },
+          { h: "Der Spread ist im Kern Fracht und Kapazität", p: "Stellen Sie sich Brent als Ladung an einem Pier vor, den jeder anfahren kann, und WTI als Ladung in einem Lagerhaus mit einem einzigen Ausgang. Fließt dieser Ausgang, nähern sich beide Preise an. Verstopft er, muss der Halter der Lagerladung den Preis drücken, damit überhaupt jemand sie abholt. Eine wachsende Spanne bedeutet also selten, dass US-Rohöl schlechter wurde — sie bedeutet, dass es nicht hinauskommt. Deshalb lesen Händler den Spread als Barometer der Pipelinekapazität." },
+          { h: "Cushing-Bestände: das klarste Fenster", p: "Cushing in Oklahoma ist der Erfüllungsort des WTI-Terminkontrakts und der wichtigste Rohöllagerplatz der USA. Die Bestandsdaten werden wöchentlich veröffentlicht und bewegen die Preise fast jedes Mal. Die Logik ist einfach: Füllen sich die Tanks, finden neue Barrel keinen Platz und der Verkäufer muss den Preis senken; leeren sie sich, konkurrieren Käufer und der Preis steigt. Wer die Bestandsentwicklung verfolgt, versteht den Großteil der relativen Stärke von WTI." },
+          { h: "Exportzugang hat die Regeln geändert", p: "Jahrzehntelang verboten die USA Rohölexporte; WTI blieb im Binnenmarkt gefangen und der Abstand zu Brent war ungewöhnlich groß. Nach dem Ende des Verbots begannen Terminals an der Golfküste, US-Rohöl Richtung Europa und Asien zu verschiffen. WTI wurde an den Weltmarkt angeschlossen und der Spread verengte sich deutlich. Die Lehre: Der Abstand wird von Infrastruktur und Politik bestimmt, nicht von Geologie." },
+          { h: "Was ein enger Spread signalisiert", p: "Wenn sich beide Preise annähern, gibt es meist zwei Erklärungen. Entweder läuft die Logistik reibungslos und US-Rohöl erreicht globale Käufer, oder das weltweite Angebot ist so knapp, dass alle um dieselben Barrel konkurrieren und regionale Unterschiede verschwinden. Umgekehrt bedeutet eine plötzlich aufspringende Spanne meist, dass etwas gebrochen ist: Pipelinewartung, Hafenstau oder ein unerwarteter Produktionsanstieg in einer Region." },
+          { h: "Wie man beide Zahlen nutzt", p: "Wer Makro und Inflation verfolgt, für den ist Brent die bessere Einzelzahl: Sie deckt einen größeren Anteil des gehandelten Volumens ab. Wer den US-Energiesektor und die Schieferöl-Wirtschaftlichkeit im Blick hat, ist mit WTI näher an der Realität. Und beide zusammen zeigen, ob Rohöl weltweit frei fließt — eine Information, die jede Zahl allein nicht liefert. Diese Seite veröffentlicht beide genau deshalb nebeneinander." },
+        ],
+      },
+      pt: {
+        title: "O que o diferencial Brent-WTI realmente revela",
+        desc: "Dois petróleos leves e doces, dois preços diferentes — e a diferença não é um erro. É uma leitura contínua de oleodutos, exportações e de quão livremente o petróleo circula.",
+        body: [
+          { h: "Dois preços, duas situações", p: "Abra qualquer página financeira e verá dois “preços internacionais do petróleo”: Brent e WTI. Ambos são petróleos leves e doces, valorizados pelas refinarias; em qualidade a diferença é pequena. Por que, então, os preços divergem? A resposta não está no petróleo, mas em onde ele está. Um aguarda num porto marítimo, pronto para carregar em qualquer navio. O outro fica no interior, no centro do continente americano, e só pode sair por oleoduto. A localização os coloca em dois mercados distintos." },
+          { h: "O diferencial é, no fundo, frete e capacidade", p: "Veja o Brent como carga num cais que qualquer um pode acessar, e o WTI como carga num armazém com uma única saída. Quando essa saída flui, os dois preços convergem. Quando entope, quem detém a carga no armazém precisa baixar o preço para que alguém a retire. Uma diferença que se amplia raramente significa que o petróleo americano piorou: significa que não consegue sair. Por isso os operadores leem o diferencial como um barômetro da capacidade dos oleodutos." },
+          { h: "Os estoques de Cushing: a janela mais clara", p: "Cushing, em Oklahoma, é o ponto de entrega do contrato futuro do WTI e o maior centro de armazenagem de petróleo dos Estados Unidos. Seus números de estoque são publicados semanalmente e quase sempre movem os preços. A lógica é simples: quando os tanques se enchem, os novos barris não cabem e o vendedor precisa reduzir o preço; quando se esvaziam, os compradores disputam e o preço sobe. Acompanhar a tendência dos estoques explica a maior parte da força relativa do WTI." },
+          { h: "O acesso à exportação mudou as regras", p: "Durante décadas os Estados Unidos proibiram a exportação de petróleo bruto, o que manteve o WTI preso ao mercado interno e a diferença para o Brent incomumente ampla. Após a liberação, terminais na costa do Golfo passaram a carregar petróleo americano rumo à Europa e à Ásia. O WTI se conectou ao mercado global e o diferencial encolheu visivelmente. A lição: a diferença é definida por infraestrutura e política, não por geologia." },
+          { h: "O que sinaliza um diferencial estreito", p: "Quando os dois preços se aproximam, há geralmente duas explicações. Ou a logística funciona bem e o petróleo americano alcança os compradores globais, ou a oferta mundial está tão apertada que todos disputam os mesmos barris e as diferenças regionais se apagam. No sentido oposto, um diferencial que abre de repente costuma indicar que algo quebrou: manutenção de oleoduto, congestionamento portuário ou aumento inesperado da produção em alguma região." },
+          { h: "Como usar os dois números", p: "Se você acompanha o cenário macroeconômico e a inflação, o Brent é o melhor número único: cobre uma fatia maior do volume negociado. Se seu foco é o setor energético americano e a viabilidade do xisto, o WTI está mais próximo do terreno. E ler os dois em conjunto mostra se o petróleo circula livremente pelo mundo, informação que nenhum deles dá sozinho. Este site publica ambos justamente para tornar essa comparação possível." },
+        ],
+      },
+    },
+  },
+
+  /* ================================================================
+     10 — What is WTI / Cushing
+     ================================================================ */
+  {
+    slug: 'what-is-wti-crude-cushing',
+    cat: 'wti',
+    date: '2026-10-19',
+    readMin: 6,
+    i18n: {
+      zh: {
+        title: "WTI 原油是什么？为什么全世界都在看库欣的库存",
+        desc: "WTI 是美国原油的定价基准，交割地在俄克拉何马州一个叫库欣的小镇。理解这个内陆枢纽，就理解了 WTI 与全球油价为何常常不同步。",
+        body: [
+          { h: "WTI 不是某个油田的油", p: "西德克萨斯中质原油，简称 WTI。名字里有“德克萨斯”，但今天它更多指的是一套品质规格：足够轻、含硫量足够低，炼厂加工起来划算。符合这套规格的原油主要产自二叠纪盆地和中部大陆地区。把它理解成一个标准，而不是某个具体的油田，后面的逻辑才说得通。" },
+          { h: "为什么是库欣", p: "期货合约需要一个真实的交割地点。库欣位于俄克拉何马州，是数十条管道的交汇点，储油罐总容量在全美首屈一指。原油可以从四面八方流进来，再输往各地的炼厂。这种“管道十字路口”的地位，让库欣成为美国内陆原油最自然的定价点，WTI 期货也就定在这里交割。" },
+          { h: "内陆定价的代价", p: "这个设计的代价是：库欣的油只能靠管道出去。管道有容量上限，一旦接近满载，多余的原油就找不到出口，只能继续堆在罐里。此时卖家别无选择，只能降价求人拉走，库欣的当地价格就会跌到低于国际海运市场的水平。布伦特在海边，随时装船，没有这个问题。这就是两大基准价格差异的源头。" },
+          { h: "库存数据为什么牵动市场", p: "美国能源信息署每周公布库欣库存。这个数字之所以重要，是因为它直接反映罐容的松紧。库存增加，说明油在积压，价格承压；库存下降，说明油在流向炼厂，价格获得支撑。很多交易员把这份周报当作一周中最重要的原油数据来看。" },
+          { h: "出口解禁带来的转折", p: "2015 年底美国解除长达四十年的原油出口禁令，是 WTI 历史上的分水岭。此后墨西哥湾沿岸的出口码头扩建，美国原油开始装船运往欧洲和亚洲。WTI 第一次真正意义上接入了全球海运市场，它与布伦特长期偏离的状态由此改变。这再次说明，油价差距的根子在物流，不在品质。" },
+          { h: "看 WTI 时要记住的三件事", p: "第一，WTI 是原油价格，不是加油站的价格，汽油零售还要加炼化、运输和税。第二，它反映的是美国内陆的供需，与全球海运市场不完全同步。第三，单独看 WTI 容易误判，把它和布伦特放在一起，价差本身就是一个有价值的信息。本站同时列出两者，方便你直接对比。" },
+        ],
+      },
+      en: {
+        title: "What Is WTI Crude? And Why Everyone Watches Cushing",
+        desc: "WTI is the US oil benchmark, deliverable in a small Oklahoma town called Cushing. Understanding that inland hub explains why WTI and global prices often move apart.",
+        body: [
+          { h: "WTI is not one field", p: "West Texas Intermediate, WTI for short. The name says Texas, but today it describes a specification: light enough and low enough in sulphur that refiners can process it profitably. Crude meeting that spec comes mainly from the Permian Basin and the mid-continent. Think of it as a standard rather than a single oilfield and the rest of the logic follows." },
+          { h: "Why Cushing", p: "A futures contract needs a physical delivery point. Cushing, Oklahoma sits where dozens of pipelines converge and holds some of the largest crude storage capacity in the country. Oil can flow in from every direction and out again to refineries across the continent. That “pipeline crossroads” position made Cushing the natural pricing point for inland US crude, and that is where the WTI contract settles." },
+          { h: "The cost of pricing inland", p: "The design has a price: oil at Cushing can only leave by pipeline. Pipelines have a ceiling, and once they approach it, surplus crude has nowhere to go and simply accumulates in tanks. Sellers then have no option but to discount heavily to get anyone to lift it, and the local Cushing price falls below the seaborne international market. Brent sits at a seaport and can load onto a tanker at any time — it has no such problem. That is the origin of the gap between the two benchmarks." },
+          { h: "Why inventory data moves the market", p: "The US Energy Information Administration publishes Cushing stock levels every week. The number matters because it shows directly how tight tank capacity is. Rising stocks mean crude is piling up and prices come under pressure; falling stocks mean barrels are moving to refineries and prices find support. Many traders treat this weekly report as the most important crude data point of the week." },
+          { h: "The export turning point", p: "When the United States lifted its four-decade ban on crude exports in late 2015, it was a watershed for WTI. Export terminals along the Gulf Coast expanded and American crude began loading onto ships for Europe and Asia. For the first time WTI was genuinely connected to the seaborne global market, and its long-standing divergence from Brent changed. Once again, the root cause of the price gap lies in logistics, not in quality." },
+          { h: "Three things to remember", p: "First, WTI is a crude price, not a pump price: retail petrol additionally carries refining, distribution and tax. Second, it reflects supply and demand in the US interior, which does not move in perfect step with the global seaborne market. Third, WTI alone is easy to misread — set it against Brent and the spread itself becomes useful information. This site lists both so the comparison is immediate." },
+        ],
+      },
+      ja: {
+        title: "WTI原油とは何か——なぜ世界中がクッシングの在庫を見るのか",
+        desc: "WTIは米国原油の指標であり、受渡地はオクラホマ州の小さな町クッシングです。この内陸ハブを理解すれば、WTIと国際価格がしばしばずれる理由が見えてきます。",
+        body: [
+          { h: "WTIは特定の油田の原油ではない", p: "West Texas Intermediate、略してWTI。名前に「テキサス」とありますが、今日ではむしろ品質規格を指します。十分に軽く、硫黄分が十分に少なく、製油所が採算よく処理できるという基準です。この規格を満たす原油は主にパーミアン盆地と中部大陸地域で産出されます。これを単一の油田ではなく「規格」として捉えると、以降の話がすっきり通じます。" },
+          { h: "なぜクッシングなのか", p: "先物契約には現物の受渡場所が必要です。オクラホマ州クッシングは数十本のパイプラインが集中する地点であり、全米有数の原油貯蔵能力を備えています。原油は四方から流入し、各地の製油所へ送り出されます。この「パイプラインの交差点」という立地が、クッシングを米国内陸産原油の自然な価格決定点にし、WTI先物の受渡地となったのです。" },
+          { h: "内陸で値決めすることの代償", p: "この仕組みには代償があります。クッシングの原油はパイプラインでしか出られないのです。パイプラインには容量の上限があり、満載に近づくと余剰原油の行き場がなくなり、ただタンクに積み上がっていきます。売り手は値を大きく下げてでも引き取ってもらうしかなく、クッシングの現地価格は海上輸送の国際市場を下回ります。ブレントは海辺にあり、いつでも船積みできるため、この問題がありません。二大指標の価格差の起源はここにあります。" },
+          { h: "在庫統計がなぜ市場を動かすのか", p: "米国エネルギー情報局（EIA）はクッシングの在庫水準を毎週公表します。この数字が重要なのは、タンク容量の余裕を直接示すからです。在庫が増えれば原油が滞留しており価格に下押し圧力がかかる。在庫が減れば原油が製油所へ流れており価格は支えられる。多くのトレーダーがこの週報を、一週間で最も重要な原油データとして扱っています。" },
+          { h: "輸出解禁という転換点", p: "2015年末、米国が四十年近く続いた原油輸出禁止を解除したことは、WTIの歴史における分水嶺でした。以降メキシコ湾岸の輸出ターミナルが拡張され、米国産原油が欧州やアジアへ船積みされるようになります。WTIは初めて本格的に世界の海上市場と結ばれ、ブレントとの長年の乖離は様相を変えました。価格差の根が物流にあり品質にないことは、ここからも分かります。" },
+          { h: "WTIを見るときに覚えておきたい三つのこと", p: "第一に、WTIは原油の価格であり、ガソリンスタンドの価格ではありません。ガソリン小売には精製、流通、税金が上乗せされます。第二に、WTIは米国内陸の需給を反映しており、世界の海上市場と完全には同期しません。第三に、WTI単独では誤読しやすいということです。ブレントと並べれば、価格差そのものが有益な情報になります。本サイトは両方を並べて掲載しています。" },
+        ],
+      },
+      es: {
+        title: "¿Qué es el crudo WTI? Y por qué todo el mundo mira los inventarios de Cushing",
+        desc: "El WTI es la referencia del petróleo estadounidense y se entrega en un pequeño pueblo de Oklahoma llamado Cushing. Entender ese nudo interior explica por qué el WTI y los precios globales suelen divergir.",
+        body: [
+          { h: "El WTI no es el crudo de un solo yacimiento", p: "West Texas Intermediate, o WTI. El nombre menciona Texas, pero hoy describe una especificación: lo bastante ligero y con tan poco azufre como para que las refinerías lo procesen con rentabilidad. El crudo que cumple esa norma procede sobre todo de la cuenca Pérmica y de la región centrocontinental. Conviene entenderlo como un estándar y no como un yacimiento concreto: así encaja todo lo demás." },
+          { h: "Por qué Cushing", p: "Un contrato de futuros necesita un punto físico de entrega. Cushing, en Oklahoma, se sitúa donde confluyen decenas de oleoductos y cuenta con una de las mayores capacidades de almacenamiento del país. El crudo puede entrar desde todas las direcciones y salir hacia refinerías de todo el continente. Esa posición de «encrucijada de oleoductos» convirtió a Cushing en el punto natural de fijación de precios del crudo del interior de EE. UU., y allí se liquida el contrato WTI." },
+          { h: "El coste de fijar el precio tierra adentro", p: "El diseño tiene un precio: el crudo de Cushing solo puede salir por oleoducto. Los ductos tienen un límite y, al acercarse a él, el crudo excedente no tiene salida y se acumula en los tanques. Al vendedor no le queda otra que rebajar el precio para que alguien se lo lleve, y la cotización local de Cushing cae por debajo del mercado marítimo internacional. El Brent está en un puerto y puede cargarse en cualquier momento: no tiene ese problema. Ahí nace la diferencia entre las dos referencias." },
+          { h: "Por qué los datos de inventarios mueven el mercado", p: "La Administración de Información Energética de EE. UU. publica cada semana los niveles de existencias de Cushing. La cifra importa porque muestra directamente cuán ajustada está la capacidad de tanques. Si las existencias suben, el crudo se acumula y los precios sufren; si bajan, los barriles fluyen a las refinerías y los precios se sostienen. Muchos operadores consideran este informe semanal el dato de crudo más relevante de la semana." },
+          { h: "El punto de inflexión de las exportaciones", p: "Cuando Estados Unidos levantó a finales de 2015 su prohibición de exportar crudo, vigente durante cuatro décadas, marcó un antes y un después para el WTI. Las terminales de exportación de la costa del Golfo se ampliaron y el crudo estadounidense empezó a embarcarse hacia Europa y Asia. Por primera vez el WTI quedó realmente conectado al mercado marítimo global y su divergencia histórica con el Brent cambió. Una vez más, la raíz de la diferencia está en la logística, no en la calidad." },
+          { h: "Tres cosas que conviene recordar", p: "Primero: el WTI es un precio de crudo, no un precio de surtidor; la gasolina al por menor añade refinado, distribución e impuestos. Segundo: refleja la oferta y la demanda del interior de EE. UU., que no avanza en perfecta sintonía con el mercado marítimo mundial. Tercero: el WTI por sí solo se malinterpreta con facilidad; al contrastarlo con el Brent, el propio diferencial se vuelve información útil. Este sitio muestra ambos para que la comparación sea inmediata." },
+        ],
+      },
+      fr: {
+        title: "Qu’est-ce que le brut WTI ? Et pourquoi tout le monde surveille Cushing",
+        desc: "Le WTI est la référence pétrolière américaine, livrable dans une petite ville de l’Oklahoma appelée Cushing. Comprendre ce nœud intérieur explique pourquoi le WTI et les prix mondiaux divergent souvent.",
+        body: [
+          { h: "Le WTI n’est pas le pétrole d’un seul gisement", p: "West Texas Intermediate, WTI en abrégé. Le nom évoque le Texas, mais il désigne aujourd’hui une spécification : assez léger et assez pauvre en soufre pour que les raffineurs le traitent avec profit. Le brut qui satisfait à cette norme provient principalement du bassin permien et de la région du centre du continent. Il faut le voir comme un standard et non comme un gisement précis pour que la suite soit cohérente." },
+          { h: "Pourquoi Cushing", p: "Un contrat à terme a besoin d’un point de livraison physique. Cushing, en Oklahoma, se trouve au confluent de dizaines d’oléoducs et dispose de l’une des plus grandes capacités de stockage du pays. Le brut peut y entrer de toutes parts et repartir vers les raffineries du continent. Cette position de « carrefour d’oléoducs » a fait de Cushing le point de cotation naturel du brut de l’intérieur des États-Unis, et c’est là que se dénoue le contrat WTI." },
+          { h: "Le coût d’une cotation à l’intérieur des terres", p: "Ce choix a un coût : le brut de Cushing ne peut sortir que par oléoduc. Les conduits ont une limite et, lorsqu’ils l’approchent, le brut excédentaire n’a nulle part où aller et s’accumule dans les réservoirs. Le vendeur n’a alors d’autre choix que de consentir une forte remise pour que quelqu’un l’enlève, et le prix local de Cushing passe sous le marché maritime international. Le Brent, lui, est dans un port et peut charger à tout moment : il n’a pas ce problème. C’est l’origine de l’écart entre les deux références." },
+          { h: "Pourquoi les stocks font bouger le marché", p: "L’Administration américaine d’information sur l’énergie publie chaque semaine le niveau des stocks de Cushing. Le chiffre compte parce qu’il montre directement à quel point la capacité de stockage est tendue. Si les stocks montent, le brut s’accumule et les prix sont sous pression ; s’ils baissent, les barils partent vers les raffineries et les prix se maintiennent. Beaucoup d’opérateurs considèrent ce rapport hebdomadaire comme la donnée pétrolière la plus importante de la semaine." },
+          { h: "Le tournant des exportations", p: "Lorsque les États-Unis ont levé fin 2015 leur interdiction d’exporter du brut, en vigueur depuis quatre décennies, ce fut un tournant pour le WTI. Les terminaux d’exportation de la côte du Golfe se sont développés et le brut américain a commencé à embarquer vers l’Europe et l’Asie. Pour la première fois, le WTI s’est réellement connecté au marché maritime mondial et son écart historique avec le Brent a changé de nature. Là encore, la racine de l’écart est logistique, non qualitative." },
+          { h: "Trois points à garder en tête", p: "Premièrement, le WTI est un prix du brut, pas un prix à la pompe : l’essence au détail ajoute raffinage, distribution et taxes. Deuxièmement, il reflète l’offre et la demande de l’intérieur des États-Unis, qui n’évolue pas en parfaite synchronie avec le marché maritime mondial. Troisièmement, le WTI seul se lit mal : confronté au Brent, l’écart lui-même devient une information utile. Ce site affiche les deux pour que la comparaison soit immédiate." },
+        ],
+      },
+      de: {
+        title: "Was ist WTI-Rohöl? Und warum alle auf Cushing schauen",
+        desc: "WTI ist die US-Rohölreferenz, lieferbar in einem kleinen Ort in Oklahoma namens Cushing. Wer diesen Binnenknoten versteht, versteht auch, warum WTI und Weltmarktpreise oft auseinanderlaufen.",
+        body: [
+          { h: "WTI ist nicht das Öl eines Feldes", p: "West Texas Intermediate, kurz WTI. Der Name sagt Texas, doch heute beschreibt er eine Spezifikation: leicht genug und schwefelarm genug, damit Raffinerien es mit Gewinn verarbeiten können. Rohöl, das diese Norm erfüllt, stammt vor allem aus dem Perm-Becken und der Mittelkontinentalregion. Man sollte WTI als Standard begreifen, nicht als ein bestimmtes Feld — dann fügt sich alles Weitere." },
+          { h: "Warum Cushing", p: "Ein Terminkontrakt braucht einen physischen Erfüllungsort. Cushing in Oklahoma liegt dort, wo Dutzende Pipelines zusammenlaufen, und verfügt über eine der größten Lagerkapazitäten des Landes. Öl kann aus allen Richtungen zufließen und zu Raffinerien auf dem ganzen Kontinent abfließen. Diese „Pipeline-Kreuzung“ machte Cushing zum natürlichen Preispunkt für US-Binnenrohöl, und dort wird der WTI-Kontrakt erfüllt." },
+          { h: "Der Preis der Binnenpreisbildung", p: "Das Design hat seinen Preis: Öl in Cushing kann nur per Pipeline hinaus. Pipelines haben eine Obergrenze, und nähert sich diese, hat das überschüssige Rohöl keinen Abfluss und sammelt sich in den Tanks. Verkäufer müssen dann kräftig rabattieren, damit überhaupt jemand es abnimmt, und der lokale Cushing-Preis fällt unter den internationalen Seemarkt. Brent liegt an einem Seehafen und kann jederzeit verladen — dieses Problem kennt es nicht. Hier liegt der Ursprung der Differenz zwischen beiden Referenzen." },
+          { h: "Warum Bestandsdaten den Markt bewegen", p: "Die US-Energieinformationsbehörde veröffentlicht wöchentlich die Cushing-Bestände. Die Zahl zählt, weil sie unmittelbar zeigt, wie knapp die Tankkapazität ist. Steigen die Bestände, staut sich das Öl und die Preise geraten unter Druck; sinken sie, fließen die Barrel in die Raffinerien und die Preise finden Halt. Viele Händler behandeln diesen Wochenbericht als wichtigsten Rohöldatenpunkt der Woche." },
+          { h: "Die Exportwende", p: "Als die USA Ende 2015 ihr vier Jahrzehnte altes Rohölexportverbot aufhoben, war das eine Wasserscheide für WTI. Die Exportterminals an der Golfküste wurden ausgebaut und US-Rohöl begann, per Schiff nach Europa und Asien zu gehen. Zum ersten Mal war WTI wirklich an den globalen Seemarkt angeschlossen, und seine langjährige Abweichung von Brent veränderte sich. Auch hier gilt: Die Wurzel des Preisabstands liegt in der Logistik, nicht in der Qualität." },
+          { h: "Drei Dinge, die man im Kopf behalten sollte", p: "Erstens: WTI ist ein Rohölpreis, kein Zapfsäulenpreis — Benzin im Einzelhandel enthält zusätzlich Raffination, Vertrieb und Steuern. Zweitens spiegelt es Angebot und Nachfrage im US-Binnenland, das nicht im perfekten Gleichschritt mit dem Weltseemarkt läuft. Drittens lässt sich WTI allein leicht falsch lesen; stellt man es neben Brent, wird der Abstand selbst zur nützlichen Information. Diese Seite zeigt beide, damit der Vergleich unmittelbar möglich ist." },
+        ],
+      },
+      pt: {
+        title: "O que é o petróleo WTI? E por que todos observam os estoques de Cushing",
+        desc: "O WTI é a referência do petróleo americano, entregue numa pequena cidade de Oklahoma chamada Cushing. Entender esse nó interior explica por que o WTI e os preços globais costumam divergir.",
+        body: [
+          { h: "O WTI não é o petróleo de um único campo", p: "West Texas Intermediate, ou WTI. O nome cita o Texas, mas hoje descreve uma especificação: leve o suficiente e com tão pouco enxofre que as refinarias conseguem processá-lo com lucro. O petróleo que atende a essa norma vem principalmente da Bacia do Permiano e da região centro-continental. É melhor entendê-lo como um padrão, não como um campo específico — assim o resto se encaixa." },
+          { h: "Por que Cushing", p: "Um contrato futuro precisa de um ponto físico de entrega. Cushing, em Oklahoma, fica onde convergem dezenas de oleodutos e tem uma das maiores capacidades de armazenagem do país. O petróleo pode entrar de todas as direções e sair para refinarias de todo o continente. Essa posição de \"encruzilhada de oleodutos\" tornou Cushing o ponto natural de precificação do petróleo do interior dos EUA, e é lá que o contrato WTI é liquidado." },
+          { h: "O custo de precificar no interior", p: "Esse desenho tem um custo: o petróleo em Cushing só pode sair por oleoduto. Os dutos têm um limite e, ao se aproximarem dele, o excedente não tem para onde ir e se acumula nos tanques. O vendedor então não tem alternativa senão conceder um grande desconto para que alguém o retire, e o preço local de Cushing cai abaixo do mercado marítimo internacional. O Brent fica num porto e pode carregar a qualquer momento: não tem esse problema. É aí que nasce a diferença entre as duas referências." },
+          { h: "Por que os dados de estoque movem o mercado", p: "A Administração de Informação de Energia dos EUA publica semanalmente os níveis de estoque de Cushing. O número importa porque mostra diretamente quão apertada está a capacidade dos tanques. Se os estoques sobem, o petróleo está se acumulando e os preços ficam pressionados; se caem, os barris estão seguindo para as refinarias e os preços encontram sustentação. Muitos operadores tratam esse relatório semanal como o dado de petróleo mais importante da semana." },
+          { h: "O ponto de virada das exportações", p: "Quando os Estados Unidos suspenderam, no fim de 2015, a proibição de exportar petróleo bruto que vigorava havia quatro décadas, isso marcou um divisor de águas para o WTI. Os terminais de exportação da costa do Golfo foram ampliados e o petróleo americano passou a embarcar para a Europa e a Ásia. Pela primeira vez o WTI se conectou de fato ao mercado marítimo global, e sua divergência histórica em relação ao Brent mudou. Mais uma vez, a raiz da diferença está na logística, não na qualidade." },
+          { h: "Três coisas para guardar", p: "Primeiro: o WTI é um preço de petróleo bruto, não um preço de bomba — a gasolina no varejo acrescenta refino, distribuição e impostos. Segundo: ele reflete oferta e demanda do interior dos EUA, que não andam em perfeita sintonia com o mercado marítimo mundial. Terceiro: o WTI isolado é fácil de interpretar mal; ao compará-lo com o Brent, o próprio diferencial vira informação útil. Este site mostra ambos para que a comparação seja imediata." },
+        ],
+      },
+    },
+  },
+
 ];
 
 export default ARTICLES;
@@ -618,7 +810,7 @@ export const BLOG_STRINGS = {
     published: '发布',
     backToList: '← 返回文章列表',
     backToTop: '↑ 回到顶部',
-    catOil: '原油', catGold: '黄金', catCn: '国内油价', catFx: '汇率',
+    catOil: '原油', catGold: '黄金', catCn: '国内油价', catFx: '汇率', catWti: 'WTI 原油',
   },
   en: {
     fallbackNote: 'These articles are currently available in English only.',
@@ -632,7 +824,7 @@ export const BLOG_STRINGS = {
     published: 'Published',
     backToList: '← Back to articles',
     backToTop: '↑ Back to top',
-    catOil: 'Crude oil', catGold: 'Gold', catCn: 'China fuel', catFx: 'Currency',
+    catOil: 'Crude oil', catGold: 'Gold', catCn: 'China fuel', catFx: 'Currency', catWti: 'WTI crude',
   },
   ja: {
     fallbackNote: '現在、記事は英語版のみの提供となります。',
@@ -646,7 +838,7 @@ export const BLOG_STRINGS = {
     published: '公開',
     backToList: '← 記事一覧へ戻る',
     backToTop: '↑ ページ上部へ',
-    catOil: '原油', catGold: '金', catCn: '燃料価格', catFx: '為替',
+    catOil: '原油', catGold: '金', catCn: '燃料価格', catFx: '為替', catWti: 'WTI原油',
   },
   es: {
     fallbackNote: 'Por ahora estos artículos solo están disponibles en inglés.',
@@ -660,7 +852,7 @@ export const BLOG_STRINGS = {
     published: 'Publicado',
     backToList: '← Volver a artículos',
     backToTop: '↑ Volver arriba',
-    catOil: 'Petróleo', catGold: 'Oro', catCn: 'Combustible', catFx: 'Divisas',
+    catOil: 'Petróleo', catGold: 'Oro', catCn: 'Combustible', catFx: 'Divisas', catWti: 'Crudo WTI',
   },
   fr: {
     fallbackNote: 'Ces articles ne sont disponibles qu\'en anglais pour le moment.',
@@ -674,7 +866,7 @@ export const BLOG_STRINGS = {
     published: 'Publié',
     backToList: '← Retour aux articles',
     backToTop: '↑ Haut de page',
-    catOil: 'Pétrole', catGold: 'Or', catCn: 'Carburant', catFx: 'Devises',
+    catOil: 'Pétrole', catGold: 'Or', catCn: 'Carburant', catFx: 'Devises', catWti: 'Brut WTI',
   },
   de: {
     fallbackNote: 'Diese Artikel sind derzeit nur auf Englisch verfügbar.',
@@ -688,7 +880,7 @@ export const BLOG_STRINGS = {
     published: 'Veröffentlicht',
     backToList: '← Zurück zu den Artikeln',
     backToTop: '↑ Nach oben',
-    catOil: 'Rohöl', catGold: 'Gold', catCn: 'Kraftstoff', catFx: 'Währungen',
+    catOil: 'Rohöl', catGold: 'Gold', catCn: 'Kraftstoff', catFx: 'Währungen', catWti: 'WTI-Rohöl',
   },
   pt: {
     fallbackNote: 'Estes artigos estão disponíveis apenas em inglês por enquanto.',
@@ -702,7 +894,7 @@ export const BLOG_STRINGS = {
     published: 'Publicado',
     backToList: '← Voltar aos artigos',
     backToTop: '↑ Voltar ao topo',
-    catOil: 'Petróleo', catGold: 'Ouro', catCn: 'Combustível', catFx: 'Moedas',
+    catOil: 'Petróleo', catGold: 'Ouro', catCn: 'Combustível', catFx: 'Moedas', catWti: 'Petróleo WTI',
   },
 };
 
@@ -717,6 +909,24 @@ export function articlesFor(lang) {
 }
 
 // Related articles for a market page category, in language `lang`.
+// Related articles for a market page.
+// `wti` is a young category, so it falls back to general crude articles once
+// its own are exhausted — the WTI page should never look empty. Every other
+// category keeps its previous strict behaviour.
+const RELATED_FALLBACK = { wti: ['oil'] };
+
 export function relatedFor(lang, cat, limit = 3) {
-  return articlesFor(lang).filter(a => a.cat === cat).slice(0, limit);
+  const pool = articlesFor(lang);
+  const own = pool.filter(a => a.cat === cat);
+  if (own.length >= limit) return own.slice(0, limit);
+  const seen = new Set(own.map(a => a.slug));
+  const extra = [];
+  for (const fb of (RELATED_FALLBACK[cat] || [])) {
+    for (const a of pool.filter(x => x.cat === fb)) {
+      if (!seen.has(a.slug) && extra.length + own.length < limit) {
+        seen.add(a.slug); extra.push(a);
+      }
+    }
+  }
+  return [...own, ...extra].slice(0, limit);
 }

@@ -24,7 +24,7 @@ export const T = {
     homeTitle: 'PriceScope — Daily Updated Brent Crude Oil, Gold, China Fuel & Currency Rates',
     homeDesc: 'Track Brent crude oil prices, gold rates in USD/oz and CNY/gram, China retail fuel prices by province, and daily updated currency exchange rates. Free, fast, updated worldwide.',
 
-    nav: { overview: 'Overview', oil: 'Brent Crude', gold: 'Gold', cn: 'China Fuel', fx: 'Currency', about: 'About', privacy: 'Privacy', contact: 'Contact' },
+    nav: { overview: 'Overview', oil: 'Brent Crude', gold: 'Gold', cn: 'China Fuel', fx: 'Currency', wti: 'WTI Crude', about: 'About', privacy: 'Privacy', contact: 'Contact' },
 
     heroBadge: 'Daily Updated Market Data',
     heroTitle: 'Global Brent Crude Oil, Gold & Currency Prices in One Place',
@@ -52,6 +52,10 @@ export const T = {
     oilTitle: 'Brent Crude Oil Price',
     oilMetaTitle: 'Brent Crude Oil Price Today — Daily Updated Benchmark Rate | PriceScope',
     oilMetaDesc: 'Daily updated Brent crude oil price per barrel, refreshed once every day. Brent is the leading global oil benchmark used by markets worldwide.',
+    wtiTitle: 'WTI Crude Oil Price',
+    wtiMetaTitle: 'WTI Crude Oil Price Today — US Benchmark, Daily Updated | PriceScope',
+    wtiMetaDesc: 'Daily updated WTI crude oil price per barrel. WTI is the main US oil benchmark and the other half of the global oil price picture alongside Brent.',
+    wtiSpread: 'Brent–WTI spread', wtiSpreadUnit: 'USD / barrel', wtiSpreadHint: 'Brent minus WTI — a read on how freely oil moves',
     goldTitle: 'International Gold Price',
     goldMetaTitle: 'Gold Price Today — Daily Updated USD/oz & CNY/gram | PriceScope',
     goldMetaDesc: 'Daily updated international gold price in US dollars per troy ounce and Chinese yuan per gram, refreshed once every day from global market data.',
@@ -104,7 +108,7 @@ export const T = {
     homeTitle: 'PriceScope — 每日更新布伦特原油、黄金、国内油价与汇率',
     homeDesc: '一站式查看布伦特原油价格、国际金价（美元/盎司 与 人民币/克）、中国各省份成品油零售价，以及每日更新的货币汇率。免费、快速、面向全球用户。',
 
-    nav: { overview: '总览', oil: '布伦特原油', gold: '国际黄金', cn: '国内油价', fx: '汇率换算', about: '关于本站', privacy: '隐私政策', contact: '联系我们' },
+    nav: { overview: '总览', oil: '布伦特原油', gold: '国际黄金', cn: '国内油价', fx: '汇率换算', wti: 'WTI 原油', about: '关于本站', privacy: '隐私政策', contact: '联系我们' },
 
     heroBadge: '每日更新行情数据',
     heroTitle: '全球布伦特原油、黄金与汇率，一站掌握',
@@ -132,6 +136,10 @@ export const T = {
     oilTitle: '布伦特原油价格',
     oilMetaTitle: '今日布伦特原油价格 — 每日更新国际油价查询 | PriceScope',
     oilMetaDesc: '布伦特原油每桶价格，每日更新一次。布伦特原油是全球市场最通用的原油基准报价。',
+    wtiTitle: 'WTI 原油价格',
+    wtiMetaTitle: '今日 WTI 原油价格 — 美国原油基准报价查询 | PriceScope',
+    wtiMetaDesc: 'WTI 原油每桶价格，每日更新。WTI 是美国原油的定价基准，与布伦特并列为全球最受关注的两大油价指标。',
+    wtiSpread: '布伦特-WTI 价差', wtiSpreadUnit: '美元 / 桶', wtiSpreadHint: '布伦特减去 WTI，反映原油流通是否顺畅',
     goldTitle: '国际黄金价格',
     goldMetaTitle: '今日国际金价 — 美元/盎司 与 人民币/克 每日更新 | PriceScope',
     goldMetaDesc: '国际黄金价格，同时以美元/金衡盎司与人民币/克显示，数据每日更新一次。',
@@ -184,7 +192,7 @@ export const T = {
     homeTitle: 'PriceScope — ブレント原油・金・中国燃料価格・為替レート',
     homeDesc: 'ブレント原油価格、金価格（USD/オンス および CNY/グラム）、中国の地域別燃料小売価格、主要通貨の為替レートをまとめて確認できます。無料・高速・世界中で利用可能。',
 
-    nav: { overview: '概要', oil: 'ブレント原油', gold: '金', cn: '中国燃料', fx: '為替', about: '当サイトについて', privacy: 'プライバシー', contact: 'お問い合わせ' },
+    nav: { overview: '概要', oil: 'ブレント原油', gold: '金', cn: '中国燃料', fx: '為替', wti: 'WTI原油', about: '当サイトについて', privacy: 'プライバシー', contact: 'お問い合わせ' },
 
     heroBadge: '毎日更新の市場データ',
     heroTitle: '世界のブレント原油・金・為替をひとつに',
@@ -212,6 +220,10 @@ export const T = {
     oilTitle: 'ブレント原油価格',
     oilMetaTitle: '本日のブレント原油価格 — 国際ベンチマーク | PriceScope',
     oilMetaDesc: 'ブレント原油の1バレルあたり価格を自動更新で表示。世界の市場で最も参照される原油ベンチマークです。',
+    wtiTitle: 'WTI原油価格',
+    wtiMetaTitle: '本日のWTI原油価格 — 米国の原油指標 | PriceScope',
+    wtiMetaDesc: 'WTI原油の1バレルあたり価格を自動更新で表示。WTIは米国原油の指標であり、ブレントと並ぶ世界二大原油価格の一つです。',
+    wtiSpread: 'ブレント-WTI価格差', wtiSpreadUnit: '米ドル / バレル', wtiSpreadHint: 'ブレントからWTIを引いた差。原油の流通の円滑さを示す',
     goldTitle: '国際金価格',
     goldMetaTitle: '本日の金価格 — USD/オンス & CNY/グラム | PriceScope',
     goldMetaDesc: '国際金価格をUSD/トロイオンスとCNY/グラムの両方で表示。世界市場データから自動更新されます。',
@@ -264,7 +276,7 @@ export const T = {
     homeTitle: 'PriceScope — Petróleo Brent, oro, combustible en China y divisas, actualizados a diario',
     homeDesc: 'Consulta el precio del crudo Brent, el oro en USD/onza y CNY/gramo, los precios minoristas de combustible en China por provincia y los tipos de cambio actualizados a diario. Gratis, rápido y disponible en todo el mundo.',
 
-    nav: { overview: 'Resumen', oil: 'Petróleo Brent', gold: 'Oro', cn: 'Combustible China', fx: 'Divisas', about: 'Quiénes somos', privacy: 'Privacidad', contact: 'Contacto' },
+    nav: { overview: 'Resumen', oil: 'Petróleo Brent', gold: 'Oro', cn: 'Combustible China', fx: 'Divisas', wti: 'Crudo WTI', about: 'Quiénes somos', privacy: 'Privacidad', contact: 'Contacto' },
 
     heroBadge: 'Datos de mercado actualizados a diario',
     heroTitle: 'Petróleo Brent, oro y divisas mundiales en un solo lugar',
@@ -292,6 +304,10 @@ export const T = {
     oilTitle: 'Precio del petróleo crudo Brent',
     oilMetaTitle: 'Precio del crudo Brent hoy — cotización internacional actualizada a diario | PriceScope',
     oilMetaDesc: 'Precio del crudo Brent por barril con actualización automática. El Brent es la referencia global utilizada por los mercados.',
+    wtiTitle: 'Precio del petróleo WTI',
+    wtiMetaTitle: 'Precio del crudo WTI hoy — referencia estadounidense, actualización diaria | PriceScope',
+    wtiMetaDesc: 'Precio del crudo WTI por barril con actualización diaria. El WTI es la referencia del petróleo estadounidense y, junto con el Brent, uno de los dos grandes indicadores mundiales.',
+    wtiSpread: 'Diferencial Brent-WTI', wtiSpreadUnit: 'USD / barril', wtiSpreadHint: 'Brent menos WTI: indica con qué libertad circula el petróleo',
     goldTitle: 'Precio internacional del oro',
     goldMetaTitle: 'Precio del oro hoy — USD/onza y CNY/gramo actualizado a diario | PriceScope',
     goldMetaDesc: 'Precio internacional del oro en dólares por onza troy y yuanes por gramo, actualizado automáticamente.',
@@ -344,7 +360,7 @@ export const T = {
     homeTitle: 'PriceScope — Pétrole Brent, or, carburant en Chine et devises, mis à jour chaque jour',
     homeDesc: 'Suivez le prix du brut Brent, le cours de l\'or en USD/once et CNY/gramme, les prix de détail des carburants en Chine par province et les taux de change mis à jour chaque jour. Gratuit, rapide, accessible dans le monde entier.',
 
-    nav: { overview: 'Aperçu', oil: 'Pétrole Brent', gold: 'Or', cn: 'Carburant Chine', fx: 'Devises', about: 'À propos', privacy: 'Confidentialité', contact: 'Contact' },
+    nav: { overview: 'Aperçu', oil: 'Pétrole Brent', gold: 'Or', cn: 'Carburant Chine', fx: 'Devises', wti: 'Brut WTI', about: 'À propos', privacy: 'Confidentialité', contact: 'Contact' },
 
     heroBadge: 'Données de marché mises à jour chaque jour',
     heroTitle: 'Pétrole Brent, or et devises mondiaux en un seul endroit',
@@ -372,6 +388,10 @@ export const T = {
     oilTitle: 'Prix du pétrole brut Brent',
     oilMetaTitle: 'Prix du brut Brent aujourd\'hui — cours international mis à jour chaque jour | PriceScope',
     oilMetaDesc: 'Prix du brut Brent au baril avec mise à jour automatique. Le Brent est la référence mondiale utilisée par les marchés.',
+    wtiTitle: 'Prix du pétrole WTI',
+    wtiMetaTitle: 'Prix du brut WTI aujourd\'hui — référence américaine, mise à jour quotidienne | PriceScope',
+    wtiMetaDesc: 'Prix du brut WTI au baril avec mise à jour quotidienne. Le WTI est la référence américaine et, avec le Brent, l\'un des deux grands indicateurs mondiaux.',
+    wtiSpread: 'Écart Brent-WTI', wtiSpreadUnit: 'USD / baril', wtiSpreadHint: 'Brent moins WTI : indique la fluidité de circulation du pétrole',
     goldTitle: 'Prix international de l\'or',
     goldMetaTitle: 'Prix de l\'or aujourd\'hui — USD/once et CNY/gramme | PriceScope',
     goldMetaDesc: 'Prix international de l\'or en dollars par once troy et en yuans par gramme, mis à jour automatiquement.',
@@ -424,7 +444,7 @@ export const T = {
     homeTitle: 'PriceScope — Brent-Ölpreis, Goldpreis, chinesische Kraftstoffpreise & Wechselkurse, täglich aktualisiert',
     homeDesc: 'Verfolgen Sie den Brent-Rohölpreis, Gold in USD/Unze und CNY/Gramm, chinesische Einzelhandelspreise für Kraftstoff nach Provinz sowie aktuelle Wechselkurse. Kostenlos, schnell, weltweit verfügbar.',
 
-    nav: { overview: 'Überblick', oil: 'Brent-Rohöl', gold: 'Gold', cn: 'Kraftstoff China', fx: 'Währungen', about: 'Über uns', privacy: 'Datenschutz', contact: 'Kontakt' },
+    nav: { overview: 'Überblick', oil: 'Brent-Rohöl', gold: 'Gold', cn: 'Kraftstoff China', fx: 'Währungen', wti: 'WTI-Rohöl', about: 'Über uns', privacy: 'Datenschutz', contact: 'Kontakt' },
 
     heroBadge: 'Täglich aktualisierte Marktdaten',
     heroTitle: 'Brent-Öl, Gold und Währungen weltweit an einem Ort',
@@ -452,6 +472,10 @@ export const T = {
     oilTitle: 'Brent-Rohölpreis',
     oilMetaTitle: 'Brent-Ölpreis heute — internationaler Rohölkurs, täglich aktualisiert | PriceScope',
     oilMetaDesc: 'Brent-Rohölpreis pro Barrel mit automatischer Aktualisierung. Brent ist die weltweite Referenznotierung der Märkte.',
+    wtiTitle: 'WTI-Rohölpreis',
+    wtiMetaTitle: 'WTI-Ölpreis heute — US-Referenzsorte, täglich aktualisiert | PriceScope',
+    wtiMetaDesc: 'WTI-Rohölpreis pro Barrel mit täglicher Aktualisierung. WTI ist die US-Referenzsorte und neben Brent einer der beiden wichtigsten Ölpreisindikatoren der Welt.',
+    wtiSpread: 'Brent-WTI-Spread', wtiSpreadUnit: 'USD / Barrel', wtiSpreadHint: 'Brent minus WTI — zeigt, wie frei Öl zirkulieren kann',
     goldTitle: 'Internationaler Goldpreis',
     goldMetaTitle: 'Goldpreis heute — USD/Unze & CNY/Gramm, täglich aktualisiert | PriceScope',
     goldMetaDesc: 'Internationaler Goldpreis in US-Dollar pro Feinunze und Renminbi pro Gramm, automatisch aktualisiert.',
@@ -504,7 +528,7 @@ export const T = {
     homeTitle: 'PriceScope — Petróleo Brent, ouro, combustível na China e câmbio, atualizados diariamente',
     homeDesc: 'Acompanhe o preço do petróleo bruto Brent, o ouro em USD/onça e CNY/grama, os preços de combustível na China por província e as taxas de câmbio atualizadas diariamente. Grátis, rápido e disponível mundialmente.',
 
-    nav: { overview: 'Visão geral', oil: 'Petróleo Brent', gold: 'Ouro', cn: 'Combustível China', fx: 'Moedas', about: 'Sobre', privacy: 'Privacidade', contact: 'Contato' },
+    nav: { overview: 'Visão geral', oil: 'Petróleo Brent', gold: 'Ouro', cn: 'Combustível China', fx: 'Moedas', wti: 'Petróleo WTI', about: 'Sobre', privacy: 'Privacidade', contact: 'Contato' },
 
     heroBadge: 'Dados de mercado atualizados diariamente',
     heroTitle: 'Petróleo Brent, ouro e câmbio mundiais em um só lugar',
@@ -532,6 +556,10 @@ export const T = {
     oilTitle: 'Preço do petróleo bruto Brent',
     oilMetaTitle: 'Preço do petróleo Brent hoje — cotação internacional atualizada diariamente | PriceScope',
     oilMetaDesc: 'Preço do petróleo bruto Brent por barril com atualização automática. O Brent é a referência global usada pelos mercados.',
+    wtiTitle: 'Preço do petróleo WTI',
+    wtiMetaTitle: 'Preço do petróleo WTI hoje — referência americana, atualização diária | PriceScope',
+    wtiMetaDesc: 'Preço do petróleo WTI por barril com atualização diária. O WTI é a referência do petróleo americano e, junto com o Brent, um dos dois grandes indicadores mundiais.',
+    wtiSpread: 'Diferencial Brent-WTI', wtiSpreadUnit: 'USD / barril', wtiSpreadHint: 'Brent menos WTI: indica com que liberdade o petróleo circula',
     goldTitle: 'Preço internacional do ouro',
     goldMetaTitle: 'Preço do ouro hoje — USD/onça e CNY/grama | PriceScope',
     goldMetaDesc: 'Preço internacional do ouro em dólares por onça troy e em yuan por grama, atualizado automaticamente.',

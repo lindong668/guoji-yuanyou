@@ -9,7 +9,7 @@ import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
   renderPrivacy, renderAbout, renderContact, renderFaq, sitemap,
-  renderBlogList, renderArticle,
+  renderBlogList, renderArticle, renderWti,
 } from './pages.js';
 
 // ------------------------------------------------------------
@@ -168,6 +168,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
     switch (norm) {
       case '/':            return render((l, a, z) => renderHome(l, a.m, a.fx, z), true, true);
       case '/oil/':        return render((l, a, z) => renderOil(l, a.m, z), true, false);
+      case '/wti/':        return render((l, a, z) => renderWti(l, a.m, z), true, false);
       case '/gold/':       return render((l, a, z) => renderGold(l, a.m, z), true, false);
       case '/china-fuel/': return render((l, a, z) => renderCn(l, a.m, z), true, false);
       case '/currency/':   return render((l, a, z) => renderFx(l, a.fx, z), false, true);

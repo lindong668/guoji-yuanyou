@@ -66,7 +66,7 @@ function sourceBlock(lang) {
 // ------------------------------------------------------------
 function catLabel(lang, cat) {
   const S = blogStr(lang);
-  return { oil: S.catOil, gold: S.catGold, cn: S.catCn, fx: S.catFx }[cat] || cat;
+  return { oil: S.catOil, gold: S.catGold, cn: S.catCn, fx: S.catFx, wti: S.catWti }[cat] || cat;
 }
 
 function readLabel(lang, n) {
@@ -314,6 +314,7 @@ function fxUpdatedBlock(lang, fx, tz) {
 export function renderHome(lang, m, fx, tz) {
   const L = t(lang);
   const oilPrice = m?.oil?.price;
+  const wtiPrice = m?.wti?.price;
   const goldUsd = m?.gold?.usdOz;
   const goldCny = m?.gold?.cnyGram;
 
@@ -335,6 +336,13 @@ export function renderHome(lang, m, fx, tz) {
       <div class="big">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
+        <span class="go">${esc(L.viewAll)} →</span></div>
+    </a>
+    <a class="card oil" href="/${lang}/wti/">
+      <h3><span class="swatch w"></span>${esc(L.nav.wti)}</h3>
+      <div class="big">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
+      <div class="unit">${esc(L.unitBarrel)}</div>
+      <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
@@ -403,6 +411,45 @@ ${faqBlock(lang, 'oil')}
 ${relatedBlock(lang, 'oil')}
 ${sourceBlock(lang)}`;
   return page({ lang, title: L.oilMetaTitle, desc: L.oilMetaDesc, path: '/oil/', active: '/oil/', body });
+}
+
+// ------------------------------------------------------------
+// WTI CRUDE (second global benchmark — pairs with Brent)
+// ------------------------------------------------------------
+// WTI arrives in the same upstream request as Brent, so it costs no extra
+// API quota. If the upstream Worker has not been upgraded yet, price is
+// null and the card shows a dash — the page still renders fully.
+export function renderWti(lang, m, tz) {
+  const L = t(lang);
+  const p = m?.wti?.price;
+  const b = m?.oil?.price;
+  // Only show the spread when both legs are present and non-zero.
+  const spread = (p != null && b != null) ? b - p : null;
+  const body = `<section class="blk"><div class="wrap">
+  <h2 class="h2"><span class="ico">🛢</span>${esc(L.wtiTitle)}</h2>
+  <p class="sub">${esc(marketNote(lang, tz))}</p>
+  <div class="grid">
+    <div class="card oil">
+      <h3><span class="swatch w"></span>${esc(L.price)}</h3>
+      <div class="big">${p != null ? '$' + fmt(p) : '—'}</div>
+      <div class="unit">${esc(L.unitBarrel)}</div>
+      <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span></div>
+    </div>
+    ${spread != null ? `<div class="card oil">
+      <h3><span class="swatch o"></span>${esc(L.wtiSpread)}</h3>
+      <div class="big">${spread >= 0 ? '+' : ''}${fmt(spread)}</div>
+      <div class="unit">${esc(L.wtiSpreadUnit)}</div>
+      <div class="meta"><span>${esc(L.wtiSpreadHint)}</span></div>
+    </div>` : ''}
+  </div>
+  <p class="sub" style="margin-top:22px">${esc(L.dataSource)}: ${esc(L.tagline)}</p>
+  ${adSlot('wti')}
+</div></section>
+${explainer(lang, 'wti')}
+${faqBlock(lang, 'wti')}
+${relatedBlock(lang, 'wti')}
+${sourceBlock(lang)}`;
+  return page({ lang, title: L.wtiMetaTitle, desc: L.wtiMetaDesc, path: '/wti/', active: '/wti/', body });
 }
 
 // ------------------------------------------------------------
@@ -621,7 +668,7 @@ export function renderContact(lang) {
 // SITEMAP (multilingual, hreflang)
 // ------------------------------------------------------------
 export function sitemap() {
-  const paths = ['/', '/oil/', '/gold/', '/china-fuel/', '/currency/', '/faq/', '/about/', '/privacy/', '/contact/'];
+  const paths = ['/', '/oil/', '/wti/', '/gold/', '/china-fuel/', '/currency/', '/faq/', '/about/', '/privacy/', '/contact/'];
   const today = new Date().toISOString().slice(0, 10);
   const urls = [];
   for (const p of paths) {

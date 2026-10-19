@@ -87,6 +87,20 @@ export const CONTENT = {
         { q: 'Can I use this for accounting or settlement?', a: 'No. Use the official rate published by your bank, payment provider or tax authority for any financial record.' },
       ],
     },
+    wti: {
+      intro: 'WTI is the benchmark crude for the United States and the second most quoted oil price in the world after Brent. It is quoted in US dollars per barrel and refreshed while US markets are trading.',
+      sections: [
+        { h: 'What is WTI crude oil?', p: 'West Texas Intermediate is a light, sweet crude grade produced primarily in the US Permian Basin and the mid-continent. It is very light and very low in sulphur — arguably the highest quality of the major benchmarks — which makes it especially attractive to refineries configured for gasoline production. Despite the name, it is no longer produced only in Texas; the grade now describes a specification rather than a single geographic source.' },
+        { h: 'Why WTI is delivered at Cushing', p: 'The WTI futures contract settles at Cushing, Oklahoma — an inland hub where dozens of pipelines converge and hundreds of storage tanks sit. That concentration of infrastructure makes it the natural pricing point for US inland crude. But it is also WTI\'s structural weakness: oil sitting in Cushing must leave by pipeline, and when those pipelines are full the local price can fall out of step with the seaborne international market.' },
+        { h: 'WTI and Brent: why two benchmarks', p: 'Both are light sweet crudes, so over long periods their prices move together. The gap between them is not a mistake — it reflects real differences in logistics. Brent can be loaded directly onto tankers in the North Sea and shipped anywhere, so it tracks the global seaborne market. WTI is priced inland in the American mid-continent, so it responds more sharply to US pipeline capacity, Cushing inventory levels and domestic shale output.' },
+        { h: 'What the Brent–WTI spread tells you', p: 'The difference between the two prices is one of the most watched numbers in energy. When Brent trades well above WTI, it usually means US crude is trapped inland by pipeline constraints or a supply glut. When the gap narrows, it often signals that export capacity has expanded or that global supply has tightened. Reading the two together gives a far clearer picture of the oil market than either price alone.' },
+      ],
+      faq: [
+        { q: 'Is WTI the oil price US drivers pay?', a: 'It is the main reference for US crude, but pump prices also depend on refining costs, distribution, taxes and regional supply. WTI tells you what the raw crude costs, not what the finished fuel costs.' },
+        { q: 'Why is WTI usually cheaper than Brent?', a: 'It often is, but not always. WTI is priced at an inland hub rather than a seaport, so it is more sensitive to US pipeline bottlenecks and domestic inventory. A wide gap generally reflects a logistics constraint rather than a difference in oil quality.' },
+        { q: 'How often is the WTI price updated?', a: 'The figure is collected while markets are trading and cached for fast delivery. Markets close at weekends, so the most recent trading day level is shown until trading resumes.' },
+      ],
+    },
     faqPage: {
       lead: 'Answers to the questions visitors ask most often about how this site collects and presents market data.',
       items: [
@@ -166,6 +180,20 @@ export const CONTENT = {
         { q: '这些汇率有多及时？', a: '汇率按每日计划刷新，适合预算估算和比较，但不适用于实际转账操作。' },
         { q: '这是银行会给我的汇率吗？', a: '不是。银行和汇款机构会在参考汇率之上加点并收取费用，实际汇率会有所不同。' },
         { q: '可以用于记账或结算吗？', a: '不可以。任何财务记录请使用你的银行、支付机构或税务机关公布的官方汇率。' },
+      ],
+    },
+    wti: {
+      intro: 'WTI 是美国原油的定价基准，也是继布伦特之后全球第二大受关注的油价指标。以美元每桶报价，在美盘交易时段内持续更新。',
+      sections: [
+        { h: 'WTI 原油是什么', p: 'WTI 全称西德克萨斯中质原油（West Texas Intermediate），主产区在美国二叠纪盆地与中部大陆地区。它属于轻质低硫原油，密度低、含硫量少——品质在各大基准油中堪称最优，对以汽油为主要产品的炼厂尤其有吸引力。尽管名字里带着“德克萨斯”，但它如今已不再局限于德州产地，更多是指一套品质规格，而非某一个具体油田的产出。' },
+        { h: '为什么交割地是库欣', p: 'WTI 期货合约的交割地设在俄克拉何马州的库欣——那里是数十条管道交汇、数百座储油罐林立的内陆枢纽。这种基础设施的高度集中，让它成为美国内陆原油最自然的定价点。但这也正是 WTI 的结构性弱点：滞留在库欣的原油只能依靠管道外运，一旦管道满负荷，当地价格就会与国际海运市场脱节。' },
+        { h: 'WTI 与布伦特：为什么会有两个基准', p: '两者同属轻质低硫原油，长期走势高度一致。它们之间的价差不是误差，而是物流差异的真实反映。布伦特可在北海直接装船运往任何地方，因此紧贴全球海运市场；WTI 在美国中部内陆定价，对美国管道运力、库欣库存水平和本土页岩油产量的反应更为敏感。' },
+        { h: '布伦特与 WTI 的价差告诉了你什么', p: '这两个价格之间的差值，是能源领域最受关注的数字之一。布伦特明显高于 WTI，通常意味着美国原油因管道瓶颈或供应过剩被困在内陆；价差收窄，则往往说明出口能力已经提升，或全球供应趋紧。把两个价格放在一起看，比只看其中一个更能看清整个原油市场。' },
+      ],
+      faq: [
+        { q: '美国车主加的油是按 WTI 计价的吗？', a: 'WTI 是美国原油的主要参照，但加油站的实际价格还要叠加炼化成本、运输分销、税费和区域供需。WTI 告诉你原油本身值多少钱，不代表成品油的最终售价。' },
+        { q: '为什么 WTI 通常比布伦特便宜？', a: '多数时候如此，但并非绝对。WTI 在内陆枢纽而非海港定价，对美国管道瓶颈和本土库存更敏感。价差拉大通常反映的是物流受阻，而不是油品质量有差别。' },
+        { q: 'WTI 价格多久更新一次？', a: '价格在交易时段内采集并缓存以便快速呈现。周末市场休市，此时显示的是最近一个交易日的水平，直到恢复交易。' },
       ],
     },
     faqPage: {
@@ -249,6 +277,20 @@ export const CONTENT = {
         { q: '会計や決済に使えますか？', a: 'できません。財務記録には、銀行、決済事業者、税務当局が公表する公式レートをご使用ください。' },
       ],
     },
+    wti: {
+      intro: 'WTIは米国原油の指標であり、ブレントに次いで世界で2番目に多く参照される原油価格です。米ドル建てで1バレルあたりで表示され、米国市場が取引されている時間帯に更新されます。',
+      sections: [
+        { h: 'WTI原油とは何か', p: 'WTI（West Texas Intermediate、西テキサス中間質原油）は、主に米国のパーミアン盆地と中部大陸地域で産出される軽質スイート原油です。非常に軽く硫黄分が少ない——主要な指標油の中でも最高品質とされ——ガソリン生産に最適化された製油所にとりわけ魅力的な原油です。名前に「テキサス」とありますが、現在では特定の産地ではなく、一つの品質規格を指す呼び名として使われています。' },
+        { h: '受渡地がクッシングである理由', p: 'WTI先物契約の受渡地は米オクラホマ州クッシングです。ここは数十本のパイプラインが集中し、数百基の貯油タンクが並ぶ内陸のハブであり、米国内陸産原油の価格決定点として自然な場所となりました。しかし同時に、これがWTIの構造的な弱点でもあります。クッシングに滞留した原油はパイプラインでしか搬出できず、パイプが満杯になると現地価格は海上輸送の国際市場から乖離してしまいます。' },
+        { h: 'WTIとブレント——なぜ指標が二つあるのか', p: 'どちらも軽質スイート原油であるため、長期的にはほぼ同じ動きをします。両者の価格差は誤差ではなく、物流の違いを正直に反映したものです。ブレントは北海で直接タンカーに積まれ世界中へ運べるため、海上輸送のグローバル市場に連動します。一方WTIは米国中部の内陸で値決めされるため、米国内のパイプライン輸送能力、クッシングの在庫水準、国内のシェール生産量により鋭く反応します。' },
+        { h: 'ブレントとWTIの価格差が示すもの', p: 'この二つの価格の差は、エネルギー市場で最も注目される数字の一つです。ブレントがWTIを大きく上回る場合、米国産原油がパイプラインの制約や供給過剰で内陸に閉じ込められていることを示唆します。逆に差が縮まれば、輸出能力が拡大したか、世界的な供給が引き締まったシグナルであることが多いです。二つの価格を並べて見ることで、どちらか一方だけを見るより原油市場の全体像が格段に明確になります。' },
+      ],
+      faq: [
+        { q: '米国のドライバーが払うガソリン代はWTI連動ですか？', a: 'WTIは米国原油の主要な参照指標ですが、ガソリンスタンドの実際の価格には精製コスト、流通、税金、地域の需給が上乗せされます。WTIが示すのは原油そのものの値段であり、完成した燃料の価格ではありません。' },
+        { q: 'なぜWTIはブレントより安いことが多いのですか？', a: '多くの場合そうですが、常にではありません。WTIは海港ではなく内陸のハブで値決めされるため、米国のパイプラインのボトルネックや国内在庫の影響を受けやすいのです。価格差の拡大は、品質の差というより物流の制約を反映していることが一般的です。' },
+        { q: 'WTI価格はどのくらいの頻度で更新されますか？', a: '価格は市場が取引されている時間帯に取得され、高速配信のためにキャッシュされます。週末は市場が休場するため、取引再開までは直近の営業日の水準が表示されます。' },
+      ],
+    },
     faqPage: {
       lead: '本サイトが市場データをどのように収集・表示しているかについて、よく寄せられる質問と回答です。',
       items: [
@@ -328,6 +370,20 @@ export const CONTENT = {
         { q: '¿Cuál es la actualidad de estos tipos?', a: 'Los tipos se actualizan según un calendario diario. Son adecuados para presupuestar y comparar, pero no para ejecutar una transferencia.' },
         { q: '¿Es este el tipo que me dará mi banco?', a: 'No. Los bancos y servicios de transferencia aplican un margen y comisiones sobre el tipo de referencia. Espere que el tipo práctico difiera.' },
         { q: '¿Puedo usar esto para contabilidad o liquidación?', a: 'No. Utilice el tipo oficial publicado por su banco, proveedor de pago o autoridad fiscal para cualquier registro financiero.' },
+      ],
+    },
+    wti: {
+      intro: 'El WTI es la referencia del crudo estadounidense y el segundo precio del petróleo más citado del mundo después del Brent. Se cotiza en dólares por barril y se actualiza mientras operan los mercados.',
+      sections: [
+        { h: '¿Qué es el crudo WTI?', p: 'El West Texas Intermediate es un crudo ligero y dulce que se produce principalmente en la cuenca Pérmica y en la región centrocontinental de Estados Unidos. Es muy ligero y con un contenido de azufre muy bajo — posiblemente la mayor calidad entre las grandes referencias —, lo que lo hace especialmente atractivo para las refinerías orientadas a la producción de gasolina. A pesar del nombre, ya no se extrae solo en Texas: hoy el grado describe una especificación más que un único origen geográfico.' },
+        { h: 'Por qué se entrega en Cushing', p: 'El contrato de futuros del WTI se liquida en Cushing, Oklahoma, un nudo interior donde convergen decenas de oleoductos y se alzan cientos de tanques de almacenamiento. Esa concentración de infraestructura lo convierte en el punto natural de fijación de precios del crudo del interior estadounidense. Pero también es su debilidad estructural: el petróleo almacenado en Cushing solo puede salir por oleoducto, y cuando esos ductos están llenos el precio local se desajusta del mercado marítimo internacional.' },
+        { h: 'WTI y Brent: por qué hay dos referencias', p: 'Ambos son crudos ligeros y dulces, de modo que a largo plazo sus precios se mueven juntos. La diferencia entre ellos no es un error: refleja diferencias logísticas reales. El Brent puede cargarse directamente en buques en el Mar del Norte y enviarse a cualquier parte, por lo que sigue al mercado marítimo global. El WTI se fija tierra adentro, en el centro del continente americano, y reacciona con más fuerza a la capacidad de los oleoductos, al nivel de inventarios en Cushing y a la producción de esquisto nacional.' },
+        { h: 'Qué indica el diferencial Brent-WTI', p: 'La diferencia entre ambos precios es uno de los números más observados del sector energético. Cuando el Brent cotiza muy por encima del WTI, suele significar que el crudo estadounidense está atrapado tierra adentro por limitaciones de oleoductos o por exceso de oferta. Cuando la brecha se estrecha, a menudo indica que la capacidad de exportación se ha ampliado o que la oferta global se ha ajustado. Leer los dos precios juntos da una imagen mucho más clara del mercado que cualquiera de ellos por separado.' },
+      ],
+      faq: [
+        { q: '¿Es el WTI el precio que pagan los conductores estadounidenses?', a: 'Es la referencia principal del crudo en EE. UU., pero el precio en el surtidor también depende de los costes de refino, la distribución, los impuestos y la oferta regional. El WTI indica cuánto cuesta el crudo, no el combustible terminado.' },
+        { q: '¿Por qué el WTI suele ser más barato que el Brent?', a: 'A menudo lo es, pero no siempre. El WTI se fija en un nudo interior y no en un puerto, por lo que es más sensible a los cuellos de botella de los oleoductos y a los inventarios nacionales. Una brecha amplia suele reflejar una limitación logística, no una diferencia de calidad.' },
+        { q: '¿Cada cuánto se actualiza el precio del WTI?', a: 'El dato se recoge mientras los mercados operan y se almacena en caché para una entrega rápida. Los mercados cierran el fin de semana, por lo que se muestra el nivel de la última sesión hasta que se reanuda la negociación.' },
       ],
     },
     faqPage: {
@@ -411,6 +467,20 @@ export const CONTENT = {
         { q: 'Puis-je utiliser ceci pour la comptabilité ou le règlement ?', a: 'Non. Utilisez le taux officiel publié par votre banque, votre prestataire de paiement ou votre administration fiscale pour tout enregistrement financier.' },
       ],
     },
+    wti: {
+      intro: 'Le WTI est la référence du pétrole brut américain et le deuxième prix du brut le plus cité au monde après le Brent. Il est coté en dollars par baril et actualisé pendant les heures de cotation.',
+      sections: [
+        { h: "Qu'est-ce que le brut WTI ?", p: "Le West Texas Intermediate est un brut léger et doux produit principalement dans le bassin permien et la région du centre du continent américain. Il est très léger et très pauvre en soufre — sans doute la meilleure qualité parmi les grandes références —, ce qui le rend particulièrement attractif pour les raffineries orientées vers l'essence. Malgré son nom, il n'est plus produit uniquement au Texas : le grade décrit aujourd'hui une spécification plutôt qu'une origine géographique unique." },
+        { h: 'Pourquoi la livraison se fait à Cushing', p: "Le contrat à terme du WTI se dénoue à Cushing, en Oklahoma, un nœud intérieur où convergent des dizaines d'oléoducs et où s'alignent des centaines de réservoirs. Cette concentration d'infrastructures en fait le point de cotation naturel du brut de l'intérieur des États-Unis. Mais c'est aussi sa faiblesse structurelle : le pétrole stocké à Cushing ne peut partir que par oléoduc, et lorsque ces conduits sont saturés, le prix local se désynchronise du marché maritime international." },
+        { h: 'WTI et Brent : pourquoi deux références', p: "Les deux sont des bruts légers et doux : à long terme, leurs prix évoluent ensemble. L'écart entre eux n'est pas une erreur, il reflète des différences logistiques bien réelles. Le Brent peut être chargé directement sur des navires en mer du Nord et expédié n'importe où : il suit donc le marché maritime mondial. Le WTI est coté à l'intérieur des terres, au centre du continent américain, et réagit plus vivement à la capacité des oléoducs, au niveau des stocks de Cushing et à la production nationale de schiste." },
+        { h: "Ce que l'écart Brent-WTI vous apprend", p: "La différence entre les deux prix est l'un des chiffres les plus surveillés du secteur énergétique. Quand le Brent se négocie nettement au-dessus du WTI, cela signifie généralement que le brut américain est bloqué à l'intérieur des terres par des contraintes d'oléoducs ou un excédent d'offre. Quand l'écart se resserre, cela indique souvent que la capacité d'exportation s'est développée ou que l'offre mondiale s'est tendue. Lire les deux prix ensemble donne une image bien plus claire du marché que chacun pris isolément." },
+      ],
+      faq: [
+        { q: "Est-ce le prix que paient les automobilistes américains ?", a: "C'est la référence principale du brut aux États-Unis, mais le prix à la pompe dépend aussi des coûts de raffinage, de la distribution, des taxes et de l'offre régionale. Le WTI indique le prix du brut lui-même, pas celui du carburant fini." },
+        { q: 'Pourquoi le WTI est-il souvent moins cher que le Brent ?', a: "Souvent, mais pas toujours. Le WTI est coté à un nœud intérieur et non dans un port, ce qui le rend plus sensible aux goulets d'étranglement des oléoducs et aux stocks nationaux. Un écart important reflète généralement une contrainte logistique, non une différence de qualité." },
+        { q: 'À quelle fréquence le prix du WTI est-il actualisé ?', a: "La donnée est collectée pendant les heures de cotation et mise en cache pour une diffusion rapide. Les marchés ferment le week-end : le niveau de la dernière séance est donc affiché jusqu'à la reprise des échanges." },
+      ],
+    },
     faqPage: {
       lead: 'Réponses aux questions les plus fréquentes des visiteurs sur la façon dont ce site collecte et présente les données de marché.',
       items: [
@@ -492,6 +562,20 @@ export const CONTENT = {
         { q: 'Kann ich das für Buchhaltung oder Abrechnung nutzen?', a: 'Nein. Verwenden Sie für finanzielle Aufzeichnungen den offiziellen Kurs Ihrer Bank, Ihres Zahlungsdienstleisters oder Ihrer Steuerbehörde.' },
       ],
     },
+    wti: {
+      intro: 'WTI ist die Referenzsorte für US-Rohöl und nach Brent der weltweit zweithäufigste zitierte Ölpreis. Er wird in US-Dollar pro Barrel notiert und während der Handelszeiten aktualisiert.',
+      sections: [
+        { h: 'Was ist WTI-Rohöl?', p: 'West Texas Intermediate ist ein leichtes, süßes Rohöl, das vor allem im Perm-Becken und in der Mittelkontinentalregion der USA gefördert wird. Es ist sehr leicht und sehr schwefelarm — qualitativ wohl die hochwertigste der großen Referenzsorten — und damit besonders attraktiv für Raffinerien, die auf Benzin ausgelegt sind. Trotz des Namens stammt es längst nicht mehr nur aus Texas: Die Bezeichnung beschreibt heute eine Spezifikation, nicht eine einzelne geografische Quelle.' },
+        { h: 'Warum Cushing der Lieferort ist', p: 'Der WTI-Terminkontrakt wird in Cushing, Oklahoma, erfüllt — einem Binnenknotenpunkt, an dem Dutzende Pipelines zusammenlaufen und mehrere hundert Lagertanks stehen. Diese Konzentration an Infrastruktur macht den Ort zum natürlichen Preispunkt für US-Binnenrohöl. Sie ist aber auch WTIs strukturelle Schwäche: Öl, das in Cushing liegt, kann nur per Pipeline abfließen, und wenn diese Pipelines voll sind, läuft der lokale Preis aus dem Takt mit dem internationalen Seemarkt.' },
+        { h: 'WTI und Brent: Warum zwei Referenzen', p: 'Beide sind leichte Süßrohöle, sodass sich ihre Preise auf lange Sicht gemeinsam bewegen. Der Abstand zwischen ihnen ist kein Fehler, sondern spiegelt reale logistische Unterschiede. Brent lässt sich in der Nordsee direkt auf Tanker laden und weltweit verschiffen und folgt deshalb dem globalen Seemarkt. WTI wird im Binnenland, im amerikanischen Mittelkontinent, bepreist und reagiert stärker auf US-Pipelinekapazität, Lagerbestände in Cushing und die heimische Schieferölproduktion.' },
+        { h: 'Was der Brent-WTI-Spread verrät', p: 'Die Differenz zwischen beiden Preisen ist eine der meistbeachteten Zahlen im Energiesektor. Notiert Brent deutlich über WTI, bedeutet das meist, dass US-Rohöl durch Pipelineengpässe oder ein Überangebot im Binnenland feststeckt. Verengt sich der Abstand, signalisiert das häufig ausgeweitete Exportkapazität oder einen strafferen globalen Markt. Beide Preise zusammen zu lesen ergibt ein deutlich klareres Bild als jeder für sich.' },
+      ],
+      faq: [
+        { q: 'Ist WTI der Preis, den US-Autofahrer zahlen?', a: 'Es ist die wichtigste Referenz für US-Rohöl, doch der Preis an der Zapfsäule hängt zusätzlich an Raffineriekosten, Vertrieb, Steuern und regionalem Angebot. WTI zeigt, was das Rohöl kostet, nicht den fertigen Kraftstoff.' },
+        { q: 'Warum ist WTI meist günstiger als Brent?', a: 'Oft ist es das, aber nicht immer. WTI wird an einem Binnenknoten und nicht an einem Seehafen bepreist und reagiert daher stärker auf Pipelineengpässe und Inlandsbestände. Ein großer Abstand spiegelt meist eine Logistikbeschränkung, keinen Qualitätsunterschied.' },
+        { q: 'Wie oft wird der WTI-Preis aktualisiert?', a: 'Der Wert wird während der Handelszeiten erhoben und für die schnelle Auslieferung zwischengespeichert. Am Wochenende sind die Märkte geschlossen, sodass bis zur Wiederaufnahme des Handels der Stand des letzten Handelstages angezeigt wird.' },
+      ],
+    },
     faqPage: {
       lead: 'Antworten auf die Fragen, die Besucher am häufigsten dazu stellen, wie diese Website Marktdaten erhebt und darstellt.',
       items: [
@@ -571,6 +655,20 @@ export const CONTENT = {
         { q: 'Qual é a atualidade destas taxas?', a: 'As taxas são atualizadas em cronograma diário. Servem para orçamento e comparação, mas não para executar uma transferência.' },
         { q: 'É a taxa que meu banco me dará?', a: 'Não. Bancos e serviços de transferência aplicam margem e tarifas sobre a taxa de referência. Espere que a taxa prática seja diferente.' },
         { q: 'Posso usar isto para contabilidade ou liquidação?', a: 'Não. Use a taxa oficial publicada pelo seu banco, provedor de pagamento ou autoridade fiscal para qualquer registro financeiro.' },
+      ],
+    },
+    wti: {
+      intro: 'O WTI é a referência do petróleo bruto americano e o segundo preço de petróleo mais citado no mundo, depois do Brent. É cotado em dólares por barril e atualizado durante o horário de negociação.',
+      sections: [
+        { h: 'O que é o petróleo WTI?', p: 'O West Texas Intermediate é um petróleo leve e doce produzido principalmente na Bacia do Permiano e na região centro-continental dos Estados Unidos. É muito leve e com teor de enxofre muito baixo — provavelmente a mais alta qualidade entre as grandes referências —, o que o torna especialmente atraente para refinarias voltadas à produção de gasolina. Apesar do nome, já não é extraído apenas no Texas: hoje o grau descreve uma especificação, e não uma única origem geográfica.' },
+        { h: 'Por que a entrega ocorre em Cushing', p: 'O contrato futuro do WTI é liquidado em Cushing, Oklahoma, um nó interior onde convergem dezenas de oleodutos e se erguem centenas de tanques de armazenagem. Essa concentração de infraestrutura faz do local o ponto natural de precificação do petróleo do interior americano. Mas é também a fraqueza estrutural do WTI: o óleo armazenado em Cushing só pode sair por oleoduto e, quando esses dutos estão cheios, o preço local se desalinha do mercado marítimo internacional.' },
+        { h: 'WTI e Brent: por que existem duas referências', p: 'Ambos são petróleos leves e doces, de modo que, no longo prazo, seus preços se movem juntos. A diferença entre eles não é um erro: reflete diferenças logísticas reais. O Brent pode ser carregado diretamente em navios no Mar do Norte e enviado a qualquer lugar, acompanhando o mercado marítimo global. O WTI é cotado no interior, no centro do continente americano, e reage com mais intensidade à capacidade dos oleodutos, ao nível dos estoques em Cushing e à produção doméstica de xisto.' },
+        { h: 'O que o diferencial Brent-WTI revela', p: 'A diferença entre os dois preços é um dos números mais observados do setor de energia. Quando o Brent é negociado bem acima do WTI, isso normalmente significa que o petróleo americano está preso no interior por restrições de oleodutos ou por excesso de oferta. Quando a diferença se estreita, costuma indicar que a capacidade de exportação se expandiu ou que a oferta global ficou mais apertada. Ler os dois preços em conjunto dá um quadro bem mais claro do mercado do que qualquer um isoladamente.' },
+      ],
+      faq: [
+        { q: 'O WTI é o preço que os motoristas americanos pagam?', a: 'É a principal referência do petróleo nos EUA, mas o preço na bomba também depende dos custos de refino, da distribuição, dos impostos e da oferta regional. O WTI indica quanto custa o petróleo bruto, não o combustível pronto.' },
+        { q: 'Por que o WTI costuma ser mais barato que o Brent?', a: 'Com frequência é, mas nem sempre. O WTI é cotado em um nó interior, não em um porto, o que o torna mais sensível a gargalos de oleodutos e aos estoques domésticos. Uma diferença ampla geralmente reflete uma restrição logística, não uma diferença de qualidade.' },
+        { q: 'Com que frequência o preço do WTI é atualizado?', a: 'O dado é coletado enquanto os mercados operam e armazenado em cache para entrega rápida. Os mercados fecham nos fins de semana, de modo que o nível da última sessão é exibido até a retomada das negociações.' },
       ],
     },
     faqPage: {

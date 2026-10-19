@@ -22,6 +22,7 @@ const HARDCODED = {
   AD_SLOT_GOLD:   '',
   AD_SLOT_CN:     '',
   AD_SLOT_FX:     '',
+  AD_SLOT_WTI:    '',
   AD_SLOT_LEGAL:  '',
   AD_SLOT_BLOG:    '',
   AD_SLOT_ARTICLE: '',
@@ -48,6 +49,7 @@ export function configure(env = {}) {
     gold:  v('AD_SLOT_GOLD')  || HARDCODED.AD_SLOT_GOLD,
     cn:    v('AD_SLOT_CN')    || HARDCODED.AD_SLOT_CN,
     fx:    v('AD_SLOT_FX')    || HARDCODED.AD_SLOT_FX,
+    wti:   v('AD_SLOT_WTI')   || HARDCODED.AD_SLOT_WTI,
     legal: v('AD_SLOT_LEGAL') || HARDCODED.AD_SLOT_LEGAL,
     blog:    v('AD_SLOT_BLOG')    || HARDCODED.AD_SLOT_BLOG,
     article: v('AD_SLOT_ARTICLE') || HARDCODED.AD_SLOT_ARTICLE,
@@ -202,6 +204,7 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 
 .swatch{width:9px;height:9px;border-radius:3px;background:var(--gold)}
 .swatch.o{background:var(--oil)} .s{background:var(--cn)} .f{background:var(--fx)}
+.swatch.w{background:linear-gradient(135deg,var(--oil),#ffd166)}
 
 /* ---------- table ---------- */
 .tblwrap{overflow-x:auto;border-radius:16px;border:1px solid var(--line);background:var(--card)}
@@ -360,7 +363,7 @@ ${CONFIG.gaId ? `<script async src="https://www.googletagmanager.com/gtag/js?id=
 export function topbar(lang, active) {
   const L = t(lang);
   const items = [
-    ['/', L.nav.overview], ['/oil/', L.nav.oil], ['/gold/', L.nav.gold],
+    ['/', L.nav.overview], ['/oil/', L.nav.oil], ['/wti/', L.nav.wti], ['/gold/', L.nav.gold],
     ['/china-fuel/', L.nav.cn], ['/currency/', L.nav.fx],
     ['/blog/', blogStr(lang).nav],
   ];
@@ -404,8 +407,8 @@ export function footer(lang, year) {
       <p class="disc">${esc(L.tagline)}</p>
     </div>
     <div><h4>${esc(L.footerQuick)}</h4><ul>
-      ${link('/oil/', L.nav.oil)}${link('/gold/', L.nav.gold)}
-      ${link('/china-fuel/', L.nav.cn)}${link('/currency/', L.nav.fx)}
+      ${link('/oil/', L.nav.oil)}${link('/wti/', L.nav.wti)}
+      ${link('/gold/', L.nav.gold)}${link('/china-fuel/', L.nav.cn)}${link('/currency/', L.nav.fx)}
     </ul></div>
     <div><h4>${esc(L.footerCompany)}</h4><ul>
       ${link('/faq/', faqLabel(lang))}

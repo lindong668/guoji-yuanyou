@@ -211,7 +211,9 @@ async function ensureBlock(which) {
   if (!n) return;
   const ttl = secondsUntilDailyRefresh(sched.h, sched.m);
   if (which === 'oilGold') {
-    blockOG = { ts: Date.now(), ttl, data: { oil: n.oil, gold: n.gold } };
+    // WTI rides along with the oil block — it comes from the same upstream
+    // request, so it refreshes on the identical schedule at zero extra cost.
+    blockOG = { ts: Date.now(), ttl, data: { oil: n.oil, gold: n.gold, wti: n.wti } };
   } else {
     blockCN = { ts: Date.now(), ttl, data: { cnOil: n.cnOil } };
   }
@@ -227,6 +229,7 @@ export function normalise(raw) {
   const oilRaw = raw['油'] || raw.oil || {};
   const goldRaw = raw['金子'] || raw.gold || {};
   const cnRaw = raw.cn_oil || raw['cn_oil'] || {};
+  const wtiRaw = raw.wti || raw['wti'] || {};
 
   const listSrc = Array.isArray(cnRaw.list) ? cnRaw.list
     : Array.isArray(cnRaw['列表']) ? cnRaw['列表']
@@ -260,6 +263,14 @@ export function normalise(raw) {
       note: cnRaw.note || '',
       source: cnRaw.source || '',
     },
+    // WTI — same upstream request as Brent (by_code=BRENT_CRUDE_USD,WTI_USD),
+    // so it costs no extra API quota. Absent on older upstream builds.
+    wti: {
+      price: wtiRaw.price ?? null,
+      formatted: wtiRaw.formatted ?? null,
+      updated: toUtcIso(wtiRaw.updatedLocal || wtiRaw.timestamp) || null,
+      isSettlement: wtiRaw.isSettlement ?? false,
+    },
     fetchedAt: new Date().toISOString(),
   };
 }
@@ -270,6 +281,7 @@ export function normalise(raw) {
 const EMPTY_OIL = { price: null, formatted: null, updated: null, isSettlement: false };
 const EMPTY_GOLD = { usdOz: null, cnyGram: null, updated: null };
 const EMPTY_CN = { list: [], updated: null, note: '', source: '' };
+const EMPTY_WTI = { price: null, formatted: null, updated: null, isSettlement: false };
 
 export async function getMarket() {
   try {
@@ -282,6 +294,7 @@ export async function getMarket() {
       oil: og.oil || EMPTY_OIL,
       gold: og.gold || EMPTY_GOLD,
       cnOil: cn.cnOil || EMPTY_CN,
+      wti: og.wti || EMPTY_WTI,
       fetchedAt: new Date().toISOString(),
     };
     if (n.oil.price || n.gold.usdOz || n.cnOil.list.length) {
