@@ -25,7 +25,7 @@ export const ARTICLES = [
   {
     slug: 'why-brent-is-oil-benchmark',
     cat: 'oil',
-    date: '2026-09-29',
+    date: '2026-09-22',
     readMin: 6,
     i18n: {
       zh: {
@@ -121,7 +121,7 @@ export const ARTICLES = [
   {
     slug: 'how-to-read-gold-price',
     cat: 'gold',
-    date: '2026-10-02',
+    date: '2026-09-25',
     readMin: 5,
     i18n: {
       zh: {
@@ -217,7 +217,7 @@ export const ARTICLES = [
   {
     slug: 'china-fuel-pricing-mechanism',
     cat: 'cn',
-    date: '2026-10-05',
+    date: '2026-09-30',
     readMin: 6,
     i18n: {
       zh: {
@@ -313,7 +313,7 @@ export const ARTICLES = [
   {
     slug: 'mid-market-vs-bank-rate',
     cat: 'fx',
-    date: '2026-10-08',
+    date: '2026-10-06',
     readMin: 5,
     i18n: {
       zh: {
@@ -409,7 +409,7 @@ export const ARTICLES = [
   {
     slug: 'what-one-barrel-produces',
     cat: 'oil',
-    date: '2026-10-11',
+    date: '2026-10-09',
     readMin: 5,
     i18n: {
       zh: {
@@ -501,7 +501,7 @@ export const ARTICLES = [
   {
     slug: 'why-fuel-prices-differ-by-province',
     cat: 'cn',
-    date: '2026-10-14',
+    date: '2026-10-13',
     readMin: 6,
     i18n: {
       zh: {
@@ -533,7 +533,7 @@ export const ARTICLES = [
   {
     slug: 'gasoline-92-95-98-octane',
     cat: 'cn',
-    date: '2026-10-16',
+    date: '2026-10-15',
     readMin: 5,
     i18n: {
       zh: {
@@ -565,7 +565,7 @@ export const ARTICLES = [
   {
     slug: 'gold-investment-vehicles-compared',
     cat: 'gold',
-    date: '2026-10-18',
+    date: '2026-10-16',
     readMin: 6,
     i18n: {
       zh: {

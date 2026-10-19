@@ -28,7 +28,7 @@ export const T = {
 
     heroBadge: 'Daily Updated Market Data',
     heroTitle: 'Global Brent Crude Oil, Gold & Currency Prices in One Place',
-    heroSub: 'Brent crude oil, gold and China retail fuel prices, updated once every day — plus a free currency converter. Data is refreshed on a daily schedule and served from a global edge network for visitors worldwide.',
+    heroSub: 'Brent crude updates hourly while markets are open; gold and China retail fuel prices update daily — plus a free currency converter. Data is served from a global edge network for visitors worldwide.',
     heroCta: "See Today's Prices",
 
     secOverview: 'Market Overview',
@@ -43,7 +43,7 @@ export const T = {
     thProvince: 'Province / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regions covered',
     weekendNote: 'Markets are closed on weekends — the most recent trading day figures are shown.',
-    prevCloseNote: 'Showing the closing price from the previous trading session.',
+    prevCloseNote: 'Brent updates hourly during trading hours; gold and China fuel prices update once daily.',
     fxWeekendNote: 'FX markets are closed at weekends — the latest published rate is shown.',
     viewAll: 'View all',
 
@@ -108,7 +108,7 @@ export const T = {
 
     heroBadge: '每日更新行情数据',
     heroTitle: '全球布伦特原油、黄金与汇率，一站掌握',
-    heroSub: '布伦特原油、黄金与中国成品油价格每日更新，并内置免费汇率换算工具。数据每日刷新一次，依托全球边缘网络为各地访客快速加载。',
+    heroSub: '布伦特原油在交易时段每小时更新，黄金与中国成品油价格每日更新，并内置免费汇率换算工具。数据依托全球边缘网络为各地访客快速加载。',
     heroCta: '查看当日价格',
 
     secOverview: '行情总览',
@@ -123,7 +123,7 @@ export const T = {
     thProvince: '省份 / 地区', th92: '92#', th95: '95#', th98: '98#', th0: '0# 柴油',
     provincesCount: '个地区',
     weekendNote: '周末市场休市，显示最近一个交易日数据。',
-    prevCloseNote: '显示前一交易日的收盘价格。',
+    prevCloseNote: '布伦特原油在交易时段每小时更新，黄金与国内油价每日更新一次。',
     fxWeekendNote: '外汇市场周末休市，显示最近一次公布的汇率。',
     viewAll: '查看全部',
 
@@ -188,7 +188,7 @@ export const T = {
 
     heroBadge: '毎日更新の市場データ',
     heroTitle: '世界のブレント原油・金・為替をひとつに',
-    heroSub: 'ブレント原油・金・中国燃料価格を毎日更新で表示し、無料の通貨換算ツールも搭載。データは1日1回更新され、グローバルエッジネットワークから高速配信されます。',
+    heroSub: 'ブレント原油は取引時間中に毎時更新、金と中国燃料価格は毎日更新、無料の通貨換算ツールも搭載。グローバルエッジネットワークから高速配信されます。',
     heroCta: '本日の価格を見る',
 
     secOverview: 'マーケット概要',
@@ -203,7 +203,7 @@ export const T = {
     thProvince: '省・地域', th92: '92#', th95: '95#', th98: '98#', th0: '0# 軽油',
     provincesCount: '地域',
     weekendNote: '週末は市場が休場のため、直近の営業日の数値を表示しています。',
-    prevCloseNote: '前営業日の終値を表示しています。',
+    prevCloseNote: 'ブレント原油は取引時間中に1時間ごと、金と中国の燃料価格は1日1回更新されます。',
     fxWeekendNote: '外国為替市場は週末休場のため、最新の公表レートを表示しています。',
     viewAll: 'すべて見る',
 
@@ -268,7 +268,7 @@ export const T = {
 
     heroBadge: 'Datos de mercado actualizados a diario',
     heroTitle: 'Petróleo Brent, oro y divisas mundiales en un solo lugar',
-    heroSub: 'Precios del crudo Brent, oro y combustible en China actualizados una vez al día, además de un conversor de divisas gratuito. Los datos se renuevan a diario y se distribuyen desde la red perimetral global.',
+    heroSub: 'El crudo Brent se actualiza cada hora mientras los mercados están abiertos; el oro y el combustible en China, a diario, además de un conversor de divisas gratuito. Los datos se distribuyen desde la red perimetral global.',
     heroCta: 'Ver los precios de hoy',
 
     secOverview: 'Resumen del mercado',
@@ -283,7 +283,7 @@ export const T = {
     thProvince: 'Provincia / Región', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diésel',
     provincesCount: 'regiones',
     weekendNote: 'Los mercados cierran el fin de semana: se muestran los datos del último día hábil.',
-    prevCloseNote: 'Se muestra el precio de cierre de la sesión anterior.',
+    prevCloseNote: 'El Brent se actualiza cada hora en horario de negociación; el oro y los combustibles de China, una vez al día.',
     fxWeekendNote: 'Los mercados de divisas cierran el fin de semana: se muestra la última cotización publicada.',
     viewAll: 'Ver todo',
 
@@ -348,7 +348,7 @@ export const T = {
 
     heroBadge: 'Données de marché mises à jour chaque jour',
     heroTitle: 'Pétrole Brent, or et devises mondiaux en un seul endroit',
-    heroSub: 'Prix du brut Brent, de l\'or et des carburants en Chine, actualisés une fois par jour, plus un convertisseur de devises gratuit. Les données sont renouvelées chaque jour et diffusées depuis un réseau périphérique mondial.',
+    heroSub: 'Le brut Brent est actualisé toutes les heures pendant les heures de négociation ; l\'or et les carburants en Chine, chaque jour, plus un convertisseur de devises gratuit. Les données sont diffusées depuis un réseau périphérique mondial.',
     heroCta: 'Voir les prix du jour',
 
     secOverview: 'Aperçu du marché',
@@ -363,7 +363,7 @@ export const T = {
     thProvince: 'Province / Région', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'régions',
     weekendNote: 'Marchés fermés le week-end : les chiffres du dernier jour de cotation sont affichés.',
-    prevCloseNote: 'Affichage du cours de clôture de la séance précédente.',
+    prevCloseNote: 'Le Brent est actualisé toutes les heures pendant les heures de négociation ; l\'or et les carburants chinois, une fois par jour.',
     fxWeekendNote: 'Les marchés des changes sont fermés le week-end : le dernier taux publié est affiché.',
     viewAll: 'Voir tout',
 
@@ -428,7 +428,7 @@ export const T = {
 
     heroBadge: 'Täglich aktualisierte Marktdaten',
     heroTitle: 'Brent-Öl, Gold und Währungen weltweit an einem Ort',
-    heroSub: 'Einmal täglich aktualisierte Preise für Brent-Rohöl, Gold und chinesische Kraftstoffe – plus ein kostenloser Währungsrechner. Die Daten werden jeden Tag erneuert und weltweit über ein Edge-Netzwerk ausgeliefert.',
+    heroSub: 'Brent-Rohöl wird während der Handelszeiten stündlich aktualisiert, Gold und chinesische Kraftstoffe täglich – plus ein kostenloser Währungsrechner. Die Daten werden weltweit über ein Edge-Netzwerk ausgeliefert.',
     heroCta: 'Preise des Tages ansehen',
 
     secOverview: 'Marktüberblick',
@@ -443,7 +443,7 @@ export const T = {
     thProvince: 'Provinz / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'Regionen',
     weekendNote: 'Märkte sind am Wochenende geschlossen – es werden die Werte des letzten Handelstags angezeigt.',
-    prevCloseNote: 'Schlusskurs des vorherigen Handelstags wird angezeigt.',
+    prevCloseNote: 'Brent wird während der Handelszeiten stündlich aktualisiert, Gold und chinesische Kraftstoffpreise einmal täglich.',
     fxWeekendNote: 'Die Devisenmärkte sind am Wochenende geschlossen – es wird der zuletzt veröffentlichte Kurs angezeigt.',
     viewAll: 'Alle ansehen',
 
@@ -508,7 +508,7 @@ export const T = {
 
     heroBadge: 'Dados de mercado atualizados diariamente',
     heroTitle: 'Petróleo Brent, ouro e câmbio mundiais em um só lugar',
-    heroSub: 'Preços do petróleo bruto Brent, ouro e combustível na China atualizados uma vez por dia, além de um conversor de moedas gratuito. Os dados são renovados diariamente e entregues por uma rede de borda global.',
+    heroSub: 'O petróleo Brent é atualizado de hora em hora durante o pregão; ouro e combustível na China, diariamente, além de um conversor de moedas gratuito. Os dados são entregues por uma rede de borda global.',
     heroCta: 'Ver os preços de hoje',
 
     secOverview: 'Visão geral do mercado',
@@ -523,7 +523,7 @@ export const T = {
     thProvince: 'Província / Região', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regiões',
     weekendNote: 'Mercados fecham no fim de semana — são exibidos os dados do último dia útil.',
-    prevCloseNote: 'Exibindo o preço de fechamento da sessão anterior.',
+    prevCloseNote: 'O Brent é atualizado de hora em hora durante o pregão; ouro e combustíveis da China, uma vez por dia.',
     fxWeekendNote: 'Os mercados de câmbio fecham no fim de semana — é exibida a última cotação publicada.',
     viewAll: 'Ver tudo',
 
