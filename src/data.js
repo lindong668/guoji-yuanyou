@@ -6,6 +6,12 @@
 
 export const SOURCE_WORKER = 'https://ss.wwok.eu.cc/data';
 
+/* 源站 /data 只读 KV —— 不触发真实抓取、不消耗任何 API 配额。
+ * 真正消耗配额的是 3 号的 /update（cron 定时 + 手动），与这里无关。
+ * 所以前端缓存时间可以放心压短：手刷 /update 之后，
+ * 前端最多等 SOURCE_CACHE_TTL 秒就能看到新值，而不必等到次日 04:30。 */
+const SOURCE_CACHE_TTL = 600;   // 10 分钟
+
 /* 3 号（oil-data-worker）已开启私有后端访问控制，
  * 访问 /data 必须携带此密钥，否则返回 403。
  * ⚠️ 必须与 3 号 wrangler.toml 里的 ACCESS_KEY 完全一致，
@@ -217,7 +223,7 @@ async function ensureBlock(which) {
   if (which === 'cnOil' && isFresh(blockCN)) return;
   const n = await fetchSource();
   if (!n) return;
-  const ttl = secondsUntilDailyRefresh(sched.h, sched.m);
+  const ttl = Math.min(secondsUntilDailyRefresh(sched.h, sched.m), SOURCE_CACHE_TTL);
   if (which === 'oilGold') {
     // WTI rides along with the oil block — it comes from the same upstream
     // request, so it refreshes on the identical schedule at zero extra cost.
