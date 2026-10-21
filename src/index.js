@@ -51,11 +51,22 @@ export default {
     const tz = pickTz(request);
 
     // ---------- ads.txt (required by AdSense) ----------
+    /* ★ v2 修正：ads.txt 必须提前给出真实 publisher ID
+     *
+     * 原逻辑依赖 adsTxtPublisher()，而它受 ADSENSE_CLIENT 控制；
+     * wrangler.toml 里该值留空（为了审核期间不展示广告位），
+     * 结果 ads.txt 输出的是一行注释 —— AdSense 抓取器会判定
+     * 「ads.txt 无效 / 缺失」，审核直接卡住。
+     *
+     * 关键点：ads.txt 只是所有权声明文件，本身不含广告代码，
+     * 提前放置完全符合 AdSense 政策（政策禁止的是审核期间展示广告位，
+     * 不是禁止声明所有权）。
+     *
+     * 所以这里写死真实 pub ID，且与广告位开关解耦 ——
+     * ads.txt 立即生效，广告位仍等批准后由 ADSENSE_CLIENT 控制开启。 */
     if (url.pathname === '/ads.txt') {
-      const pub = adsTxtPublisher();
-      const body = pub
-        ? `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`
-        : '# ads.txt — set ADSENSE_CLIENT in wrangler.toml [vars] after AdSense approval\n';
+      const pub = adsTxtPublisher() || 'pub-8915931557404979';
+      const body = `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`;
       return new Response(body, {
         headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=86400' },
       });

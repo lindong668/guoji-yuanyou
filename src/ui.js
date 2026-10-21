@@ -67,16 +67,35 @@ export const adsTxtPublisher = () =>
   adOn() ? CONFIG.adsenseClient.replace(/^ca-/, '') : '';
 
 /**
- * Render one AdSense ad unit (or a placeholder before approval).
- * pos: home | oil | gold | cn | fx | legal
+ * Render one AdSense ad unit.
+ * pos: home | oil | gold | cn | fx | legal | blog | article
+ *
+ * ★ v2 修正：审核期间「完全不渲染广告位」。
+ *
+ * 原逻辑在 adOn() 为 false 时输出一个带英文技术说明的占位 div：
+ *   "Advertisement slot — enable AdSense by setting ADSENSE_CLIENT in src/ui.js"
+ * 该文案会：
+ *   1) 出现在中文站点的公网页面上，显得站点未完成；
+ *   2) 把内部变量名（src/ui.js / ADSENSE_CLIENT）暴露给公网。
+ *
+ * AdSense 政策要求：账号获批前不得展示广告位，也不应出现空白广告框。
+ * 因此这里在获批前直接返回空字符串 —— 不留占位、不留空白框、不留任何痕迹。
+ *
+ * 获批后操作：在 wrangler.toml [vars] 填入真实的
+ *   ADSENSE_CLIENT = "ca-pub-8915931557404979"
+ *   AD_SLOT_HOME / AD_SLOT_OIL / … = 各自的广告位 ID
+ * 广告位会自动出现，无需再改本文件。
+ *
+ * ⚠️ 填入的 ADSENSE_CLIENT 必须与 /ads.txt 里的 pub-8915931557404979 一致，
+ *    否则 AdSense 会判「ads.txt 与页面不匹配」。
  */
 export function adSlot(pos = 'home') {
   if (!adOn()) {
-    return `<div class="adslot ad-ph">Advertisement slot — enable AdSense by setting ADSENSE_CLIENT in src/ui.js</div>`;
+    return ''; // pre-approval: render nothing at all
   }
   const slot = CONFIG.adSlots[pos] || CONFIG.adSlots.home || '';
   if (!slot) {
-    return `<div class="adslot ad-ph">Advertisement — set AD_SLOT_${String(pos).toUpperCase()} in wrangler.toml</div>`;
+    return ''; // no slot ID configured for this position yet
   }
   return `<div class="adslot">
   <ins class="adsbygoogle" style="display:block"
@@ -333,6 +352,10 @@ export function head({ lang, title, desc, path, noindex }) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- ★ v2 新增：AdSense 站点归属验证标签。
+     AdSense 后台「网站」审核用它把站点与账号绑定；
+     这是纯 meta 声明、不含广告代码，审核期间放置完全合规。 -->
+<meta name="google-adsense-account" content="ca-pub-8915931557404979">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <link rel="canonical" href="${url}">

@@ -1,7 +1,7 @@
 // ============================================================
 // PriceScope — Page renderers (SSR, so crawlers read real numbers)
 // ============================================================
-import { t, provName, LANGS } from './i18n.js';
+import { t, provName, LANGS, SITE } from './i18n.js';
 import { page, hero, esc, adSlot } from './ui.js';
 import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
 import { curName } from './i18n.js';
@@ -668,14 +668,22 @@ export function renderContact(lang) {
 // SITEMAP (multilingual, hreflang)
 // ------------------------------------------------------------
 export function sitemap() {
+  /* ★ v2 修正：
+   *  1) 原先用硬编码字符串拼 URL，域名一旦变更就会整份 sitemap 变成
+   *     死链，Google 会批量报「已提交但无法抓取」。改为统一走
+   *     SITE.domain（src/i18n.js），域名的任何改动一处生效、全局同步。
+   *  2) 下方「Article index」那段同样改走 SITE.domain。
+   *     注意：/blog/ 列表页本来就有一份（按有译文的语言生成），
+   *     所以这里不再重复加进 paths，避免同一 URL 在 sitemap 里出现两次。 */
+  const D = SITE.domain;
   const paths = ['/', '/oil/', '/wti/', '/gold/', '/china-fuel/', '/currency/', '/faq/', '/about/', '/privacy/', '/contact/'];
   const today = new Date().toISOString().slice(0, 10);
   const urls = [];
   for (const p of paths) {
     for (const l of LANGS) {
-      const loc = `https://you.piccalc.com/${l}${p}`;
+      const loc = `${D}/${l}${p}`;
       const alts = LANGS.map(x =>
-        `<xhtml:link rel="alternate" hreflang="${x}" href="https://you.piccalc.com/${x}${p}"/>`).join('');
+        `<xhtml:link rel="alternate" hreflang="${x}" href="${D}/${x}${p}"/>`).join('');
       urls.push(`<url><loc>${loc}</loc><lastmod>${today}</lastmod>
     <changefreq>${p === '/' ? 'hourly' : 'daily'}</changefreq>
     <priority>${p === '/' ? '1.0' : '0.8'}</priority>${alts}</url>`);
@@ -691,9 +699,9 @@ export function sitemap() {
     if (!artLangs.length) continue;
     for (const l of artLangs) {
       const path = `/blog/${a.slug}/`;
-      const loc = `https://you.piccalc.com/${l}${path}`;
+      const loc = `${D}/${l}${path}`;
       const alts = artLangs.map(x =>
-        `<xhtml:link rel="alternate" hreflang="${x}" href="https://you.piccalc.com/${x}${path}"/>`).join('');
+        `<xhtml:link rel="alternate" hreflang="${x}" href="${D}/${x}${path}"/>`).join('');
       urls.push(`<url><loc>${loc}</loc><lastmod>${a.date}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>${alts}</url>`);
@@ -702,9 +710,9 @@ export function sitemap() {
   // Article index — same language set as the articles themselves.
   const blogLangs = LANGS.filter(l => articlesFor(l).length);
   for (const l of blogLangs) {
-    const loc = `https://you.piccalc.com/${l}/blog/`;
+    const loc = `${D}/${l}/blog/`;
     const alts = blogLangs.map(x =>
-      `<xhtml:link rel="alternate" hreflang="${x}" href="https://you.piccalc.com/${x}/blog/"/>`).join('');
+      `<xhtml:link rel="alternate" hreflang="${x}" href="${D}/${x}/blog/"/>`).join('');
     urls.push(`<url><loc>${loc}</loc><lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>${alts}</url>`);
