@@ -10,7 +10,18 @@ export const SOURCE_WORKER = 'https://ss.wwok.eu.cc/data';
  * 真正消耗配额的是 3 号的 /update（cron 定时 + 手动），与这里无关。
  * 所以前端缓存时间可以放心压短：手刷 /update 之后，
  * 前端最多等 SOURCE_CACHE_TTL 秒就能看到新值，而不必等到次日 04:30。 */
-const SOURCE_CACHE_TTL = 600;   // 10 分钟
+const SOURCE_CACHE_TTL = 10;    // ★ 秒。手刷 /update 后前端最多等这么久就能看到新值
+
+/* ⚠️ 注意这里有【两层】缓存，必须同时改小才有效：
+ *
+ *   第一层：CF fetch 边缘缓存（下面 fetchSource 里的 cf.cacheTtl）
+ *           —— 即使模块级缓存过期了，这一层也会把旧响应再 hold 住，
+ *              之前固定写 60 秒，是"改了 TTL 却不见效"的隐形元凶。
+ *   第二层：模块级 blockOG / blockCN（本文件的 isFresh 判断）
+ *           —— per-isolate 内存缓存，部署或冷启动即清空。
+ *
+ * 两层现在统一用 SOURCE_CACHE_TTL。想更快就把它调成 5，
+ * 代价只是 CF Worker 请求数略增（见下方说明），不动任何 API 配额。 */
 
 /* 3 号（oil-data-worker）已开启私有后端访问控制，
  * 访问 /data 必须携带此密钥，否则返回 403。
@@ -205,7 +216,8 @@ async function fetchSource() {
           // 3 号已开启私有后端访问控制，需携带同一密钥
           'X-Access-Key': SOURCE_ACCESS_KEY,
         },
-        cf: { cacheTtl: 60, cacheEverything: true },
+        // ★ 第一层缓存：与模块级统一，否则改了 TTL 也不生效
+        cf: { cacheTtl: SOURCE_CACHE_TTL, cacheEverything: true },
       });
       if (!res.ok) throw new Error(`Upstream ${res.status}`);
       return normalise(await res.json());
