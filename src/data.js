@@ -5,6 +5,12 @@
 // ============================================================
 
 export const SOURCE_WORKER = 'https://ss.wwok.eu.cc/data';
+
+/* 3 号（oil-data-worker）已开启私有后端访问控制，
+ * 访问 /data 必须携带此密钥，否则返回 403。
+ * ⚠️ 必须与 3 号 wrangler.toml 里的 ACCESS_KEY 完全一致，
+ *    否则 2 号站取不到任何行情数据（页面空白）。 */
+const SOURCE_ACCESS_KEY = 'lfwczh8pa4atakrpj7uwhybo2vexc76u';
 // Primary FX source: the keyless ExchangeRate-API open endpoint. It refreshes
 // every 24h at ~00:00 UTC — INCLUDING weekends — so the date on the page stays
 // current. The ECB/Frankfurter feed publishes on business days only, which was
@@ -190,6 +196,8 @@ async function fetchSource() {
         headers: {
           'User-Agent': 'PriceScope/1.0 (+https://you.piccalc.com)',
           'Accept': 'application/json',
+          // 3 号已开启私有后端访问控制，需携带同一密钥
+          'X-Access-Key': SOURCE_ACCESS_KEY,
         },
         cf: { cacheTtl: 60, cacheEverything: true },
       });
