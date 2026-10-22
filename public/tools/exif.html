@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta content="ca-pub-8915931557404979" name="google-adsense-account"/>
+<script async="" crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8915931557404979"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>View and Remove EXIF Data Online | PicStudio</title>
+<meta content="Inspect camera, exposure and GPS metadata in your photos, then strip it to protect your privacy. Parsed entirely locally." name="description"/>
+<meta content="exif viewer, remove exif, photo metadata, gps removal" name="keywords"/>
+<link href="https://piccalc.com/tools/exif.html" hreflang="en" rel="alternate"/>
+<link href="https://piccalc.com/tools/exif.html" hreflang="zh-CN" rel="alternate"/>
+<link href="https://piccalc.com/tools/exif.html" hreflang="x-default" rel="alternate"/>
+<link href="https://piccalc.com/tools/exif.html" rel="canonical"/>
+<meta content="index,follow,max-image-preview:large" name="robots"/>
+<meta content="website" property="og:type"/>
+<meta content="PicStudio" property="og:site_name"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="View and Remove EXIF Data Online | PicStudio" property="og:title"/>
+<meta content="Inspect camera, exposure and GPS metadata in your photos, then strip it to protect your privacy. Parsed entirely locally." property="og:description"/>
+<meta content="https://piccalc.com/tools/exif.html" property="og:url"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="View and Remove EXIF Data Online | PicStudio" name="twitter:title"/>
+<meta content="Inspect camera, exposure and GPS metadata in your photos, then strip it to protect your privacy. Parsed entirely locally." name="twitter:description"/>
+<link href="../assets/css/style.css?v=20261024a" rel="stylesheet"/>
+<style>.content-section{padding:48px 0;background:transparent;border-top:1px solid var(--border)}
+.content-section .container{max-width:860px}
+.content-block{margin-bottom:40px}
+.content-block h2{font-size:1.35rem;color:var(--text-primary);margin-bottom:16px;padding-left:12px;border-left:4px solid #6366f1}
+.content-block h3{font-size:1.05rem;color:var(--text-primary);margin:20px 0 8px}
+.content-block p{color:var(--text-secondary);line-height:1.85;margin-bottom:12px}
+.content-block ul,.content-block ol{color:var(--text-secondary);line-height:1.85;padding-left:22px;margin-bottom:12px}
+.content-block li{margin-bottom:6px}
+.steps-list{counter-reset:step;list-style:none;padding-left:0}
+.steps-list li{counter-increment:step;position:relative;padding-left:44px;margin-bottom:14px;color:var(--text-secondary);line-height:1.8}
+.steps-list li::before{content:counter(step);position:absolute;left:0;top:2px;width:28px;height:28px;background:#6366f1;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:600}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.scenario-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.scenario-card h4{font-size:.98rem;color:var(--text-primary);margin-bottom:6px}
+.scenario-card p{font-size:.9rem;color:var(--text-secondary);margin:0;line-height:1.7}
+.spec-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.92rem}
+.spec-table th,.spec-table td{border:1px solid var(--border);padding:10px 12px;text-align:left}
+.spec-table th{background:var(--bg-dark);color:var(--text-primary);font-weight:600;white-space:nowrap}
+.spec-table td{color:var(--text-secondary)}
+.faq-item{border-bottom:1px solid #e2e8f0;padding:16px 0}
+.faq-item:last-child{border-bottom:none}
+.faq-item h3{font-size:1rem;color:var(--text-primary);margin:0 0 8px}
+.faq-item p{color:var(--text-secondary);line-height:1.8;margin:0}
+.related-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.related-card{display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;text-decoration:none;transition:.2s}
+.related-card:hover{border-color:#6366f1;transform:translateY(-2px)}
+.related-card .ricon{font-size:1.4rem;display:block;margin-bottom:6px}
+.related-card .rname{font-size:.92rem;color:var(--text-primary);font-weight:600}
+.related-card .rdesc{font-size:.8rem;color:var(--text-secondary);margin-top:4px;line-height:1.5}
+@media(max-width:640px){.content-section{padding:32px 0}.content-block h2{font-size:1.2rem}}</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "EXIF Viewer",
+  "url": "https://piccalc.com/tools/exif.html",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any (browser)",
+  "browserRequirements": "A modern browser with Canvas support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "description": "View a photo's EXIF data online (camera model, capture time, aperture, shutter, GPS and more) and strip metadata in one click to protect your privacy. Local processing; no upload."
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why can I not read EXIF from my photo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Likely reasons: the file is PNG or WebP (which usually carry no EXIF); the photo was already compressed and stripped by a platform such as WeChat or Weibo; or it was generated by software rather than a camera."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does stripping reduce quality?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PNG export is lossless with no change in quality. JPG recompresses at 92% quality — virtually identical to the eye, but strictly one more lossy encode."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can stripped data be restored?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The metadata is discarded entirely and is absent from the exported file. Confirm before you proceed, and keep the original if needed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does WeChat strip EXIF?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Platforms like WeChat and Weibo usually compress and strip most metadata on upload, so images relayed through them typically carry no location. Originals sent via cloud storage or email keep everything."
+      }
+    }
+  ]
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://piccalc.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "All Tools",
+      "item": "https://piccalc.com/#tools"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "EXIF Viewer",
+      "item": "https://piccalc.com/tools/exif.html"
+    }
+  ]
+}
+    </script>
+<style>
+      html[data-lang="en"] [data-lang-block="zh"] { display: none !important; }
+      html[data-lang="zh"] [data-lang-block="en"] { display: none !important; }
+      .lang-toggle { background: transparent; border: 1px solid var(--border, #e2e8f0);
+        border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer;
+        color: var(--text-secondary, #64748b); line-height: 1.6; }
+      .lang-toggle:hover { border-color: var(--primary, #6366f1); color: var(--primary, #6366f1); }
+    </style>
+<script>
+      (function () {
+        try {
+          var v = localStorage.getItem('ps_lang');
+          document.documentElement.setAttribute('data-lang', (v === 'zh') ? 'zh' : 'en');
+        } catch (e) { document.documentElement.setAttribute('data-lang', 'en'); }
+      })();
+    </script>
+</head>
+<body>
+<header class="header">
+<div class="container">
+<a class="logo" href="../index.html">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</a>
+<nav class="tool-nav">
+<button class="lang-toggle" data-lang-toggle="" type="button">EN</button>
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0067" href="/guides/"><span data-i18n="k0067">Image Guides</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0067" href="/guides/"><span data-i18n="k0067">Image Guides</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+</nav>
+<button class="lang-toggle lang-toggle-m" data-lang-toggle="" type="button">EN</button>
+</div>
+</header>
+<section class="tool-page">
+<div class="container">
+<a class="back-link" data-i18n="k0162" href="../index.html"><span data-i18n="k0162">← Back to Home</span></a>
+<div class="tool-header">
+<h1 data-i18n="k1245">📷 EXIF Viewer &amp; Cleaner</h1>
+<p data-i18n="k1303">See what your photo hides, then strip GPS and camera data</p>
+</div>
+<style>.gen-box{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:8px}
+.meta-table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:12px}
+.meta-table th,.meta-table td{border:1px solid var(--border);padding:8px 11px;text-align:left}
+.meta-table th{background:var(--bg-dark);color:var(--text-primary);font-weight:600;width:38%}
+.meta-table td{color:var(--text-secondary);word-break:break-all}
+.warn-box{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:10px;padding:12px 14px;color:#fcd34d;font-size:.88rem;line-height:1.7;margin-top:12px}
+.ok-box{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.38);border-radius:10px;padding:12px 14px;color:#6ee7b7;font-size:.88rem;line-height:1.7;margin-top:12px}
+.preview-box{max-width:420px;margin:16px auto}</style>
+<div class="upload-area" id="uploadArea">
+<div class="upload-icon">📁</div>
+<div class="upload-text" data-i18n="k1218">Click or drag a photo here</div>
+<div class="upload-hint" data-i18n="k1358">Viewing EXIF requires JPEG; stripping works with any image format</div>
+<input accept="image/*" id="fileInput" type="file"/>
+</div>
+<div class="preview-box" id="previewBox">
+<h3 data-i18n="k1066">Photo preview</h3>
+<img alt="Photo preview" id="previewImg" src=""/>
+</div>
+<div class="gen-box" id="resultBox">
+<h3 data-i18n="k1123">Metadata</h3>
+<div id="metaMsg"></div>
+<div id="metaTable"></div>
+<div style="margin-top:20px;padding-top:18px;border-top:1px solid #e2e8f0;">
+<h3 data-i18n="k1194" style="font-size:1rem;color:var(--text-primary);margin-bottom:10px;">Strip metadata and export</h3>
+<div class="control-group">
+<label class="control-label" data-i18n="k0163"><span data-i18n="k0163">Export format</span></label>
+<div class="radio-group">
+<div class="radio-option"><input checked="" id="fmtPng" name="outFmt" type="radio" value="png"/><label data-i18n="k0164" for="fmtPng"><span data-i18n="k0164">PNG (lossless)</span></label></div>
+<div class="radio-option"><input id="fmtJpg" name="outFmt" type="radio" value="jpeg"/><label data-i18n="k1195" for="fmtJpg">JPG (smaller file)</label></div>
+</div>
+</div>
+<button class="btn btn-primary btn-lg" data-i18n="k1196" id="stripBtn" style="width:100%;margin-top:10px;">Strip metadata and download</button>
+<div id="stripMsg"></div>
+</div>
+</div>
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<div class="loading-text" data-i18n="k0165" id="loadingText"><span data-i18n="k0165">Processing…</span></div>
+</div>
+</div>
+</section>
+<section class="content-section">
+<div class="container">
+<div class="content-block">
+<h2 data-i18n="k0166"><span data-i18n="k0166">How to view and strip EXIF</span></h2>
+<ol class="steps-list"><li data-i18n="k0167"><span data-i18n="k0167">Upload a photo (JPEG is required to read EXIF)</span></li><li data-i18n="k0168"><span data-i18n="k0168">The page lists camera model, capture time, aperture, ISO and more, including GPS coordinates if present</span></li><li data-i18n="k0169"><span data-i18n="k0169">Once you spot anything you would rather not share, pick an export format</span></li><li data-i18n="k0170"><span data-i18n="k0170">Click "Strip metadata and download" to get a clean image</span></li></ol>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0171"><span data-i18n="k0171">How it works</span></h2>
+<p data-i18n="k0172"><span data-i18n="k0172">EXIF is structured data embedded in the JPEG header, recording camera settings, capture time and even GPS coordinates. It lives in the APP1 marker segment and does not affect how the picture displays, which is why many people never know it is there.</span></p><p data-i18n="k0173"><span data-i18n="k0173">Reading it means parsing this block as TIFF: determine byte order (big or little endian), locate the IFD (Image File Directory) entries, then look up each tag number to learn what the field means.</span></p><p data-i18n="k0174"><span data-i18n="k0174">Stripping is straightforward: redraw the image onto a Canvas and export. Canvas exports pure pixel data with none of the original metadata blocks, so GPS and camera settings disappear naturally.</span></p>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0175"><span data-i18n="k0175">Common use cases</span></h2>
+<p data-i18n="k0176"><span data-i18n="k0176">It works best for:</span></p>
+<div class="scenario-grid"><div class="scenario-card"><h4 data-i18n="k0177"><span data-i18n="k0177">Before posting</span></h4><p data-i18n="k0178"><span data-i18n="k0178">Remove location so your home address is not exposed</span></p></div><div class="scenario-card"><h4 data-i18n="k0179"><span data-i18n="k0179">Second-hand sales</span></h4><p data-i18n="k0180"><span data-i18n="k0180">Clear shooting parameters before selling a camera or posting sample shots</span></p></div><div class="scenario-card"><h4 data-i18n="k0181"><span data-i18n="k0181">Cloud sharing</span></h4><p data-i18n="k0182"><span data-i18n="k0182">Strip private data before sharing originals</span></p></div><div class="scenario-card"><h4 data-i18n="k0183"><span data-i18n="k0183">Verification</span></h4><p data-i18n="k0184"><span data-i18n="k0184">Check a photo's true capture time and device</span></p></div></div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0185"><span data-i18n="k0185">Specifications</span></h2>
+<table class="spec-table"><tbody><tr><th data-i18n="k0186"><span data-i18n="k0186">Reads</span></th><td data-i18n="k0187"><span data-i18n="k0187">JPEG (PNG/WebP usually carry no EXIF)</span></td></tr><tr><th data-i18n="k0188"><span data-i18n="k0188">Strips</span></th><td data-i18n="k0189"><span data-i18n="k0189">All image formats</span></td></tr><tr><th data-i18n="k0190"><span data-i18n="k0190">Readable fields</span></th><td data-i18n="k0191"><span data-i18n="k0191">Camera make and model, capture time, aperture, shutter, ISO, focal length, GPS and more</span></td></tr><tr><th data-i18n="k0163"><span data-i18n="k0163">Export format</span></th><td data-i18n="k0192"><span data-i18n="k0192">PNG (lossless) or JPG (compressed)</span></td></tr><tr><th data-i18n="k0193"><span data-i18n="k0193">Privacy</span></th><td data-i18n="k0194"><span data-i18n="k0194">Parsed locally — never uploaded</span></td></tr></tbody></table>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0195"><span data-i18n="k0195">FAQ about EXIF</span></h2>
+<div class="faq-item"><h3 data-i18n="k0196"><span data-i18n="k0196">Why can I not read EXIF from my photo?</span></h3><p data-i18n="k0197"><span data-i18n="k0197">Likely reasons: the file is PNG or WebP (which usually carry no EXIF); the photo was already compressed and stripped by a platform such as WeChat or Weibo; or it was generated by software rather than a camera.</span></p></div><div class="faq-item"><h3 data-i18n="k0198"><span data-i18n="k0198">Does stripping reduce quality?</span></h3><p data-i18n="k0199"><span data-i18n="k0199">PNG export is lossless with no change in quality. JPG recompresses at 92% quality — virtually identical to the eye, but strictly one more lossy encode.</span></p></div><div class="faq-item"><h3 data-i18n="k0200"><span data-i18n="k0200">Can stripped data be restored?</span></h3><p data-i18n="k0201"><span data-i18n="k0201">No. The metadata is discarded entirely and is absent from the exported file. Confirm before you proceed, and keep the original if needed.</span></p></div><div class="faq-item"><h3 data-i18n="k0202"><span data-i18n="k0202">Does WeChat strip EXIF?</span></h3><p data-i18n="k0203"><span data-i18n="k0203">Platforms like WeChat and Weibo usually compress and strip most metadata on upload, so images relayed through them typically carry no location. Originals sent via cloud storage or email keep everything.</span></p></div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0204"><span data-i18n="k0204">Try other tools</span></h2>
+<div class="related-grid"><a class="related-card" href="base64.html"><span class="ricon">🔤</span><span class="rname" data-i18n="k0205"><span data-i18n="k0205">Base64 converter</span></span><span class="rdesc" data-i18n="k0206"><span data-i18n="k0206">Image ⇄ encoding conversion</span></span></a><a class="related-card" href="compress.html"><span class="ricon">🗜️</span><span class="rname" data-i18n="k0084"><span data-i18n="k0084">Compress Image</span></span><span class="rdesc" data-i18n="k0207"><span data-i18n="k0207">Reduce file size</span></span></a><a class="related-card" href="convert.html"><span class="ricon">🔄</span><span class="rname" data-i18n="k0079"><span data-i18n="k0079">Convert Format</span></span><span class="rdesc" data-i18n="k0208"><span data-i18n="k0208">Convert between PNG, JPG and WebP</span></span></a><a class="related-card" href="remove-bg.html"><span class="ricon">🎭</span><span class="rname" data-i18n="k0072"><span data-i18n="k0072">Background Remover</span></span><span class="rdesc" data-i18n="k0209"><span data-i18n="k0209">Remove image background</span></span></a></div>
+</div>
+</div>
+</section>
+<footer class="footer">
+<div class="container">
+<div class="footer-content">
+<div class="footer-brand">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</div>
+<p class="footer-desc" data-i18n="k0024"><span data-i18n="k0024">Free online image tools — everything runs locally in your browser</span></p>
+</div>
+<div class="footer-links">
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0026" href="/about.html"><span data-i18n="k0026">About</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0005" href="/terms.html"><span data-i18n="k0005">Terms of Use</span></a>
+</div>
+<div class="footer-bottom">
+<p style="margin-bottom:6px;">Contact: <a href="mailto:juju089@qq.com" style="color:#818cf8;">juju089@qq.com</a></p>
+<p data-i18n="k0028"><span data-i18n="k1312">© 2026 PicStudio. All rights reserved.</span></p>
+</div>
+</div>
+</footer>
+<script src="../assets/js/preview.js?v=20261024a"></script>
+<script src="../assets/js/download.js?v=20261024a"></script>
+<script src="../assets/js/lab.js?v=20261025id"></script><script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+var fileInput=$('fileInput'),uploadArea=$('uploadArea'),
+    resultBox=$('resultBox'),previewBox=$('previewBox'),previewImg=$('previewImg');
+var curFile=null,curImg=null;
+function handleFile(file){
+  if(!file){return;}
+  curFile=file;
+  var isJpeg=/\.(jpe?g)$/i.test(file.name)||file.type==='image/jpeg';
+  var r=new FileReader();
+  r.onload=function(e){
+    /* 注意：e.target.result 是 ArrayBuffer，不能直接赋给 img.src（会导致 onload 永不触发，
+     * 表现为「上传了但预览区没反应」）。这里改用 blob URL 做预览。 */
+    /* 预览统一走 __setPreview（四重回退 + 缩图重试），
+     * 不再直接塞 blob URL —— 手机端大图解码失败时会留下黑格。 */
+    var im=new Image();
+    function showBoxes(){previewBox.classList.add('active');resultBox.classList.add('active');}
+    if(window.__setPreview){
+      window.__setPreview(previewImg,file,function(url,how){
+        var im2=new Image();
+        im2.onload=function(){curImg=im2;};
+        im2.onerror=function(){curImg=null;};
+        im2.src=url;
+        showBoxes();
+      },function(){curImg=null;showBoxes();});
+    }else{
+      var objUrl=URL.createObjectURL(file);
+      im.onload=function(){curImg=im;previewImg.src=im.src;showBoxes();};
+      im.onerror=function(){curImg=null;showBoxes();};
+      im.src=objUrl;
+    }
+    var buf=e.target.result;
+    var meta=null;
+    if(isJpeg){try{meta=Lab.parseExif(buf);}catch(err){meta=null;}}
+    renderMeta(meta,isJpeg,file);};
+  r.readAsArrayBuffer(file);}
+function renderMeta(meta,isJpeg,file){
+  var box=$('metaTable');box.innerHTML='';
+  var msg=$('metaMsg');msg.innerHTML='';
+  if(!isJpeg){
+    msg.innerHTML='<div class="warn-box">当前只支持读取 JPEG 格式照片的 EXIF 信息。'+
+      'PNG 和 WebP 通常不保存这类拍摄参数。<br>不过你仍然可以用下面的「清除元数据」功能处理任意格式。</div>';
+  }else if(!meta||!Object.keys(meta).length){
+    msg.innerHTML='<div class="ok-box">这张 JPEG 照片没有检测到 EXIF 信息，可能已被清除过，或由软件生成。</div>';
+  }else{
+    var keys=Object.keys(meta);
+    msg.innerHTML='<div class="ok-box">共读取到 '+keys.length+' 项元数据。'+
+      '其中可能包含拍摄时间、相机型号，甚至 GPS 定位——分享前建议清除。</div>';
+    var t=document.createElement('table');t.className='meta-table';
+    keys.forEach(function(k){
+      var tr=document.createElement('tr');
+      var th=document.createElement('th');th.textContent=k;
+      var td=document.createElement('td');td.textContent=String(meta[k]);
+      tr.appendChild(th);tr.appendChild(td);t.appendChild(tr);});
+    box.appendChild(t);}}
+uploadArea.addEventListener('click',function(){fileInput.click();});
+fileInput.addEventListener('change',function(e){handleFile(e.target.files[0]);});
+uploadArea.addEventListener('dragover',function(e){e.preventDefault();uploadArea.classList.add('dragover');});
+uploadArea.addEventListener('dragleave',function(){uploadArea.classList.remove('dragover');});
+uploadArea.addEventListener('drop',function(e){e.preventDefault();uploadArea.classList.remove('dragover');handleFile(e.dataTransfer.files[0]);});
+$('stripBtn').addEventListener('click',function(){
+  if(!curImg){alert('请先选择图片');return;}
+  var c=document.createElement('canvas');
+  c.width=curImg.naturalWidth;c.height=curImg.naturalHeight;
+  c.getContext('2d').drawImage(curImg,0,0);
+  var fmtEl=document.querySelector('input[name="outFmt"]:checked');
+  var fmt=fmtEl?fmtEl.value:'png';
+  if(window.__download){window.__download(c,'clean.'+(fmt==='jpeg'?'jpg':'png'));}else{var a=document.createElement('a');a.download='clean.'+(fmt==='jpeg'?'jpg':'png');a.href=c.toDataURL('image/'+(fmt==='jpeg'?'jpeg':'png'),0.92);a.click();}
+  $('stripMsg').innerHTML='<div class="ok-box">已导出不含元数据的图片。'+
+    '原理是重新绘制到画布再导出，画布导出的图片天然不包含 EXIF。</div>';});
+})();
+</script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/i18n-dict.js"></script>
+<script src="../assets/js/i18n.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+/*
+  Cache-Control: public, max-age=3600
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/sitemap.xml
+  Content-Type: application/xml; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+/robots.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+# ads.txt 必须显式声明 text/plain，AdSense 抓取器只认这个 MIME
+# 若被猜成 text/html，会导致 ads.txt 判定失败、审核卡住
+/ads.txt
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=3600
+
+# 谷歌站长验证文件：显式声明 MIME 且不缓存
+# 保证 Google 每次来抓都拿到最新内容，不被 CDN 缓存干扰
+/google6474e28bb6098302.html
+  Content-Type: text/html; charset=utf-8
+  Cache-Control: no-cache, must-revalidate

@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta content="ca-pub-8915931557404979" name="google-adsense-account"/>
+<script async="" crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8915931557404979"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Remove Image Background - Transparent PNG</title>
+<meta content="Remove solid backgrounds and export transparent PNG. Ideal for ID photo backdrops and product shots. Runs entirely in your browser." name="description"/>
+<meta content="remove background, transparent png, cut out image, background eraser" name="keywords"/>
+<link href="https://piccalc.com/tools/remove-bg.html" hreflang="en" rel="alternate"/>
+<link href="https://piccalc.com/tools/remove-bg.html" hreflang="zh-CN" rel="alternate"/>
+<link href="https://piccalc.com/tools/remove-bg.html" hreflang="x-default" rel="alternate"/>
+<link href="https://piccalc.com/tools/remove-bg.html" rel="canonical"/>
+<meta content="index,follow,max-image-preview:large" name="robots"/>
+<meta content="website" property="og:type"/>
+<meta content="PicStudio" property="og:site_name"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="Remove Image Background Online - Export Transparent PNG | PicStudio" property="og:title"/>
+<meta content="Remove solid backgrounds and export transparent PNG. Ideal for ID photo backdrops and product shots. Runs entirely in your browser." property="og:description"/>
+<meta content="https://piccalc.com/tools/remove-bg.html" property="og:url"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Remove Image Background Online - Export Transparent PNG | PicStudio" name="twitter:title"/>
+<meta content="Remove solid backgrounds and export transparent PNG. Ideal for ID photo backdrops and product shots. Runs entirely in your browser." name="twitter:description"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Background Remover",
+  "url": "https://piccalc.com/tools/remove-bg.html",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any (browser)",
+  "browserRequirements": "A modern browser with Canvas support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "description": "Remove image backgrounds online and export a transparent PNG. Suits ID photo backdrops, product shots on white and logo extraction. Fully local; images are never uploaded and no registration is needed."
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why is my result not clean?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The most common cause is a background that is not solid. Gradients, shadows and patterns make the corner samples unrepresentative, and a subject close in colour to the background gets removed along with it. Reduce background interference first, or start from a cleaner original."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which format should I download for transparency?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It must be PNG. JPG has no alpha channel, so transparent areas get filled with white or black — which is why some people find their transparency \"turned white\"."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I switch straight to a red or blue backdrop?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Choose \"Custom colour\" in the background options, pick your colour, then start. Common ID photo values are around #FF0000 for red, #438EDB for blue and #FFFFFF for white."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will my photo be uploaded?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Everything runs in your browser and the image data never leaves your device. Results vanish when you close the page; no copy is kept on any server."
+      }
+    }
+  ]
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "PicStudio",
+      "item": "https://piccalc.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Background Remover",
+      "item": "https://piccalc.com/tools/remove-bg.html"
+    }
+  ]
+}
+    </script>
+<link href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎨&lt;/text&gt;&lt;/svg&gt;" rel="icon" type="image/svg+xml"/>
+<link href="../assets/css/style.css?v=20261024a" rel="stylesheet"/>
+<style>
+      html[data-lang="en"] [data-lang-block="zh"] { display: none !important; }
+      html[data-lang="zh"] [data-lang-block="en"] { display: none !important; }
+      .lang-toggle { background: transparent; border: 1px solid var(--border, #e2e8f0);
+        border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer;
+        color: var(--text-secondary, #64748b); line-height: 1.6; }
+      .lang-toggle:hover { border-color: var(--primary, #6366f1); color: var(--primary, #6366f1); }
+    </style>
+<script>
+      (function () {
+        try {
+          var v = localStorage.getItem('ps_lang');
+          document.documentElement.setAttribute('data-lang', (v === 'zh') ? 'zh' : 'en');
+        } catch (e) { document.documentElement.setAttribute('data-lang', 'en'); }
+      })();
+    </script>
+</head>
+<body>
+<header class="header">
+<div class="container">
+<a class="logo" href="../index.html">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</a>
+<nav class="tool-nav">
+<button class="lang-toggle" data-lang-toggle="" type="button">EN</button>
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0067" href="/guides/"><span data-i18n="k0067">Image Guides</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+</nav>
+<button class="lang-toggle lang-toggle-m" data-lang-toggle="" type="button">EN</button>
+</div>
+</header>
+<section class="tool-page">
+<div class="container">
+<a class="back-link" data-i18n="k0162" href="../index.html"><span data-i18n="k0162">← Back to Home</span></a>
+<div class="tool-header">
+<h1 data-i18n="k1184">✂️ Background Remover</h1>
+<p data-i18n="k1377">Upload an image to remove solid backgrounds automatically; export as transparent PNG or swap in a solid colour</p>
+</div>
+<!-- Upload Area -->
+<div class="upload-area" id="uploadArea">
+<div class="upload-icon">📁</div>
+<div class="upload-text" data-i18n="k0210"><span data-i18n="k0210">Click or drag an image here</span></div>
+<div class="upload-hint" data-i18n="k1378">Supports PNG / JPG / WebP; under 5 MB is recommended</div>
+<input accept="image/*" id="fileInput" type="file"/>
+</div>
+<!-- Preview Area -->
+<div class="preview-area" id="previewArea">
+<div class="preview-box">
+<h3 data-i18n="k0212"><span data-i18n="k0212">Original</span></h3>
+<img alt="Original" id="originalPreview" src=""/>
+</div>
+<div class="preview-box">
+<h3 data-i18n="k1087">Cut-out result</h3>
+<img alt="Result" id="processedPreview" src=""/>
+</div>
+</div>
+<!-- Controls -->
+<div class="controls" id="controls">
+<div class="control-group">
+<label class="control-label" data-i18n="k1088">Background options</label>
+<div class="radio-group">
+<div class="radio-option">
+<input checked="" id="bgTransparent" name="bgType" type="radio" value="transparent"/>
+<label data-i18n="k1089" for="bgTransparent">Transparent background</label>
+</div>
+<div class="radio-option">
+<input id="bgWhite" name="bgType" type="radio" value="white"/>
+<label data-i18n="k1090" for="bgWhite">White background</label>
+</div>
+<div class="radio-option">
+<input id="bgCustom" name="bgType" type="radio" value="custom"/>
+<label data-i18n="k1131" for="bgCustom">Custom colour</label>
+</div>
+</div>
+</div>
+<div class="control-group" id="customColorGroup" style="display:none;">
+<label class="control-label" data-i18n="k1153">Choose background colour</label>
+<input id="bgColor" style="width:60px;height:40px;border:none;border-radius:8px;cursor:pointer;" type="color" value="#6366f1"/>
+</div>
+<div class="control-group">
+<label class="control-label"><span data-i18n="k1132">Colour tolerance:</span><span id="tolHint">30</span></label>
+<input id="tolerance" max="90" min="5" step="1" type="range" value="30"/>
+<div class="control-hint" data-i18n="k1379">A larger tolerance treats more of the image as background. Raise it if residue remains; lower it if parts of the subject disappear.</div>
+</div>
+<div class="control-group">
+<label class="control-label"><span data-i18n="k1133">Edge feathering:</span><span data-i18n="k0989" id="featherHint">On</span></label>
+<input id="feather" max="10" min="0" step="1" type="range" value="5"/>
+<div class="control-hint" data-i18n="k1380">Softens the edge transition. Raise it for hair and fur; drag to 0 for hard edges such as product shots.</div>
+</div>
+<div class="control-group">
+<label class="control-label" data-i18n="k1200">Manual touch-up (optional)</label>
+<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+<button class="btn btn-secondary btn-sm" data-i18n="k1091" id="brushNone" style="flex:1;min-width:80px;" type="button">Brush off</button>
+<button class="btn btn-secondary btn-sm" data-i18n="k1134" id="brushFg" style="flex:1;min-width:80px;" type="button">🟢 Keep brush</button>
+<button class="btn btn-secondary btn-sm" data-i18n="k1135" id="brushBg" style="flex:1;min-width:80px;" type="button">🔴 Erase brush</button>
+</div>
+<input id="brushSize" max="80" min="5" step="1" type="range" value="25"/>
+<div class="control-hint" data-i18n="k1381">If the automatic result disappoints, paint over wrongly removed parts of the subject with the keep brush and over leftover background with the erase brush, then tap "Re-cut".</div>
+</div>
+<div class="engine-badge" id="engineBadge" style="display:none;"></div>
+<button class="btn btn-primary btn-lg" data-i18n="k1092" id="processBtn" style="width:100%;">Remove background</button>
+<button class="btn btn-secondary btn-lg" data-i18n="k1238" id="reprocessBtn" style="width:100%;margin-top:8px;display:none;">🔄 Apply touch-up and re-cut</button>
+<button class="btn btn-secondary btn-sm" data-i18n="k1298" id="aiRetryBtn" style="width:100%;margin-top:8px;">🤖 Reload AI model (retry if offline)</button>
+</div>
+<!-- Download -->
+<div class="download-section" id="downloadSection">
+<button class="btn btn-primary btn-lg" data-i18n="k0320" id="downloadBtn"><span data-i18n="k0320">⬇️ Download result</span></button>
+</div>
+</div>
+</section>
+<!-- ========== Content: guide / how it works / use cases / FAQ ========== -->
+<section class="content-section">
+<div class="container">
+<div class="content-block">
+<h2 data-i18n="k0530"><span data-i18n="k0530">How to remove a background</span></h2>
+<ol class="steps">
+<li><strong data-i18n="k0322"><span data-i18n="k0322">Upload: </span></strong><span data-i18n="k1382">Click the dashed area to choose a file, or drag an image straight in. PNG, JPG and WebP are supported; under 5 MB is recommended.</span></li>
+<li><strong data-i18n="k0531"><span data-i18n="k0531">Choose what to do with the background: </span></strong><span data-i18n="k1383">Keep transparency, fill with white or choose any colour. To keep transparency, download as PNG.</span></li>
+<li><strong data-i18n="k0532"><span data-i18n="k0532">Start: </span></strong><span data-i18n="k1384">Tap "Remove background"; processing runs in your browser and usually finishes within seconds.</span></li>
+<li><strong data-i18n="k0533"><span data-i18n="k0533">Compare and download: </span></strong><span data-i18n="k1385">Compare the result with the original and tap "Download result" when happy. Results are not stored on a server, so save yours promptly.</span></li>
+</ol>
+<div class="note-box">
+<p><strong data-i18n="k0326"><span data-i18n="k0326">Tip: </span></strong><span data-i18n="k1318">All processing happens in your browser: images are never uploaded to a server. Results live only on this page, so download them promptly.</span></p>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0171"><span data-i18n="k0171">How it works</span></h2>
+<p data-i18n="k1386">Cut-out work is essentially deciding whether each pixel belongs to the subject or the background. This tool samples the colours at the four corners and edge midpoints, averages them into a background reference colour, then measures each pixel's distance from it in RGB space: within the tolerance (30 by default) it becomes fully transparent background, between one and two times the tolerance it is treated as a transition edge with partial transparency, and everything else stays opaque.</p>
+<p data-i18n="k0534"><span data-i18n="k0534">This is colour-difference analysis — no model required, so it is fast and there is no need to upload anything.</span></p>
+<p data-i18n="k0535"><span data-i18n="k0535">Its limits are equally clear: it only works well when the background is fairly uniform and clearly different from the subject. Gradients, hair, feathers and glass — edges that are semi-transparent or extremely detailed — are hard for colour-difference methods, often leaving background residue or eating into the subject.</span></p>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0175"><span data-i18n="k0175">Common use cases</span></h2>
+<div class="usecases">
+<div class="usecase"><strong data-i18n="k0536"><span data-i18n="k0536">Swap ID photo backdrops</span></strong><span data-i18n="k0537"><span data-i18n="k0537">Turn white or blue ID photos into red or white in one click — no trip to the photo studio.</span></span></div>
+<div class="usecase"><strong data-i18n="k0538"><span data-i18n="k0538">Remove white from product shots</span></strong><span data-i18n="k0539"><span data-i18n="k0539">Convert white-background product images to transparent PNG for any listing template.</span></span></div>
+<div class="usecase"><strong data-i18n="k0540"><span data-i18n="k0540">Extract logos and icons</span></strong><span data-i18n="k0541"><span data-i18n="k0541">Pull logos off solid backgrounds for clean transparent assets.</span></span></div>
+<div class="usecase"><strong data-i18n="k0542"><span data-i18n="k0542">Slides and documents</span></strong><span data-i18n="k0543"><span data-i18n="k0543">Strip backgrounds so white boxes do not sit on dark slides.</span></span></div>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0185"><span data-i18n="k0185">Specifications</span></h2>
+<div class="table-wrap">
+<table class="spec">
+<tbody>
+<tr><th data-i18n="k0442"><span data-i18n="k0442">Supported input</span></th><td>PNG / JPG / JPEG / WebP / BMP / GIF</td></tr>
+<tr><th data-i18n="k0443"><span data-i18n="k0443">Recommended size</span></th><td data-i18n="k1299">Under 5 MB per image, up to 4000 px per side</td></tr>
+<tr><th data-i18n="k0234"><span data-i18n="k0234">Output format</span></th><td data-i18n="k0544"><span data-i18n="k0544">PNG (supports transparency); JPG when using a solid colour</span></td></tr>
+<tr><th data-i18n="k0446"><span data-i18n="k0446">Processing</span></th><td data-i18n="k0447"><span data-i18n="k0447">Runs locally in your browser — nothing is uploaded</span></td></tr>
+<tr><th data-i18n="k0545"><span data-i18n="k0545">Works well for</span></th><td data-i18n="k0546"><span data-i18n="k0546">Solid backgrounds with clear subject contrast</span></td></tr>
+<tr><th data-i18n="k0547"><span data-i18n="k0547">Not for</span></th><td data-i18n="k0548"><span data-i18n="k0548">Gradients, hair, semi-transparent objects, complex scenes</span></td></tr>
+</tbody>
+</table>
+</div>
+<div class="note-box">
+<p data-i18n="k0549"><span data-i18n="k0549">This tool uses colour-difference analysis, not a deep learning matting model. It is best on solid backgrounds; for complex images pair it with professional software.</span></p>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0550"><span data-i18n="k0550">FAQ about background removal</span></h2>
+<div class="faq-list">
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0551"><span data-i18n="k0551">Why is my result not clean?</span></div>
+<div class="faq-answer" data-i18n="k0552"><span data-i18n="k0552">The most common cause is a background that is not solid. Gradients, shadows and patterns make the corner samples unrepresentative, and a subject close in colour to the background gets removed along with it. Reduce background interference first, or start from a cleaner original.</span></div>
+</div>
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0553"><span data-i18n="k0553">Which format should I download for transparency?</span></div>
+<div class="faq-answer" data-i18n="k0554"><span data-i18n="k0554">It must be PNG. JPG has no alpha channel, so transparent areas get filled with white or black — which is why some people find their transparency "turned white".</span></div>
+</div>
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0555"><span data-i18n="k0555">Can I switch straight to a red or blue backdrop?</span></div>
+<div class="faq-answer" data-i18n="k0556"><span data-i18n="k0556">Yes. Choose "Custom colour" in the background options, pick your colour, then start. Common ID photo values are around #FF0000 for red, #438EDB for blue and #FFFFFF for white.</span></div>
+</div>
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0557"><span data-i18n="k0557">Will my photo be uploaded?</span></div>
+<div class="faq-answer" data-i18n="k0558"><span data-i18n="k0558">No. Everything runs in your browser and the image data never leaves your device. Results vanish when you close the page; no copy is kept on any server.</span></div>
+</div>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0204"><span data-i18n="k0204">Try other tools</span></h2>
+<div class="related-tools">
+<a class="related-tool" href="blur.html"><span>🌫️</span><span data-i18n="k0077">Blur Background</span></a>
+<a class="related-tool" href="convert.html"><span>🔄</span><span data-i18n="k0079">Convert Format</span></a>
+<a class="related-tool" href="rounded.html"><span>⬜</span><span data-i18n="k0091">Rounded Corners</span></a>
+<a class="related-tool" href="../guides/index.html"><span>📚</span><span data-i18n="k1140">Image Guides</span></a>
+</div>
+</div>
+</div>
+</section>
+<!-- ========== Footer ========== -->
+<footer class="footer">
+<div class="container">
+<div class="footer-content">
+<div class="footer-brand">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</div>
+<p class="footer-desc" data-i18n="k0024"><span data-i18n="k0024">Free online image tools — everything runs locally in your browser</span></p>
+</div>
+<div class="footer-links">
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0026" href="/about.html"><span data-i18n="k0026">About</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0005" href="/terms.html"><span data-i18n="k0005">Terms of Use</span></a>
+</div>
+<div class="footer-bottom">
+<p style="margin-bottom:6px;">Contact: <a href="mailto:juju089@qq.com" style="color:#818cf8;">juju089@qq.com</a></p>
+<p data-i18n="k0028"><span data-i18n="k1312">© 2026 PicStudio. All rights reserved.</span></p>
+</div>
+</div>
+</footer>
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<div class="loading-text" data-i18n="k0428" id="loadingText"><span data-i18n="k0428">Processing, please wait…</span></div>
+</div>
+<script src="../assets/js/preview.js?v=20261024a"></script>
+<script src="../assets/js/download.js?v=20261024a"></script>
+<script src="../assets/js/algo-seg.js?v=20261024a"></script>
+<script src="../assets/js/tools.js?v=20261024a"></script>
+<script>
+    /* 保存「未合成背景」的抠图结果（透明底）。
+     * 有了它，切换背景选项时只需重新合成，不必重跑一遍抠图。 */
+    var lastBaseCanvas = null;
+
+    function currentBgColor() {
+        var t = document.querySelector('input[name="bgType"]:checked');
+        t = t ? t.value : 'transparent';
+        if (t === 'white') return '#FFFFFF';
+        if (t === 'custom') {
+            var el = document.getElementById('bgColor');
+            return el ? el.value : '#FFFFFF';
+        }
+        return null;   // 透明
+    }
+
+    /* 切换背景后即时重绘结果。
+     * 旧实现只切换了取色器的显示与否，结果图不会更新 ——
+     * 用户点「白色背景」后画面纹丝不动，仍显示透明棋盘格，看起来像抠图失败（一片黑）。 */
+    function refreshBackgroundPreview() {
+        if (!lastBaseCanvas) return;
+        var color = currentBgColor();
+        var out = color ? applyBackgroundColor(lastBaseCanvas, color) : lastBaseCanvas;
+        var pv = document.getElementById('processedPreview');
+        if (pv) pv.src = out.toDataURL('image/png');
+        if (typeof tool !== 'undefined' && tool) tool.processedCanvas = out;
+    }
+
+    document.querySelectorAll('input[name="bgType"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            document.getElementById('customColorGroup').style.display =
+                e.target.value === 'custom' ? 'block' : 'none';
+            refreshBackgroundPreview();
+        });
+    });
+    (function () {
+        var bc = document.getElementById('bgColor');
+        if (bc) {
+            bc.addEventListener('input', refreshBackgroundPreview);
+            bc.addEventListener('change', refreshBackgroundPreview);
+        }
+    })();
+
+    const tolSlider = document.getElementById('tolerance');
+    const tolHint   = document.getElementById('tolHint');
+    const feather   = document.getElementById('feather');
+    const featherH  = document.getElementById('featherHint');
+    tolSlider.addEventListener('input', () => { tolHint.textContent = tolSlider.value; });
+    feather.addEventListener('input', () => {
+        featherH.textContent = (+feather.value === 0) ? '关' : feather.value;
+    });
+
+    /* ---------------- 手动修补状态 ---------------- */
+    const brush = { mode: 'none', size: 25, fg: null, bg: null, W: 0, H: 0 };
+    const brushSize = document.getElementById('brushSize');
+    brushSize.addEventListener('input', () => { brush.size = +brushSize.value; });
+
+    function setBrush(mode) {
+        brush.mode = mode;
+        ['brushNone','brushFg','brushBg'].forEach(id => {
+            document.getElementById(id).style.outline = '';
+        });
+        const map = { none:'brushNone', fg:'brushFg', bg:'brushBg' };
+        document.getElementById(map[mode]).style.outline = '2px solid var(--accent)';
+        const prev = document.getElementById('originalPreview');
+        prev.style.cursor = mode === 'none' ? 'default' : 'crosshair';
+    }
+    document.getElementById('brushNone').onclick = () => setBrush('none');
+    document.getElementById('brushFg').onclick   = () => setBrush('fg');
+    document.getElementById('brushBg').onclick   = () => setBrush('bg');
+
+    let lastImageData = null;   // 保留原图 ImageData 供重新计算
+    let runToken = 0;           // 处理批次令牌，防止旧的后台结果覆盖新结果
+
+    /* ---------------- 引擎状态提示 ---------------- */
+    const engineBadge = document.getElementById('engineBadge');
+    function setEngine(text, kind) {
+        if (!engineBadge) return;
+        engineBadge.style.display = 'block';
+        engineBadge.textContent = text;
+        engineBadge.className = 'engine-badge' + (kind ? ' ' + kind : '');
+    }
+
+    /* 把 AI 输出的 mask 统一转成 0..1 的 Float 数组，并套用手动修补笔 */
+    function maskToAlpha(mask, W, H) {
+        const a = new Float32Array(W * H);
+        const m = mask.data, mw = mask.width, mh = mask.height;
+        if (mw === W && mh === H) {
+            for (let i = 0; i < a.length; i++) a[i] = m[i] / 255;
+        } else {
+            const sx = mw / W, sy = mh / H;
+            for (let y = 0; y < H; y++) {
+                const my = Math.min(mh - 1, Math.floor(y * sy));
+                for (let x = 0; x < W; x++) {
+                    const mx = Math.min(mw - 1, Math.floor(x * sx));
+                    a[y * W + x] = m[my * mw + mx] / 255;
+                }
+            }
+        }
+        if (brush.fg && brush.bg && brush.fg.length === W * H) {
+            for (let i = 0; i < a.length; i++) {
+                if (brush.fg[i]) a[i] = 1;
+                else if (brush.bg[i]) a[i] = 0;
+            }
+        }
+        return a;
+    }
+
+    /* ---------------- 性能与鲁棒性辅助（v26 新增） ---------------- */
+    /* 大图直接在原分辨率跑 GrabCut + 边缘细化会长时间阻塞主线程（实测
+       3024×4032 手机照约 10 秒界面完全卡死）。这里先把工作图画布限制到
+       MAX_WORK_SIDE，算完再把 alpha 放大回原尺寸 —— 清晰度不受影响，
+       因为最终合成仍使用原图像素，只有遮罩是低分辨率的。 */
+    const MAX_WORK_SIDE = 1200;
+
+    function downscaleCanvas(src, maxSide) {
+        const longSide = Math.max(src.width, src.height);
+        if (longSide <= maxSide) return { canvas: src, scale: 1 };
+        const scale = maxSide / longSide;
+        const w = Math.max(1, Math.round(src.width * scale));
+        const h = Math.max(1, Math.round(src.height * scale));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(src, 0, 0, w, h);
+        return { canvas: c, scale };
+    }
+
+    function downscaleMask(mask, W, H, w, h) {
+        const out = new Uint8Array(w * h);
+        const sx = W / w, sy = H / h;
+        for (let y = 0; y < h; y++) {
+            const my = Math.min(H - 1, Math.floor(y * sy));
+            for (let x = 0; x < w; x++) {
+                const mx = Math.min(W - 1, Math.floor(x * sx));
+                out[y * w + x] = mask[my * W + mx];
+            }
+        }
+        return out;
+    }
+
+    function upscaleAlpha(a, w, h, W, H) {
+        if (w === W && h === H) return a;
+        const out = new Float32Array(W * H);
+        const sx = w / W, sy = h / H;
+        for (let y = 0; y < H; y++) {
+            const sy0 = Math.min(h - 1, Math.floor(y * sy));
+            for (let x = 0; x < W; x++) {
+                const sx0 = Math.min(w - 1, Math.floor(x * sx));
+                out[y * W + x] = a[sy0 * w + sx0];
+            }
+        }
+        return out;
+    }
+
+    function fgRatio(a) {
+        let n = 0;
+        for (let i = 0; i < a.length; i++) if (a[i] > 0.5) n++;
+        return n / a.length;
+    }
+
+    /* 抠图彻底失败时的兜底：保留画面中心区域，至少不让整张图变透明棋盘格 */
+    function centerFallback(w, h) {
+        const a = new Float32Array(w * h);
+        const x0 = w * 0.12, x1 = w * 0.88, y0 = h * 0.08, y1 = h * 0.95;
+        for (let y = 0; y < h; y++) {
+            for (let x = 0; x < w; x++) {
+                a[y * w + x] = (x >= x0 && x <= x1 && y >= y0 && y <= y1) ? 1 : 0;
+            }
+        }
+        return a;
+    }
+
+    const tool = new ImageTool({
+        process: async (canvas, self) => {
+            const bgType = document.querySelector('input[name="bgType"]:checked').value;
+            const tol = parseInt(tolSlider.value, 10);
+            const featherPx = parseInt(feather.value, 10);
+            const W = canvas.width, H = canvas.height;
+
+            /* 忙碌状态：先让浏览器把「处理中」画出来，再开始重计算 */
+            const processBtn = document.getElementById('processBtn');
+            const processBtnLabel = processBtn ? processBtn.textContent : '';
+            if (processBtn) { processBtn.disabled = true; processBtn.textContent = '处理中…'; }
+            setEngine('⚙️ 正在分析图片…', 'loading');
+            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+            const restoreBtn = () => {
+                if (processBtn) { processBtn.disabled = false; processBtn.textContent = processBtnLabel; }
+            };
+
+            lastImageData = canvas.getContext('2d').getImageData(0, 0, W, H);
+            brush.W = W; brush.H = H;
+            if (!brush.fg || brush.fg.length !== W * H) {
+                brush.fg = new Uint8Array(W * H);
+                brush.bg = new Uint8Array(W * H);
+            }
+
+            /* 本次运行的令牌：防止后台 AI 结果覆盖掉用户新一次的处理 */
+            const token = ++runToken;
+
+            const LOCAL_MSG = '⚙️ 本地算法抠图（GrabCut + 边缘细化）。效果不理想可调容差，或用修补笔涂抹。';
+
+            let alpha = null;
+            let usedAI = false;
+
+            /* ---- ① AI 已就绪才优先用（绝不为了等模型而阻塞出图） ---- */
+            if (window.AILab && window.AILab.isSettled && window.AILab.isSettled() && window.AILab.aiAvailable()) {
+                try {
+                    setEngine('AI 正在分析主体…', 'loading');
+                    const mask = await window.AILab.segment(canvas, {
+                        onProgress: (msg) => setEngine(msg, 'loading')
+                    });
+                    alpha = maskToAlpha(mask, W, H);
+                    usedAI = true;
+                    const engine = window.AILab.getEngine();
+                    setEngine(engine === 'modnet'
+                        ? '✅ 已用 AI 分割模型（MODNet）识别主体'
+                        : '✅ 已用 AI 人像分割模型（MediaPipe）识别主体', 'ai');
+                } catch (err) {
+                    console.warn('[remove-bg] AI 分割失败，改用本地算法：', err);
+                    alpha = null;
+                }
+            }
+
+            /* ---- ② 其余情况一律先用本地算法立刻出图 ---- */
+            let aiMessage = '';
+            if (!alpha) {
+                /* 在工作尺寸上计算（避免大图长时间卡死界面） */
+                const work = downscaleCanvas(canvas, MAX_WORK_SIDE);
+                const ww = work.canvas.width, wh = work.canvas.height;
+                const wData = work.canvas.getContext('2d').getImageData(0, 0, ww, wh).data;
+                const wFg = (brush.fg && brush.fg.length === W * H) ? downscaleMask(brush.fg, W, H, ww, wh) : null;
+                const wBg = (brush.bg && brush.bg.length === W * H) ? downscaleMask(brush.bg, W, H, ww, wh) : null;
+
+                let a = PicSeg.segmentAlpha(wData, ww, wh,
+                    { tolerance: tol, maxSide: 700, fgSeeds: wFg, bgSeeds: wBg });
+                let ratio = fgRatio(a);
+
+                /* 结果保护：几乎全透明或几乎全不透明都说明判断失败 */
+                if (ratio < 0.01 || ratio > 0.995) {
+                    setEngine('⚙️ 首次判断不理想，正在换参数重试…', 'loading');
+                    await new Promise(r => setTimeout(r, 0));
+                    const retryTol = ratio < 0.01 ? Math.min(90, tol + 25) : Math.max(5, tol - 20);
+                    const a2 = PicSeg.segmentAlpha(wData, ww, wh,
+                        { tolerance: retryTol, maxSide: 700, seedMode: 'portrait' });
+                    const r2 = fgRatio(a2);
+                    if (Math.abs(r2 - 0.5) < Math.abs(ratio - 0.5)) { a = a2; ratio = r2; }
+                }
+
+                if (ratio < 0.01) {
+                    /* 两次都失败 —— 兜底保留中心区域，绝不输出整片透明 */
+                    a = centerFallback(ww, wh);
+                    setEngine('⚙️ 自动识别未成功，已保留画面中心区域。可拖「容差」滑块或直接用修补笔涂抹调整。', 'local');
+                } else if (ratio > 0.995) {
+                    setEngine('⚙️ 未找到明显主体（画面可能是纯色背景）。可用修补笔标记要保留的部分。', 'local');
+                } else if (window.AILab && window.AILab.isSettled && !window.AILab.isSettled()) {
+                    aiMessage = '⚙️ 本地算法已出图，正在后台尝试加载 AI 模型以提升精度…';
+                    setEngine(aiMessage, 'loading');
+                } else if (window.AILab && window.AILab.isSettled() && !window.AILab.aiAvailable()) {
+                    setEngine('⚙️ AI 模型在当前网络下不可用，已使用本地算法。可点下方「重新加载 AI 模型」再试。', 'local');
+                } else {
+                    setEngine(LOCAL_MSG, 'local');
+                }
+
+                alpha = upscaleAlpha(a, ww, wh, W, H);
+            }
+
+            const result = alphaToCanvas(alpha, canvas, featherPx);
+            lastBaseCanvas = result;   // 存下透明底，供切换背景时即时重绘
+
+            // 显示修补按钮
+            document.getElementById('reprocessBtn').style.display = 'block';
+            setupBrushCanvas();
+
+            /* ---- ③ 后台加载 AI，成功后自动升级结果（不阻塞） ---- */
+            if (!usedAI && window.AILab && window.AILab.isSettled && !window.AILab.isSettled()) {
+                window.AILab.warm();
+                window.AILab.init().then(function (eng) {
+                    if (token !== runToken) return;                 // 用户已重新处理，丢弃旧结果
+                    if (!window.AILab.aiAvailable()) {
+                        setEngine('⚙️ AI 模型在当前网络下不可用，已使用本地算法。可点「重新加载 AI 模型」再试。', 'local');
+                        return;
+                    }
+                    return window.AILab.segment(canvas).then(function (mask) {
+                        if (token !== runToken) return;
+                        const a2 = maskToAlpha(mask, W, H);
+                        const r2 = alphaToCanvas(a2, canvas, featherPx);
+                        lastBaseCanvas = r2;   // AI 结果也要更新透明底
+                        const out2 = (bgType === 'white') ? applyBackgroundColor(r2, '#FFFFFF')
+                                   : (bgType === 'custom') ? applyBackgroundColor(r2, document.getElementById('bgColor').value)
+                                   : r2;
+                        if (self) self.processedCanvas = out2;
+                        document.getElementById('processedPreview').src = out2.toDataURL('image/png');
+                        setEngine(eng === 'modnet'
+                            ? '✅ 已用 AI 分割模型（MODNet）重新抠图，结果已更新'
+                            : '✅ 已用 AI 人像分割模型（MediaPipe）重新抠图，结果已更新', 'ai');
+                    });
+                }).catch(function () {
+                    if (token !== runToken) return;
+                    setEngine('⚙️ AI 模型在当前网络下不可用，已使用本地算法。可点「重新加载 AI 模型」再试。', 'local');
+                });
+            }
+
+            restoreBtn();
+            if (bgType === 'white') return applyBackgroundColor(result, '#FFFFFF');
+            if (bgType === 'custom') return applyBackgroundColor(result, document.getElementById('bgColor').value);
+            return result;
+        },
+        downloadOptions: { filename: 'picstudio-removebg', format: 'png' }
+    });
+
+    document.getElementById('processBtn').addEventListener('click', () => tool.process());
+    document.getElementById('aiRetryBtn').addEventListener('click', () => {
+        if (!window.AILab) {
+            setEngine('⚙️ 本站使用本地算法抠图，完全在你的浏览器里运行，不需要联网下载模型、也不会上传图片。效果可用「容差」滑块和修补笔调整。', 'local');
+            return;
+        }
+        window.AILab.reset();
+        setEngine('正在重新加载 AI 模型…', 'loading');
+        window.AILab.init((msg) => setEngine(msg, 'loading')).then(function (eng) {
+            if (window.AILab.aiAvailable()) {
+                setEngine('✅ AI 模型已就绪，点「开始抠图」使用它', 'ai');
+            } else {
+                setEngine('⚙️ 仍然加载不到 AI 模型（多为网络限制），将使用本地算法', 'local');
+            }
+        });
+    });
+    document.getElementById('reprocessBtn').addEventListener('click', () => tool.process());
+
+    /* ---------------- alpha → canvas ---------------- */
+    function alphaToCanvas(alpha, srcCanvas, featherPx) {
+        const W = srcCanvas.width, H = srcCanvas.height;
+        const src = srcCanvas.getContext('2d').getImageData(0, 0, W, H).data;
+        const out = new ImageData(W, H);
+        const o = out.data;
+
+        let a = alpha;
+        if (featherPx > 0) {
+            a = smoothAlpha(alpha, W, H, featherPx);
+        }
+        for (let i = 0; i < W * H; i++) {
+            const j = i * 4;
+            o[j] = src[j]; o[j+1] = src[j+1]; o[j+2] = src[j+2];
+            o[j+3] = Math.round(Math.max(0, Math.min(1, a[i])) * 255);
+        }
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        c.getContext('2d').putImageData(out, 0, 0);
+        return c;
+    }
+
+    /* 边缘羽化：可分离滑动窗口模糊（O(N)，与原分辨率无关地快）
+       原实现是 O(N×半径)，在 3024×4032 上要跑上亿次加法，是卡顿主因之一 */
+    function smoothAlpha(alpha, W, H, radius) {
+        const src = alpha;
+        const r = Math.max(1, radius | 0);
+        const tmp = new Float32Array(W * H);
+        const out = new Float32Array(W * H);
+
+        // 水平：滑动窗口
+        for (let y = 0; y < H; y++) {
+            const row = y * W;
+            let sum = 0;
+            for (let k = -r; k <= r; k++) {
+                const xx = Math.min(W - 1, Math.max(0, k));
+                sum += src[row + xx];
+            }
+            let cnt = 0;
+            for (let k = -r; k <= r; k++) if (k >= 0 && k < W) cnt++;
+            tmp[row] = sum / cnt;
+            for (let x = 1; x < W; x++) {
+                const addX = x + r, subX = x - r - 1;
+                if (addX < W) { sum += src[row + addX]; cnt++; }
+                if (subX >= 0) { sum -= src[row + subX]; cnt--; }
+                tmp[row + x] = sum / cnt;
+            }
+        }
+        // 垂直：滑动窗口
+        for (let x = 0; x < W; x++) {
+            let sum = 0, cnt = 0;
+            for (let k = -r; k <= r; k++) {
+                const yy = Math.min(H - 1, Math.max(0, k));
+                sum += tmp[yy * W + x]; cnt++;
+            }
+            out[x] = sum / cnt;
+            for (let y = 1; y < H; y++) {
+                const addY = y + r, subY = y - r - 1;
+                if (addY < H) { sum += tmp[addY * W + x]; cnt++; }
+                if (subY >= 0) { sum -= tmp[subY * W + x]; cnt--; }
+                out[y * W + x] = sum / cnt;
+            }
+        }
+        // 只在原边缘带内应用（避免整体发虚）
+        for (let i = 0; i < W * H; i++) {
+            if (src[i] <= 0.001 || src[i] >= 0.999) out[i] = src[i];
+        }
+        return out;
+    }
+
+    /* ---------------- 画笔交互 ---------------- */
+    let brushCanvas = null, brushCtx = null;
+    function setupBrushCanvas() {
+        const prev = document.getElementById('originalPreview');
+        if (!prev || !brush.W) return;
+        if (!brushCanvas) {
+            brushCanvas = document.createElement('canvas');
+            brushCanvas.className = 'pv-overlay';
+            brushCanvas.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;';
+            if (prev.parentElement.style.position !== 'relative') {
+                prev.parentElement.style.position = 'relative';
+            }
+            prev.parentElement.appendChild(brushCanvas);
+            brushCtx = brushCanvas.getContext('2d');
+            const paint = (e) => {
+                if (brush.mode === 'none' || !brushCtx) return;
+                const rect = brushCanvas.getBoundingClientRect();
+                const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+                const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+                const sx = brush.W / rect.width, sy = brush.H / rect.height;
+                const px = cx * sx, py = cy * sy;
+                const rad = brush.size * Math.max(sx, sy) * 0.5;
+                const x0 = Math.max(0, Math.floor(px - rad)), x1 = Math.min(brush.W-1, Math.ceil(px + rad));
+                const y0 = Math.max(0, Math.floor(py - rad)), y1 = Math.min(brush.H-1, Math.ceil(py + rad));
+                for (let y = y0; y <= y1; y++) {
+                    for (let x = x0; x <= x1; x++) {
+                        const dx = x - px, dy = y - py;
+                        if (dx*dx + dy*dy > rad*rad) continue;
+                        const idx = y * brush.W + x;
+                        if (brush.mode === 'fg') { brush.fg[idx] = 1; brush.bg[idx] = 0; }
+                        else                     { brush.bg[idx] = 1; brush.fg[idx] = 0; }
+                    }
+                }
+                drawBrushOverlay();
+            };
+            let drawing = false;
+            brushCanvas.addEventListener('mousedown', e => { drawing = true; paint(e); });
+            brushCanvas.addEventListener('mousemove', e => { if (drawing) paint(e); });
+            window.addEventListener('mouseup', () => { drawing = false; });
+            brushCanvas.addEventListener('touchstart', e => { e.preventDefault(); paint(e); }, { passive: false });
+            brushCanvas.addEventListener('touchmove',  e => { e.preventDefault(); paint(e); }, { passive: false });
+        }
+        brushCanvas.width = brush.W;
+        brushCanvas.height = brush.H;
+        drawBrushOverlay();
+    }
+    function drawBrushOverlay() {
+        if (!brushCtx) return;
+        brushCtx.clearRect(0, 0, brush.W, brush.H);
+        if (!brush.fg) return;
+        const img = brushCtx.createImageData(brush.W, brush.H);
+        for (let i = 0; i < brush.W * brush.H; i++) {
+            const j = i * 4;
+            if (brush.fg[i])      { img.data[j]=34;  img.data[j+1]=197; img.data[j+2]=94;  img.data[j+3]=110; }
+            else if (brush.bg[i]) { img.data[j]=239; img.data[j+1]=68;  img.data[j+2]=68;  img.data[j+3]=110; }
+        }
+        brushCtx.putImageData(img, 0, 0);
+    }
+
+    /**
+     * 把抠出的透明图合成到指定背景色上（保留原图 RGB，只替换透明区）
+     */
+    function applyBackgroundColor(srcCanvas, color) {
+        const W = srcCanvas.width, H = srcCanvas.height;
+        const srcData = srcCanvas.getContext('2d').getImageData(0, 0, W, H);
+        const d = srcData.data;
+
+        /* 解析 #RGB / #RRGGBB */
+        let br = 255, bg = 255, bb = 255;
+        if (typeof color === 'string' && color.charAt(0) === '#') {
+            let hex = color.slice(1);
+            if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+            const n = parseInt(hex, 16);
+            if (!isNaN(n)) { br = (n>>16)&255; bg = (n>>8)&255; bb = n&255; }
+        }
+
+        const out = new ImageData(W, H);
+        const o = out.data;
+        for (let i = 0; i < W * H; i++) {
+            const j = i * 4;
+            const a = d[j+3] / 255;
+            o[j]   = Math.round(d[j]   * a + br * (1 - a));
+            o[j+1] = Math.round(d[j+1] * a + bg * (1 - a));
+            o[j+2] = Math.round(d[j+2] * a + bb * (1 - a));
+            o[j+3] = 255;
+        }
+        const c = document.createElement('canvas');
+        c.width = W; c.height = H;
+        c.getContext('2d').putImageData(out, 0, 0);
+        return c;
+    }
+    </script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/i18n-dict.js"></script>
+<script src="../assets/js/i18n.js"></script>
+</body>
+</html>

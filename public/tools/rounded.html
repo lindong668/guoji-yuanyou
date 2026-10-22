@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta content="ca-pub-8915931557404979" name="google-adsense-account"/>
+<script async="" crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8915931557404979"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Round Image Corners & Circular Avatars</title>
+<meta content="Add rounded corners or crop to a circle with transparent PNG output. Ideal for avatars, cards and UI assets." name="description"/>
+<meta content="rounded corners, circular avatar, round image, image mask" name="keywords"/>
+<link href="https://piccalc.com/tools/rounded.html" hreflang="en" rel="alternate"/>
+<link href="https://piccalc.com/tools/rounded.html" hreflang="zh-CN" rel="alternate"/>
+<link href="https://piccalc.com/tools/rounded.html" hreflang="x-default" rel="alternate"/>
+<link href="https://piccalc.com/tools/rounded.html" rel="canonical"/>
+<meta content="index,follow,max-image-preview:large" name="robots"/>
+<meta content="website" property="og:type"/>
+<meta content="PicStudio" property="og:site_name"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="Round Image Corners or Make Circular Avatars Online | PicStudio" property="og:title"/>
+<meta content="Add rounded corners or crop to a circle with transparent PNG output. Ideal for avatars, cards and UI assets." property="og:description"/>
+<meta content="https://piccalc.com/tools/rounded.html" property="og:url"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Round Image Corners or Make Circular Avatars Online | PicStudio" name="twitter:title"/>
+<meta content="Add rounded corners or crop to a circle with transparent PNG output. Ideal for avatars, cards and UI assets." name="twitter:description"/>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Rounded Corners",
+  "url": "https://piccalc.com/tools/rounded.html",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any (browser)",
+  "browserRequirements": "A modern browser with Canvas support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "description": "Add rounded corners or crop to a circle online with a custom radius, exporting a transparent PNG. Suits avatars, cards and icons. Local processing; no upload."
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why is the outside black or white?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Because you downloaded as JPG. JPG has no transparency, so the area outside the corners is filled with a background colour. Download as PNG instead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "My circular avatar came out as an oval?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "That means the source is not square. Use the Resize tool to crop it to 1:1 first, then apply the circle crop."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I choose the radius?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Card images typically use 8–16 px; avatars just use the circle option; for a soft large radius try 10%–20% of the side length."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I round only two corners?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This version offers uniform corners on all four corners, plus the circle. To control individual corners, pre-process with another tool."
+      }
+    }
+  ]
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "PicStudio",
+      "item": "https://piccalc.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Rounded Corners",
+      "item": "https://piccalc.com/tools/rounded.html"
+    }
+  ]
+}
+    </script>
+<link href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎨&lt;/text&gt;&lt;/svg&gt;" rel="icon" type="image/svg+xml"/>
+<link href="../assets/css/style.css?v=20261024a" rel="stylesheet"/>
+<style>
+      html[data-lang="en"] [data-lang-block="zh"] { display: none !important; }
+      html[data-lang="zh"] [data-lang-block="en"] { display: none !important; }
+      .lang-toggle { background: transparent; border: 1px solid var(--border, #e2e8f0);
+        border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer;
+        color: var(--text-secondary, #64748b); line-height: 1.6; }
+      .lang-toggle:hover { border-color: var(--primary, #6366f1); color: var(--primary, #6366f1); }
+    </style>
+<script>
+      (function () {
+        try {
+          var v = localStorage.getItem('ps_lang');
+          document.documentElement.setAttribute('data-lang', (v === 'zh') ? 'zh' : 'en');
+        } catch (e) { document.documentElement.setAttribute('data-lang', 'en'); }
+      })();
+    </script>
+</head>
+<body>
+<header class="header">
+<div class="container">
+<a class="logo" href="../index.html">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</a>
+<nav class="tool-nav">
+<button class="lang-toggle" data-lang-toggle="" type="button">EN</button>
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0067" href="/guides/"><span data-i18n="k0067">Image Guides</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+</nav>
+<button class="lang-toggle lang-toggle-m" data-lang-toggle="" type="button">EN</button>
+</div>
+</header>
+<section class="tool-page">
+<div class="container">
+<a class="back-link" data-i18n="k0162" href="../index.html"><span data-i18n="k0162">← Back to Home</span></a>
+<div class="tool-header">
+<h1 data-i18n="k1158">⬜ Rounded Corners</h1>
+<p data-i18n="k1390">Add rounded or circular masks and export a transparent PNG — ideal for avatars and cards</p>
+</div>
+<div class="upload-area" id="uploadArea">
+<div class="upload-icon">📁</div>
+<div class="upload-text" data-i18n="k0210"><span data-i18n="k0210">Click or drag an image here</span></div>
+<div class="upload-hint" data-i18n="k0211"><span data-i18n="k0211">PNG / JPG / WebP supported</span></div>
+<input accept="image/*" id="fileInput" type="file"/>
+</div>
+<div class="preview-area" id="previewArea">
+<div class="preview-box">
+<h3 data-i18n="k0212"><span data-i18n="k0212">Original</span></h3>
+<img alt="Original" id="originalPreview" src=""/>
+</div>
+<div class="preview-box">
+<h3 data-i18n="k0461"><span data-i18n="k0461">Result</span></h3>
+<img alt="Result" id="processedPreview" src=""/>
+</div>
+</div>
+<div class="controls" id="controls">
+<div class="control-group">
+<label class="control-label" data-i18n="k1007">Shape</label>
+<div class="radio-group">
+<div class="radio-option">
+<input checked="" id="shapeRounded" name="shape" type="radio" value="rounded"/>
+<label data-i18n="k1103" for="shapeRounded">Rounded rectangle</label>
+</div>
+<div class="radio-option">
+<input id="shapeCircle" name="shape" type="radio" value="circle"/>
+<label data-i18n="k1008" for="shapeCircle">Circle</label>
+</div>
+<div class="radio-option">
+<input id="shapeHeart" name="shape" type="radio" value="heart"/>
+<label data-i18n="k1009" for="shapeHeart">Heart</label>
+</div>
+</div>
+</div>
+<div class="control-group" id="radiusGroup">
+<label class="control-label" data-i18n="k1104">Corner radius</label>
+<input id="radius" max="50" min="0" type="range" value="15"/>
+<div class="control-hint" id="radiusHint">15%</div>
+</div>
+<div class="control-group">
+<label class="control-label" data-i18n="k1252">Background colour (fills transparency)</label>
+<div class="radio-group">
+<div class="radio-option">
+<input checked="" id="fillNone" name="fillMode" type="radio" value="none"/>
+<label data-i18n="k1010" for="fillNone">Transparent</label>
+</div>
+<div class="radio-option">
+<input id="fillWhite" name="fillMode" type="radio" value="white"/>
+<label data-i18n="k1011" for="fillWhite">White</label>
+</div>
+<div class="radio-option">
+<input id="fillCustom" name="fillMode" type="radio" value="custom"/>
+<label data-i18n="k0588" for="fillCustom"><span data-i18n="k0588">Custom</span></label>
+</div>
+</div>
+</div>
+<div class="control-group" id="customFillGroup" style="display:none;">
+<input id="fillColor" style="width:60px;height:40px;border:none;border-radius:8px;cursor:pointer;" type="color" value="#6366f1"/>
+</div>
+<button class="btn btn-primary btn-lg" data-i18n="k1012" id="processBtn" style="width:100%;">Apply</button>
+</div>
+<div class="download-section" id="downloadSection">
+<button class="btn btn-primary btn-lg" data-i18n="k0320" id="downloadBtn"><span data-i18n="k0320">⬇️ Download result</span></button>
+</div>
+</div>
+</section>
+<!-- ========== Content: guide / how it works / use cases / FAQ ========== -->
+<section class="content-section">
+<div class="container">
+<div class="content-block">
+<h2 data-i18n="k0879"><span data-i18n="k0879">How to round corners</span></h2>
+<ol class="steps">
+<li><strong data-i18n="k0322"><span data-i18n="k0322">Upload: </span></strong><span data-i18n="k1391">Drop in an image. For avatars a square original gives the neatest result.</span></li>
+<li><strong data-i18n="k0880"><span data-i18n="k0880">Choose a shape: </span></strong><span data-i18n="k1291">Rounded rectangle or circle; circle crops to a disc.</span></li>
+<li><strong data-i18n="k0881"><span data-i18n="k0881">Set the corner radius: </span></strong><span data-i18n="k1310">Drag to set the radius; half the side length is a circle.</span></li>
+<li><strong data-i18n="k0882"><span data-i18n="k0882">Download as PNG: </span></strong><span data-i18n="k1392">Choose PNG so the area outside the corners stays properly transparent.</span></li>
+</ol>
+<div class="note-box">
+<p><strong data-i18n="k0326"><span data-i18n="k0326">Tip: </span></strong><span data-i18n="k1318">All processing happens in your browser: images are never uploaded to a server. Results live only on this page, so download them promptly.</span></p>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0171"><span data-i18n="k0171">How it works</span></h2>
+<p data-i18n="k0883"><span data-i18n="k0883">Rounded corners rely on a canvas clipping path: quadratic Bézier curves trace the four corners into a closed path, and the canvas draws only inside it. Pixels outside are never painted, so they stay transparent.</span></p>
+<p data-i18n="k0884"><span data-i18n="k0884">So the area outside the corners is transparent, not white. That transparency survives only if the output format has an alpha channel: PNG and WebP do, JPG does not — which is why the wrong choice turns those corners into black or white blocks.</span></p>
+<p data-i18n="k0885"><span data-i18n="k0885">A circular avatar simply swaps the clip path for an ellipse. If the source is not square, cropping to a circle yields an oval — square it up first.</span></p>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0175"><span data-i18n="k0175">Common use cases</span></h2>
+<div class="usecases">
+<div class="usecase"><strong data-i18n="k0886"><span data-i18n="k0886">Social media avatars</span></strong><span data-i18n="k0887"><span data-i18n="k0887">Crop to a circle, ready for any account avatar.</span></span></div>
+<div class="usecase"><strong data-i18n="k0888"><span data-i18n="k0888">Card images</span></strong><span data-i18n="k0889"><span data-i18n="k0889">Consistent corners that match your UI cards.</span></span></div>
+<div class="usecase"><strong data-i18n="k0890"><span data-i18n="k0890">Slides and documents</span></strong><span data-i18n="k0891"><span data-i18n="k0891">Soften inserted images with rounded corners.</span></span></div>
+<div class="usecase"><strong data-i18n="k0892"><span data-i18n="k0892">Icon and button assets</span></strong><span data-i18n="k0893"><span data-i18n="k0893">Produce PNG assets with transparent rounded corners.</span></span></div>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0185"><span data-i18n="k0185">Specifications</span></h2>
+<div class="table-wrap">
+<table class="spec">
+<tbody>
+<tr><th data-i18n="k0442"><span data-i18n="k0442">Supported input</span></th><td>PNG / JPG / JPEG / WebP / BMP / GIF</td></tr>
+<tr><th data-i18n="k0234"><span data-i18n="k0234">Output format</span></th><td data-i18n="k0894"><span data-i18n="k0894">PNG (recommended); JPG loses transparency</span></td></tr>
+<tr><th data-i18n="k0689"><span data-i18n="k0689">Corner radius</span></th><td data-i18n="k0895"><span data-i18n="k0895">0 is square; larger values round more, approaching a circle at half the side length</span></td></tr>
+<tr><th data-i18n="k0896"><span data-i18n="k0896">Shapes</span></th><td data-i18n="k0897"><span data-i18n="k0897">Rounded rectangle, circle (ellipse)</span></td></tr>
+<tr><th data-i18n="k0446"><span data-i18n="k0446">Processing</span></th><td data-i18n="k0447"><span data-i18n="k0447">Runs locally in your browser — nothing is uploaded</span></td></tr>
+</tbody>
+</table>
+</div>
+<div class="note-box">
+<p data-i18n="k0898"><span data-i18n="k0898">The area outside the corners is transparent. JPG drops that transparency — always choose PNG.</span></p>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0899"><span data-i18n="k0899">FAQ about rounded corners</span></h2>
+<div class="faq-list">
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0900"><span data-i18n="k0900">Why is the outside black or white?</span></div>
+<div class="faq-answer" data-i18n="k0901"><span data-i18n="k0901">Because you downloaded as JPG. JPG has no transparency, so the area outside the corners is filled with a background colour. Download as PNG instead.</span></div>
+</div>
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0902"><span data-i18n="k0902">My circular avatar came out as an oval?</span></div>
+<div class="faq-answer" data-i18n="k0903"><span data-i18n="k0903">That means the source is not square. Use the Resize tool to crop it to 1:1 first, then apply the circle crop.</span></div>
+</div>
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0904"><span data-i18n="k0904">How do I choose the radius?</span></div>
+<div class="faq-answer" data-i18n="k0905"><span data-i18n="k0905">Card images typically use 8–16 px; avatars just use the circle option; for a soft large radius try 10%–20% of the side length.</span></div>
+</div>
+<div class="faq-item">
+<div class="faq-question" data-i18n="k0906"><span data-i18n="k0906">Can I round only two corners?</span></div>
+<div class="faq-answer" data-i18n="k0907"><span data-i18n="k0907">This version offers uniform corners on all four corners, plus the circle. To control individual corners, pre-process with another tool.</span></div>
+</div>
+</div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0204"><span data-i18n="k0204">Try other tools</span></h2>
+<div class="related-tools">
+<a class="related-tool" href="icon-maker.html"><span>🎯</span><span data-i18n="k0086">Icon Maker</span></a>
+<a class="related-tool" href="resize.html"><span>📐</span><span data-i18n="k0082">Resize Image</span></a>
+<a class="related-tool" href="remove-bg.html"><span>✂️</span><span data-i18n="k0072">Background Remover</span></a>
+<a class="related-tool" href="../guides/index.html"><span>📚</span><span data-i18n="k1140">Image Guides</span></a>
+</div>
+</div>
+</div>
+</section>
+<!-- ========== Footer ========== -->
+<footer class="footer">
+<div class="container">
+<div class="footer-content">
+<div class="footer-brand">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</div>
+<p class="footer-desc" data-i18n="k0024"><span data-i18n="k0024">Free online image tools — everything runs locally in your browser</span></p>
+</div>
+<div class="footer-links">
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0026" href="/about.html"><span data-i18n="k0026">About</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0005" href="/terms.html"><span data-i18n="k0005">Terms of Use</span></a>
+</div>
+<div class="footer-bottom">
+<p style="margin-bottom:6px;">Contact: <a href="mailto:juju089@qq.com" style="color:#818cf8;">juju089@qq.com</a></p>
+<p data-i18n="k0028"><span data-i18n="k1312">© 2026 PicStudio. All rights reserved.</span></p>
+</div>
+</div>
+</footer>
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<div class="loading-text" data-i18n="k0428"><span data-i18n="k0428">Processing, please wait…</span></div>
+</div>
+<script src="../assets/js/preview.js?v=20261024a"></script>
+<script src="../assets/js/download.js?v=20261024a"></script>
+<script src="../assets/js/tools.js?v=20261024a"></script>
+<script>
+    const radiusSlider = document.getElementById('radius');
+    const radiusHint = document.getElementById('radiusHint');
+    const shapeRadios = document.querySelectorAll('input[name="shape"]');
+    const radiusGroup = document.getElementById('radiusGroup');
+    const fillRadios = document.querySelectorAll('input[name="fillMode"]');
+    const customFillGroup = document.getElementById('customFillGroup');
+
+    radiusSlider.addEventListener('input', () => {
+        radiusHint.textContent = `${radiusSlider.value}%`;
+    });
+
+    shapeRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            radiusGroup.style.display = e.target.value === 'circle' ? 'none' : 'block';
+        });
+    });
+
+    fillRadios.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            customFillGroup.style.display = e.target.value === 'custom' ? 'block' : 'none';
+        });
+    });
+
+    const tool = new ImageTool({
+        process: async (canvas) => {
+            const shape = document.querySelector('input[name="shape"]:checked').value;
+            const radiusPercent = parseInt(radiusSlider.value);
+            const fillMode = document.querySelector('input[name="fillMode"]:checked').value;
+            const fillColor = document.getElementById('fillColor').value;
+
+            const w = canvas.width;
+            const h = canvas.height;
+
+            const result = document.createElement('canvas');
+            result.width = w;
+            result.height = h;
+            const ctx = result.getContext('2d');
+
+            // Fill background
+            if (fillMode === 'white') {
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, w, h);
+            } else if (fillMode === 'custom') {
+                ctx.fillStyle = fillColor;
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            // Draw image with clipping
+            ctx.save();
+
+            if (shape === 'circle') {
+                const cx = w / 2;
+                const cy = h / 2;
+                const radius = Math.min(w, h) / 2;
+                ctx.beginPath();
+                ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                ctx.clip();
+            } else if (shape === 'rounded') {
+                const r = Math.floor(Math.min(w, h) * radiusPercent / 100);
+                ctx.beginPath();
+                ctx.moveTo(r, 0);
+                ctx.lineTo(w - r, 0);
+                ctx.quadraticCurveTo(w, 0, w, r);
+                ctx.lineTo(w, h - r);
+                ctx.quadraticCurveTo(w, h, w - r, h);
+                ctx.lineTo(r, h);
+                ctx.quadraticCurveTo(0, h, 0, h - r);
+                ctx.lineTo(0, r);
+                ctx.quadraticCurveTo(0, 0, r, 0);
+                ctx.closePath();
+                ctx.clip();
+            } else if (shape === 'heart') {
+                // Heart shape clip path
+                ctx.beginPath();
+                const cx = w / 2;
+                const cy = h / 2;
+                const s = Math.min(w, h) / 30;
+                for (let t = 0; t <= Math.PI * 2; t += 0.01) {
+                    const x = 16 * Math.pow(Math.sin(t), 3);
+                    const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                    if (t === 0) ctx.moveTo(cx + x * s, cy + y * s);
+                    else ctx.lineTo(cx + x * s, cy + y * s);
+                }
+                ctx.closePath();
+                ctx.clip();
+            }
+
+            ctx.drawImage(canvas, 0, 0);
+            ctx.restore();
+
+            return result;
+        },
+        downloadOptions: { filename: 'picstudio-rounded', format: 'png' }
+    });
+
+    document.getElementById('processBtn').addEventListener('click', () => tool.process());
+    </script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/i18n-dict.js"></script>
+<script src="../assets/js/i18n.js"></script>
+</body>
+</html>

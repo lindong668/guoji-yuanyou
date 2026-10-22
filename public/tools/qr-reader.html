@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta content="ca-pub-8915931557404979" name="google-adsense-account"/>
+<script async="" crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8915931557404979"></script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Read QR Code from Image Online | PicStudio</title>
+<meta content="Decode QR codes from screenshots or saved images. Uses the browser native detector when available, so your image stays local." name="description"/>
+<meta content="qr code reader, scan qr code, decode qr, read qr image" name="keywords"/>
+<link href="https://piccalc.com/tools/qr-reader.html" hreflang="en" rel="alternate"/>
+<link href="https://piccalc.com/tools/qr-reader.html" hreflang="zh-CN" rel="alternate"/>
+<link href="https://piccalc.com/tools/qr-reader.html" hreflang="x-default" rel="alternate"/>
+<link href="https://piccalc.com/tools/qr-reader.html" rel="canonical"/>
+<meta content="index,follow,max-image-preview:large" name="robots"/>
+<meta content="website" property="og:type"/>
+<meta content="PicStudio" property="og:site_name"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="Read QR Code from Image Online | PicStudio" property="og:title"/>
+<meta content="Decode QR codes from screenshots or saved images. Uses the browser native detector when available, so your image stays local." property="og:description"/>
+<meta content="https://piccalc.com/tools/qr-reader.html" property="og:url"/>
+<meta content="summary_large_image" name="twitter:card"/>
+<meta content="Read QR Code from Image Online | PicStudio" name="twitter:title"/>
+<meta content="Decode QR codes from screenshots or saved images. Uses the browser native detector when available, so your image stays local." name="twitter:description"/>
+<link href="../assets/css/style.css?v=20261024a" rel="stylesheet"/>
+<style>.content-section{padding:48px 0;background:transparent;border-top:1px solid var(--border)}
+.content-section .container{max-width:860px}
+.content-block{margin-bottom:40px}
+.content-block h2{font-size:1.35rem;color:var(--text-primary);margin-bottom:16px;padding-left:12px;border-left:4px solid #6366f1}
+.content-block h3{font-size:1.05rem;color:var(--text-primary);margin:20px 0 8px}
+.content-block p{color:var(--text-secondary);line-height:1.85;margin-bottom:12px}
+.content-block ul,.content-block ol{color:var(--text-secondary);line-height:1.85;padding-left:22px;margin-bottom:12px}
+.content-block li{margin-bottom:6px}
+.steps-list{counter-reset:step;list-style:none;padding-left:0}
+.steps-list li{counter-increment:step;position:relative;padding-left:44px;margin-bottom:14px;color:var(--text-secondary);line-height:1.8}
+.steps-list li::before{content:counter(step);position:absolute;left:0;top:2px;width:28px;height:28px;background:#6366f1;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:600}
+.scenario-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:14px}
+.scenario-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.scenario-card h4{font-size:.98rem;color:var(--text-primary);margin-bottom:6px}
+.scenario-card p{font-size:.9rem;color:var(--text-secondary);margin:0;line-height:1.7}
+.spec-table{width:100%;border-collapse:collapse;margin-top:12px;font-size:.92rem}
+.spec-table th,.spec-table td{border:1px solid var(--border);padding:10px 12px;text-align:left}
+.spec-table th{background:var(--bg-dark);color:var(--text-primary);font-weight:600;white-space:nowrap}
+.spec-table td{color:var(--text-secondary)}
+.faq-item{border-bottom:1px solid #e2e8f0;padding:16px 0}
+.faq-item:last-child{border-bottom:none}
+.faq-item h3{font-size:1rem;color:var(--text-primary);margin:0 0 8px}
+.faq-item p{color:var(--text-secondary);line-height:1.8;margin:0}
+.related-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:14px}
+.related-card{display:block;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:14px;text-decoration:none;transition:.2s}
+.related-card:hover{border-color:#6366f1;transform:translateY(-2px)}
+.related-card .ricon{font-size:1.4rem;display:block;margin-bottom:6px}
+.related-card .rname{font-size:.92rem;color:var(--text-primary);font-weight:600}
+.related-card .rdesc{font-size:.8rem;color:var(--text-secondary);margin-top:4px;line-height:1.5}
+@media(max-width:640px){.content-section{padding:32px 0}.content-block h2{font-size:1.2rem}}</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "QR Code Reader",
+  "url": "https://piccalc.com/tools/qr-reader.html",
+  "applicationCategory": "UtilityApplication",
+  "operatingSystem": "Any (browser)",
+  "browserRequirements": "A modern browser with Canvas support",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "CNY"
+  },
+  "description": "Upload a QR image online to read the URL, text or WiFi password inside, with no app to install. Uses the browser's native decoding; runs locally, no upload."
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why will it not decode?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most often the image is too blurry or the code occupies too little of it. Upload a clean original and avoid recompression. Heavy skew, glare or obstruction also interfere."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will my image be exposed?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The native path is fully offline; the network is used only to load a fallback library when unsupported, and the image always stays local."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can it read several codes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "With the native BarcodeDetector, yes — it returns every code in the image. The jsQR fallback returns one at a time."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can it read barcodes?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "This version handles QR codes only. One-dimensional barcodes are planned for a later release."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does it work in Safari or Firefox?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Neither supports the native API, so it falls back to jsQR automatically — same features, just a one-time download of the library."
+      }
+    }
+  ]
+}
+    </script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Home",
+      "item": "https://piccalc.com/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "All Tools",
+      "item": "https://piccalc.com/#tools"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "QR Code Reader",
+      "item": "https://piccalc.com/tools/qr-reader.html"
+    }
+  ]
+}
+    </script>
+<style>
+      html[data-lang="en"] [data-lang-block="zh"] { display: none !important; }
+      html[data-lang="zh"] [data-lang-block="en"] { display: none !important; }
+      .lang-toggle { background: transparent; border: 1px solid var(--border, #e2e8f0);
+        border-radius: 6px; padding: 4px 10px; font-size: 13px; cursor: pointer;
+        color: var(--text-secondary, #64748b); line-height: 1.6; }
+      .lang-toggle:hover { border-color: var(--primary, #6366f1); color: var(--primary, #6366f1); }
+    </style>
+<script>
+      (function () {
+        try {
+          var v = localStorage.getItem('ps_lang');
+          document.documentElement.setAttribute('data-lang', (v === 'zh') ? 'zh' : 'en');
+        } catch (e) { document.documentElement.setAttribute('data-lang', 'en'); }
+      })();
+    </script>
+</head>
+<body>
+<header class="header">
+<div class="container">
+<a class="logo" href="../index.html">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</a>
+<nav class="tool-nav">
+<button class="lang-toggle" data-lang-toggle="" type="button">EN</button>
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0067" href="/guides/"><span data-i18n="k0067">Image Guides</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0067" href="/guides/"><span data-i18n="k0067">Image Guides</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+</nav>
+<button class="lang-toggle lang-toggle-m" data-lang-toggle="" type="button">EN</button>
+</div>
+</header>
+<section class="tool-page">
+<div class="container">
+<a class="back-link" data-i18n="k0162" href="../index.html"><span data-i18n="k0162">← Back to Home</span></a>
+<div class="tool-header">
+<h1 data-i18n="k1180">🔎 QR Code Reader</h1>
+<p data-i18n="k1373">Upload a QR screenshot to read the URL, text or WiFi password inside</p>
+</div>
+<style>.gen-box{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:8px}
+.gen-out{margin-top:16px}
+.gen-out h3{font-size:1rem;color:var(--text-primary);margin-bottom:8px}
+.gen-out textarea,.gen-out pre{width:100%;min-height:110px;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:.85rem;font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--bg-dark);color:var(--text-primary);word-break:break-all;white-space:pre-wrap;margin:0}
+.sw-list{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.sw{width:96px;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--bg-card)}
+.sw-chip{height:62px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:4px;font-size:.68rem;font-weight:600}
+.sw-hex{padding:6px;text-align:center;font-size:.76rem;color:var(--text-secondary);font-family:ui-monospace,monospace;cursor:pointer}
+.sw-hex:hover{background:var(--bg-card-hover);color:var(--primary-light)}
+.meta-table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:12px}
+.meta-table th,.meta-table td{border:1px solid var(--border);padding:8px 11px;text-align:left}
+.meta-table th{background:var(--bg-dark);color:var(--text-primary);font-weight:600;width:35%}
+.meta-table td{color:var(--text-secondary);word-break:break-all}
+.warn-box{background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.35);border-radius:10px;padding:12px 14px;color:#fcd34d;font-size:.88rem;line-height:1.7;margin-top:12px}
+.ok-box{background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.38);border-radius:10px;padding:12px 14px;color:#6ee7b7;font-size:.88rem;line-height:1.7;margin-top:12px}.preview-box{max-width:420px;margin:16px auto}</style>
+<div class="upload-area" id="uploadArea">
+<div class="upload-icon">📁</div>
+<div class="upload-text" data-i18n="k1256">Click or drag a QR image here</div>
+<div class="upload-hint" data-i18n="k1288">QR screenshots in PNG or JPG</div>
+<input accept="image/*" id="fileInput" type="file"/>
+</div>
+<div class="preview-box" id="previewBox">
+<h3 data-i18n="k1130">Image to decode</h3>
+<img alt="Image to decode" id="previewImg" src=""/>
+</div>
+<div class="gen-box" id="resultBox">
+<h3 data-i18n="k1083">Decoded result</h3>
+<div id="decodeMsg"></div>
+<textarea id="resultText" readonly="" style="margin-top:12px;"></textarea>
+</div>
+<div class="download-section" id="downloadSection">
+<button class="btn btn-primary btn-lg" data-i18n="k1084" id="copyBtn" style="width:100%;margin-bottom:10px;">Copy content</button>
+<button class="btn btn-outline btn-lg" data-i18n="k1249" id="openBtn" style="width:100%;">If it is a URL, open it in a new tab</button>
+</div>
+<div class="loading-overlay" id="loadingOverlay">
+<div class="spinner"></div>
+<div class="loading-text" data-i18n="k0165" id="loadingText"><span data-i18n="k0165">Processing…</span></div>
+</div>
+</div>
+</section>
+<section class="content-section">
+<div class="container">
+<div class="content-block">
+<h2 data-i18n="k0357"><span data-i18n="k0357">How to read a QR code</span></h2>
+<ol class="steps-list"><li data-i18n="k0358"><span data-i18n="k0358">Save the QR code as an image (screenshot or long-press to save)</span></li><li data-i18n="k0359"><span data-i18n="k0359">Upload it here and recognition starts automatically</span></li><li data-i18n="k0360"><span data-i18n="k0360">The decoded content appears below and can be copied in one tap</span></li><li data-i18n="k0361"><span data-i18n="k0361">If it is a URL, click "Open in new tab" to visit it</span></li></ol>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0171"><span data-i18n="k0171">How it works</span></h2>
+<p data-i18n="k0362"><span data-i18n="k0362">Reading reverses the generation: locate the three corner finder patterns to fix position and angle, apply perspective correction to square up a skewed code, then read black and white values module by module.</span></p><p data-i18n="k0363"><span data-i18n="k0363">The bit stream is unmasked first (using the mask number recorded in the format information), then verified and corrected with Reed-Solomon — which is exactly why slight damage is tolerated.</span></p><p data-i18n="k0364"><span data-i18n="k0364">This tool prefers the browser's native BarcodeDetector API (supported in Chrome and Edge), running entirely locally with the best speed and no network needed.</span></p><p data-i18n="k0365"><span data-i18n="k0365">If your browser lacks that API, jsQR loads from a public CDN as a fallback. That step needs the network, but the image itself is still processed only locally.</span></p>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0175"><span data-i18n="k0175">Common use cases</span></h2>
+<p data-i18n="k0176"><span data-i18n="k0176">It works best for:</span></p>
+<div class="scenario-grid"><div class="scenario-card"><h4 data-i18n="k0366"><span data-i18n="k0366">Check before you open</span></h4><p data-i18n="k0367"><span data-i18n="k0367">For a code from a stranger, decode the URL and confirm it is safe first</span></p></div><div class="scenario-card"><h4 data-i18n="k0368"><span data-i18n="k0368">Recover a WiFi password</span></h4><p data-i18n="k0369"><span data-i18n="k0369">Read the plaintext password from a shared WiFi code</span></p></div><div class="scenario-card"><h4 data-i18n="k0370"><span data-i18n="k0370">Read contact details</span></h4><p data-i18n="k0371"><span data-i18n="k0371">Turn a contact QR code back into contact text</span></p></div><div class="scenario-card"><h4 data-i18n="k0372"><span data-i18n="k0372">Recover old links</span></h4><p data-i18n="k0373"><span data-i18n="k0373">Read the link from an old poster before deciding</span></p></div></div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0185"><span data-i18n="k0185">Specifications</span></h2>
+<table class="spec-table"><tbody><tr><th data-i18n="k0233"><span data-i18n="k0233">Input format</span></th><td>PNG / JPG / WebP</td></tr><tr><th data-i18n="k0374"><span data-i18n="k0374">Recognition method</span></th><td data-i18n="k0375"><span data-i18n="k0375">Native BarcodeDetector (preferred) / jsQR (fallback)</span></td></tr><tr><th data-i18n="k0376"><span data-i18n="k0376">Supported content</span></th><td data-i18n="k0377"><span data-i18n="k0377">URL / text / WiFi / contact / email — all types</span></td></tr><tr><th data-i18n="k0378"><span data-i18n="k0378">Codes per image</span></th><td data-i18n="k0379"><span data-i18n="k0379">Multiple codes per image (with the native API)</span></td></tr><tr><th data-i18n="k0193"><span data-i18n="k0193">Privacy</span></th><td data-i18n="k0380"><span data-i18n="k0380">Image is never uploaded</span></td></tr></tbody></table>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0381"><span data-i18n="k0381">FAQ about QR reading</span></h2>
+<div class="faq-item"><h3 data-i18n="k0382"><span data-i18n="k0382">Why will it not decode?</span></h3><p data-i18n="k0383"><span data-i18n="k0383">Most often the image is too blurry or the code occupies too little of it. Upload a clean original and avoid recompression. Heavy skew, glare or obstruction also interfere.</span></p></div><div class="faq-item"><h3 data-i18n="k0384"><span data-i18n="k0384">Will my image be exposed?</span></h3><p data-i18n="k0385"><span data-i18n="k0385">No. The native path is fully offline; the network is used only to load a fallback library when unsupported, and the image always stays local.</span></p></div><div class="faq-item"><h3 data-i18n="k0386"><span data-i18n="k0386">Can it read several codes?</span></h3><p data-i18n="k0387"><span data-i18n="k0387">With the native BarcodeDetector, yes — it returns every code in the image. The jsQR fallback returns one at a time.</span></p></div><div class="faq-item"><h3 data-i18n="k0388"><span data-i18n="k0388">Can it read barcodes?</span></h3><p data-i18n="k0389"><span data-i18n="k0389">This version handles QR codes only. One-dimensional barcodes are planned for a later release.</span></p></div><div class="faq-item"><h3 data-i18n="k0390"><span data-i18n="k0390">Does it work in Safari or Firefox?</span></h3><p data-i18n="k0391"><span data-i18n="k0391">Yes. Neither supports the native API, so it falls back to jsQR automatically — same features, just a one-time download of the library.</span></p></div>
+</div>
+<div class="content-block">
+<h2 data-i18n="k0204"><span data-i18n="k0204">Try other tools</span></h2>
+<div class="related-grid"><a class="related-card" href="qrcode.html"><span class="ricon">📱</span><span class="rname" data-i18n="k0118"><span data-i18n="k0118">QR Code Generator</span></span><span class="rdesc" data-i18n="k0392"><span data-i18n="k0392">Generate a custom QR code</span></span></a><a class="related-card" href="crop.html"><span class="ricon">✂️</span><span class="rname" data-i18n="k1041">Smart Crop</span><span class="rdesc" data-i18n="k0393"><span data-i18n="k0393">Crop unwanted parts of a screenshot</span></span></a><a class="related-card" href="upscale.html"><span class="ricon">🔍</span><span class="rname" data-i18n="k0098"><span data-i18n="k0098">Upscale Image</span></span><span class="rdesc" data-i18n="k0394"><span data-i18n="k0394">Enlarge a blurry QR code</span></span></a><a class="related-card" href="adjust.html"><span class="ricon">🎨</span><span class="rname" data-i18n="k0093"><span data-i18n="k0093">Color Adjust</span></span><span class="rdesc" data-i18n="k0395"><span data-i18n="k0395">Raise contrast for easier recognition</span></span></a></div>
+</div>
+</div>
+</section>
+<footer class="footer">
+<div class="container">
+<div class="footer-content">
+<div class="footer-brand">
+<span class="logo-icon">🎨</span>
+<span class="logo-text">Pic<span class="accent">Studio</span></span>
+</div>
+<p class="footer-desc" data-i18n="k0024"><span data-i18n="k0024">Free online image tools — everything runs locally in your browser</span></p>
+</div>
+<div class="footer-links">
+<a data-i18n="k0025" href="../index.html#tools"><span data-i18n="k0025">All Tools</span></a>
+<a data-i18n="k0026" href="/about.html"><span data-i18n="k0026">About</span></a>
+<a data-i18n="k0027" href="/contact.html"><span data-i18n="k0027">Contact</span></a>
+<a data-i18n="k0003" href="/faq.html"><span data-i18n="k0003">FAQ</span></a>
+<a data-i18n="k0004" href="/privacy.html"><span data-i18n="k0004">Privacy Policy</span></a>
+<a data-i18n="k0005" href="/terms.html"><span data-i18n="k0005">Terms of Use</span></a>
+</div>
+<div class="footer-bottom">
+<p style="margin-bottom:6px;">Contact: <a href="mailto:juju089@qq.com" style="color:#818cf8;">juju089@qq.com</a></p>
+<p data-i18n="k0028"><span data-i18n="k1312">© 2026 PicStudio. All rights reserved.</span></p>
+</div>
+</div>
+</footer>
+<script src="../assets/js/preview.js?v=20261024a"></script>
+<script src="../assets/js/download.js?v=20261024a"></script>
+<script src="../assets/js/lab.js?v=20261025id"></script>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id);};
+var fileInput=$('fileInput'),uploadArea=$('uploadArea'),preview=$('previewImg'),
+    previewBox=$('previewBox'),resultBox=$('resultBox'),resultText=$('resultText'),
+    downloadSection=$('downloadSection'),loadingOverlay=$('loadingOverlay'),loadingText=$('loadingText');
+var curFile=null;var curImg=null;
+function showLoading(t){loadingText.textContent=t;loadingOverlay.classList.add('active');}
+function hideLoading(){loadingOverlay.classList.remove('active');}
+function handleFile(file){
+  if(!file||!file.type.startsWith('image/')){alert('请选择图片文件');return;}
+  curFile=file;
+  var r=new FileReader();
+  r.onload=function(e){curImg=new Image();curImg.onload=function(){
+    preview.src=curImg.src;previewBox.classList.add('active');decode();};curImg.src=e.target.result;};
+  r.readAsDataURL(file);}
+uploadArea.addEventListener('click',function(){fileInput.click();});
+fileInput.addEventListener('change',function(e){handleFile(e.target.files[0]);});
+uploadArea.addEventListener('dragover',function(e){e.preventDefault();uploadArea.classList.add('dragover');});
+uploadArea.addEventListener('dragleave',function(){uploadArea.classList.remove('dragover');});
+uploadArea.addEventListener('drop',function(e){e.preventDefault();uploadArea.classList.remove('dragover');handleFile(e.dataTransfer.files[0]);});
+
+/* 优先用浏览器原生 BarcodeDetector（Chrome/Edge，零依赖、最快） */
+function decodeNative(img){
+  return new Promise(function(res){
+    if(!('BarcodeDetector' in window))return res(null);
+    try{
+      var det=new BarcodeDetector({formats:['qr_code']});
+      det.detect(img).then(function(list){
+        res(list&&list.length?list.map(function(x){return x.rawValue;}):null);
+      }).catch(function(){res(null);});
+    }catch(e){res(null);}
+    setTimeout(function(){res(null);},8000);
+  });}
+
+/* 降级：从 CDN 加载 jsQR */
+var jsqrPromise=null;
+function loadJsQR(){
+  if(jsqrPromise)return jsqrPromise;
+  var urls=['https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js',
+            'https://unpkg.com/jsqr@1.4.0/dist/jsQR.js',
+            'https://fastly.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js'];
+  var i=0;
+  function next(){
+    if(i>=urls.length)return Promise.reject(new Error('jsQR 不可用'));
+    var u=urls[i++];
+    return fetch(u).then(function(r){return r.text();}).then(function(code){
+      (0,eval)(code);
+      if(typeof window.jsQR!=='function')throw new Error('jsQR 加载异常');
+      return window.jsQR;
+    }).catch(next);
+  }
+  jsqrPromise=new Promise(function(res,rej){
+    var t=setTimeout(function(){rej(new Error('加载超时'));},12000);
+    next().then(function(f){clearTimeout(t);res(f);}).catch(function(e){clearTimeout(t);rej(e);});
+  });
+  return jsqrPromise;}
+
+function decodeJsQR(img){
+  return loadJsQR().then(function(fn){
+    var maxSide=1200;
+    var w=img.naturalWidth,h=img.naturalHeight;
+    var s=Math.min(1,maxSide/Math.max(w,h));
+    var c=document.createElement('canvas');
+    c.width=Math.round(w*s);c.height=Math.round(h*s);
+    var ctx=c.getContext('2d',{willReadFrequently:true});
+    ctx.drawImage(img,0,0,c.width,c.height);
+    var d=ctx.getImageData(0,0,c.width,c.height);
+    var r=fn(d.data,c.width,c.height,{inversionAttempts:'dontInvert'});
+    return r&&r.data?[r.data]:null;
+  });}
+
+function decode(){
+  if(!curImg)return;
+  showLoading('正在识别二维码…');
+  resultBox.classList.remove('active');
+  downloadSection.classList.remove('active');
+  decodeNative(curImg).then(function(list){
+    if(list&&list.length){finish(list);return null;}
+    return decodeJsQR(curImg).then(finish).catch(function(){
+      hideLoading();
+      resultText.textContent='';
+      resultBox.classList.add('active');
+      $('decodeMsg').innerHTML='<div class="warn-box">没能识别出二维码。可能的原因：<br>'+
+        '· 图片里没有二维码，或二维码太小/模糊<br>'+
+        '· 二维码被裁剪、倾斜角度过大<br>'+
+        '· 网络受限导致备用识别库加载失败<br>'+
+        '建议换一张更清晰、端正的截图再试。</div>';
+    });
+  }).catch(function(e){hideLoading();alert('识别出错：'+e.message);});}
+function finish(list){
+  hideLoading();
+  resultText.value=list.join('\n\n');
+  resultBox.classList.add('active');
+  $('decodeMsg').innerHTML='<div class="ok-box">识别成功，共 '+list.length+' 个二维码。</div>';
+  downloadSection.classList.add('active');}
+/* 打开链接 */
+$('openBtn').addEventListener('click',function(){
+  var v=resultText.value.trim();
+  if(!v){alert('没有可打开的内容');return;}
+  if(/^https?:\/\//i.test(v))window.open(v,'_blank');
+  else alert('识别结果不是网址，无法直接打开');});
+$('copyBtn').addEventListener('click',function(){
+  var v=resultText.value;
+  if(!v){alert('没有内容可复制');return;}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(v).then(function(){$('copyBtn').textContent='已复制 ✓';
+      setTimeout(function(){$('copyBtn').textContent='复制内容';},1800);});
+  }else{resultText.select();document.execCommand('copy');}});
+})();
+</script>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/i18n-dict.js"></script>
+<script src="../assets/js/i18n.js"></script>
+</body>
+</html>
