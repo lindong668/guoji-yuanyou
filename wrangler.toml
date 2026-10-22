@@ -1,28 +1,36 @@
-# ============================================================
-# PicStudio（piccalc.com）—— Cloudflare Workers + Assets
-# Worker 名称必须与 CF 上的 Worker 一致，否则控制台会出现
-# "需更新 wrangler.toml 以保持一致设置" 的红色提示。
-# ============================================================
-name = "tk-bj"
-# 账号 ID 写死，deploy 时不再交互提问选账号
-account_id = "d49e51b1279804c22035a33a9c1cb06e"
-compatibility_date = "2026-09-01"
+name = 'guoji-yuanyou'
+account_id = 'd49e51b1279804c22035a33a9c1cb06e'
 main = "src/index.js"
+compatibility_date = "2024-12-01"
 
-[assets]
-directory = "./public"
-binding = "ASSETS"
+# ---- Custom domain: must use /* so ALL paths reach the Worker ----
+routes = [
+  { pattern = "you.piccalc.com/*", zone_name = "piccalc.com" }
+]
+# workers_dev = true
 
-# 路由在 CF 控制台配置：Workers → tk-bj → 设置 → 域和路由
-# piccalc.com/* 与 www.piccalc.com/*
+# Uncomment and fill after `wrangler kv:namespace create PRICESCOPE_CACHE`
+# if you later want persistent caching:
+# [[kv_namespaces]]
+# binding = "PRICESCOPE_CACHE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
-# 请求日志（CF 控制台 → Workers → 该站 → Observability 实时查看）
-# 用于查清流量来源：Googlebot / 各类爬虫 / 扫描机器人
-#
-# ⚠️ invocation_logs = true 是关键：
-#    只写 enabled = true 只会记录 console.log 的输出，
-#    而本站代码里没有任何 console.log —— 那样等于什么都看不到。
-#    invocation_logs 才负责记录「每一次请求」本身（URL / UA / IP / 状态码）。
+# ---- Fill AFTER AdSense approval / Search Console verification ----
+# Leave blank for now; the site shows placeholders instead of real ads.
+[vars]
+ADSENSE_CLIENT = ""   # ca-pub-1234567890123456
+AD_SLOT_HOME   = ""
+AD_SLOT_OIL    = ""
+AD_SLOT_GOLD   = ""
+AD_SLOT_CN     = ""
+AD_SLOT_FX     = ""
+AD_SLOT_WTI    = ""
+AD_SLOT_BLOG   = ""
+AD_SLOT_ARTICLE= ""
+AD_SLOT_LEGAL  = ""
+GA4_ID         = ""   # G-ABCDEF1234
+GSC_VERIFY     = ""   # google-site-verification=...
+
 [observability]
 enabled = true
 
