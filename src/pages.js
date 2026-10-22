@@ -708,7 +708,7 @@ export function sitemap() {
       const alts = artLangs.map(x =>
         `<xhtml:link rel="alternate" hreflang="${x}" href="${D}/${x}${path}"/>`).join('');
       urls.push(`<url><loc>${loc}</loc><lastmod>${a.date}</lastmod>
-    <changefreq>monthly</changefreq>
+    <changefreq>weekly</changefreq>
     <priority>0.7</priority>${alts}</url>`);
     }
   }
