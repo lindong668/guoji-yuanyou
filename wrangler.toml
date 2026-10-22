@@ -32,3 +32,8 @@ GSC_VERIFY     = ""   # google-site-verification=...
 
 [observability]
 enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true      # ★ 记录每次调用，缺了它看不到访问者
+head_sampling_rate = 1      # 100% 采样，不漏
