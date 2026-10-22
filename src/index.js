@@ -136,6 +136,20 @@ Sitemap: ${SITE.domain}/sitemap.xml
       return Response.redirect(`${SITE.domain}/${l}/`, 302);
     }
 
+    // ---------- legacy dated URLs -> 301 to the current, undated form ----------
+    // An earlier build appended a date segment to every URL
+    // (/{lang}/about/2026-10-20/). Google has already crawled and indexed
+    // that shape, so those URLs must not 404 — a 301 hands the accumulated
+    // signals to the live page instead of throwing them away.
+    // Handled BEFORE the trailing-slash redirect so the crawler only ever
+    // sees one hop, not two.
+    const segs = seg.slice(1);
+    if (segs.some(x => /^\d{4}-\d{2}-\d{2}$/.test(x))) {
+      // strip the date segment, then rebuild
+      let clean = segs.filter(x => !/^\d{4}-\d{2}-\d{2}$/.test(x)).join('/');
+      return Response.redirect(`${SITE.domain}/${lang}/${clean}${clean ? '/' : ''}`, 301);
+    }
+
     const rest = '/' + (seg.slice(1).join('/') || '');
     const norm = rest.endsWith('/') ? rest : rest + '/';
 
