@@ -1,4 +1,5 @@
 name = 'guoji-yuanyou'
+account_id = 'd49e51b1279804c22035a33a9c1cb06e'
 main = "src/index.js"
 compatibility_date = "2024-12-01"
 

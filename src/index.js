@@ -72,6 +72,15 @@ export default {
       });
     }
 
+    // ---------- Google 站点验证文件 ----------
+    // 与 1号(piccalc.com) / 5号(k789.cc.cd) 使用同一份验证文件，
+    // 便于在 Search Console 用同一账号添加属性。
+    if (url.pathname === '/google6474e28bb6098302.html') {
+      return new Response('google-site-verification: google6474e28bb6098302.html', {
+        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=86400' },
+      });
+    }
+
     // ---------- robots.txt ----------
     if (url.pathname === '/robots.txt') {
       const body = `User-agent: *
