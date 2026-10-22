@@ -116,6 +116,9 @@ export const CSS = `
   --fx:#a78bfa; --ok:#34d399; --grad1:linear-gradient(135deg,#0b1228,#141d3d 60%,#0b1228);
 }
 *{box-sizing:border-box}
+/* Kill the 300ms tap delay iOS adds while it waits to see if a tap
+   becomes a double-tap-to-zoom. Without this, taps feel ignored. */
+a,button,summary,label,input,select,textarea{touch-action:manipulation}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--txt);
   font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans","Noto Sans CJK",Roboto,sans-serif;
@@ -133,7 +136,8 @@ img{max-width:100%}
 .logo .mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
   background:linear-gradient(135deg,var(--gold),#ff8a3d);color:#211a00;font-weight:900;font-size:.95rem;
   box-shadow:0 6px 18px rgba(245,179,1,.32)}
-.logo span{background:linear-gradient(92deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo span{color:#fff;background:linear-gradient(92deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text}
+@supports (-webkit-background-clip:text) or (background-clip:text){.logo span{color:transparent}}
 .nav{display:flex;gap:4px;margin-inline-start:auto;overflow-x:auto;scrollbar-width:none}
 .nav::-webkit-scrollbar{display:none}
 .nav a{padding:8px 13px;border-radius:9px;font-size:.9rem;color:var(--muted);white-space:nowrap;transition:.18s}
@@ -169,9 +173,10 @@ img{max-width:100%}
   box-shadow:0 0 0 0 rgba(52,211,153,.7);animation:pulse 2s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 9px rgba(52,211,153,0)}100%{box-shadow:0 0 0 0 rgba(52,211,153,0)}}
 .hero h1{margin:18px 0 12px;font-size:clamp(1.9rem,4.4vw,3.05rem);line-height:1.14;
-  font-weight:800;letter-spacing:-.03em;
+  font-weight:800;letter-spacing:-.03em;color:#fff;
   background:linear-gradient(96deg,#fff 12%,var(--gold2) 58%,#ff9d6c 96%);
-  -webkit-background-clip:text;background-clip:text;color:transparent}
+  -webkit-background-clip:text;background-clip:text}
+@supports (-webkit-background-clip:text) or (background-clip:text){.hero h1{color:transparent}}
 .hero p{margin:0;max-width:640px;color:var(--muted);font-size:1.02rem}
 .hero .cta{display:inline-flex;margin-top:26px;padding:13px 26px;border-radius:12px;font-weight:700;
   color:#241a00;background:linear-gradient(135deg,var(--gold),#ffb03a);
@@ -190,12 +195,16 @@ section.blk{padding:46px 0}
 .card{position:relative;border-radius:18px;padding:22px;overflow:hidden;
   background:linear-gradient(160deg,var(--card),var(--card2));
   border:1px solid var(--line);transition:.22s}
-a.card{display:block;color:inherit;text-decoration:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a.card{display:block;color:inherit;text-decoration:none;cursor:pointer;
+  /* Was 'transparent' - iOS/Android then give ZERO visual feedback on tap,
+     which reads as "the link is dead". A faint gold flash confirms the hit. */
+  -webkit-tap-highlight-color:rgba(245,179,1,.2);touch-action:manipulation;position:relative}
 a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
 a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
 .card::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
   background:radial-gradient(420px 130px at 92% -12%,var(--c,rgba(255,255,255,.08)),transparent 70%)}
+.card>*{position:relative;z-index:1}
 .card h3{margin:0 0 4px;font-size:.98rem;font-weight:650;display:flex;align-items:center;gap:9px}
 .card .big{font-size:2.05rem;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px;color:#fff}
 .card .unit{font-size:.8rem;color:var(--dim)}
@@ -309,6 +318,11 @@ footer a:hover{color:var(--gold2)}
 
 /* ---------- responsive ---------- */
 @media(max-width:860px){
+  /* Gradient-clipped text renders as a solid block on some Android
+     browsers: colour goes transparent but the clip does not apply.
+     Fall back to plain white text on small screens — always readable. */
+  .hero h1,.logo span{background:none;-webkit-background-clip:border-box;
+    background-clip:border-box;color:#fff}
   .nav{display:none;position:absolute;top:64px;left:0;right:0;flex-direction:column;
     background:var(--bg2);border-bottom:1px solid var(--line);padding:12px;gap:2px}
   .nav.open{display:flex}
