@@ -598,6 +598,7 @@ ${sourceBlock(lang)}`;
 // ------------------------------------------------------------
 export function renderFaq(lang) {
   const C = commonFor(lang);
+  const L_FALLBACK = t(lang);
   const fp = contentFor(lang, 'faqPage');
   const items = (fp?.items || []).map(f =>
     `<details class="faq"><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join('');
@@ -605,6 +606,8 @@ export function renderFaq(lang) {
   <h2 class="h2"><span class="ico">❓</span>${esc(C.faqHeading)}</h2>
   <p class="lead">${esc(fp?.lead || '')}</p>
   <div class="faq-list">${items}</div>
+  <h2>${esc(L_FALLBACK.contactEmailLabel)}</h2>
+  <a class="mailto" href="mailto:${SITE.contactEmail}">\u2709\ufe0f ${SITE.contactEmail}</a>
 </div></section>
 ${sourceBlock(lang)}`;
   const title = `${C.faqHeading} — PriceScope`;
@@ -640,6 +643,8 @@ export function renderAbout(lang) {
   <h2 class="h2"><span class="ico">ℹ️</span>${esc(L.aboutTitle)}</h2>
   <p class="lead">${esc(L.aboutIntro)}</p>
   ${secs}
+  <h2>${esc(L.contactEmailLabel)}</h2>
+  <a class="mailto" href="mailto:${SITE.contactEmail}">\u2709\ufe0f ${SITE.contactEmail}</a>
 </div></section>`;
   return page({ lang, title: `${L.aboutTitle} — ${L.brand}`, desc: L.aboutMetaDesc,
     path: '/about/', active: '/about/', body });
@@ -650,7 +655,7 @@ export function renderAbout(lang) {
 // ------------------------------------------------------------
 export function renderContact(lang) {
   const L = t(lang);
-  const { contactEmail } = { contactEmail: 'FENG91111@gmail.com' };
+  const contactEmail = SITE.contactEmail;
   const body = `<section class="blk"><div class="wrap prose">
   <h2 class="h2"><span class="ico">✉️</span>${esc(L.contactTitle)}</h2>
   <p class="lead">${esc(L.contactIntro)}</p>

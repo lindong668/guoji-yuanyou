@@ -8,7 +8,7 @@ export const DEFAULT_LANG = 'en';
 export const SITE = {
   brand: 'PriceScope',
   domain: 'https://you.piccalc.com',
-  contactEmail: 'FENG91111@gmail.com',
+  contactEmail: 'juju089@qq.com',
 };
 
 // ------------------------------------------------------------
@@ -75,7 +75,7 @@ export const T = {
       { h: 'How We Use Information', p: 'The information collected is used to display the site in your preferred language, to understand aggregate traffic patterns so we can improve performance and content, to keep the service secure and prevent abuse, and to display relevant advertising.' },
       { h: 'Cookies & Advertising (Google)', p: 'We use cookies and similar technologies to operate the site and to serve advertisements. Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this or other websites. Google\'s use of advertising cookies enables it and its partners to serve ads based on your interests. You may opt out of personalised advertising by visiting Google Ads Settings, or opt out of third-party cookies at aboutads.info.' },
       { h: 'Data Sources & Accuracy', p: 'Market prices shown on this website are obtained from third-party public data providers and are provided for informational and reference purposes only. Prices may be delayed, rounded, or temporarily unavailable, and may differ from the rates offered by your bank, broker or local fuel station. We make no warranty as to accuracy, completeness or fitness for any particular purpose.' },
-      { h: 'Your Rights & Contact', p: 'Depending on your location, you may have the right to request access to, correction of, or deletion of any personal data we hold, and to object to certain processing. You may also disable cookies in your browser settings at any time. For any privacy question, please contact us at FENG91111@gmail.com.' },
+      { h: 'Your Rights & Contact', p: 'Depending on your location, you may have the right to request access to, correction of, or deletion of any personal data we hold, and to object to certain processing. You may also disable cookies in your browser settings at any time. For any privacy question, please contact us at juju089@qq.com.' },
     ],
 
     aboutTitle: 'About PriceScope',
@@ -159,7 +159,7 @@ export const T = {
       { h: '信息的使用方式', p: '所收集的信息用于：以您偏好的语言显示网站、分析汇总流量趋势以优化性能与内容、保障服务安全并防止滥用，以及展示相关广告。' },
       { h: 'Cookie 与广告（Google）', p: '我们使用 Cookie 及类似技术来运行网站并投放广告。包括 Google 在内的第三方供应商会使用 Cookie，基于您此前访问本站或其他网站的记录来投放广告。Google 使用广告 Cookie 使其及合作伙伴能够根据您的兴趣投放广告。您可访问 Google 广告设置关闭个性化广告，或通过 aboutads.info 选择退出第三方 Cookie。' },
       { h: '数据来源与准确性', p: '本站展示的市场价格来自第三方公开数据提供方，仅供信息参考。价格可能存在延迟、四舍五入或暂时不可用的情况，也可能与您所在银行、券商或当地加油站的实际报价存在差异。我们不对数据的准确性、完整性或对特定用途的适用性作出任何保证。' },
-      { h: '您的权利与联系方式', p: '根据您所在地区，您可能有权要求访问、更正或删除我们所持有的个人数据，并有权拒绝某些处理行为。您也可随时在浏览器设置中禁用 Cookie。如有任何隐私问题，请通过 FENG91111@gmail.com 与我们联系。' },
+      { h: '您的权利与联系方式', p: '根据您所在地区，您可能有权要求访问、更正或删除我们所持有的个人数据，并有权拒绝某些处理行为。您也可随时在浏览器设置中禁用 Cookie。如有任何隐私问题，请通过 juju089@qq.com 与我们联系。' },
     ],
 
     aboutTitle: '关于 PriceScope',
@@ -243,7 +243,7 @@ export const T = {
       { h: '情報の利用目的', p: '収集した情報は、お客様の言語での表示、パフォーマンスとコンテンツ改善のための集計トラフィック分析、サービス保護と不正防止、および関連広告の表示に利用されます。' },
       { h: 'Cookie と広告（Google）', p: '当サイトはサイト運営および広告配信のために Cookie および類似技術を使用します。Google を含む第三者ベンダーは、本サイトまたは他サイトへの過去の訪問に基づき Cookie を用いて広告を配信します。Google の広告 Cookie の使用により、Google およびそのパートナーは興味に基づく広告を配信できます。パーソナライズ広告は Google 広告設定から、第三者 Cookie は aboutads.info からオプトアウトできます。' },
       { h: 'データ源と正確性', p: '本サイトに表示される市場価格は第三者の公開データ提供元から取得しており、情報提供のみを目的としています。価格は遅延・丸め・一時的な欠損が生じる場合があり、お客様の銀行・証券会社・最寄りの給油所の実際の価格と異なる場合があります。正確性・完全性・特定目的への適合性について、当サイトは一切の保証を行いません。' },
-      { h: 'お客様の権利とお問い合わせ', p: 'お住まいの地域により、保有する個人データへのアクセス、訂正、削除の請求、および一部の処理に対する異議申し立てができる場合があります。またブラウザ設定でいつでも Cookie を無効化できます。プライバシーに関するご質問は FENG91111@gmail.com までご連絡ください。' },
+      { h: 'お客様の権利とお問い合わせ', p: 'お住まいの地域により、保有する個人データへのアクセス、訂正、削除の請求、および一部の処理に対する異議申し立てができる場合があります。またブラウザ設定でいつでも Cookie を無効化できます。プライバシーに関するご質問は juju089@qq.com までご連絡ください。' },
     ],
 
     aboutTitle: 'PriceScope について',
@@ -327,7 +327,7 @@ export const T = {
       { h: 'Cómo usamos la información', p: 'La información se usa para mostrar el sitio en tu idioma, entender patrones de tráfico agregados para mejorar el rendimiento y el contenido, mantener la seguridad y prevenir abusos, y mostrar publicidad relevante.' },
       { h: 'Cookies y publicidad (Google)', p: 'Usamos cookies y tecnologías similares para operar el sitio y publicar anuncios. Proveedores externos, incluido Google, usan cookies para mostrar anuncios basados en tus visitas anteriores a este u otros sitios. El uso de cookies publicitarias por parte de Google le permite a él y a sus socios mostrar anuncios según tus intereses. Puedes desactivar la publicidad personalizada en la configuración de anuncios de Google, o excluirte de cookies de terceros en aboutads.info.' },
       { h: 'Fuentes de datos y exactitud', p: 'Los precios mostrados provienen de proveedores públicos externos y se ofrecen solo con fines informativos. Pueden tener retraso, redondeo o no estar disponibles temporalmente, y diferir de los que ofrezcan tu banco, bróker o gasolinera local. No garantizamos exactitud, integridad ni idoneidad para ningún fin.' },
-      { h: 'Tus derechos y contacto', p: 'Según tu ubicación, puedes solicitar acceso, corrección o eliminación de los datos personales que tengamos, y oponerte a ciertos tratamientos. También puedes desactivar las cookies en tu navegador en cualquier momento. Para cualquier duda de privacidad, escríbenos a FENG91111@gmail.com.' },
+      { h: 'Tus derechos y contacto', p: 'Según tu ubicación, puedes solicitar acceso, corrección o eliminación de los datos personales que tengamos, y oponerte a ciertos tratamientos. También puedes desactivar las cookies en tu navegador en cualquier momento. Para cualquier duda de privacidad, escríbenos a juju089@qq.com.' },
     ],
 
     aboutTitle: 'Sobre PriceScope',
@@ -411,7 +411,7 @@ export const T = {
       { h: 'Comment nous utilisons ces informations', p: 'Elles servent à afficher le site dans votre langue, à analyser le trafic agrégé pour améliorer performances et contenu, à sécuriser le service et prévenir les abus, ainsi qu\'à diffuser des publicités pertinentes.' },
       { h: 'Cookies et publicité (Google)', p: 'Nous utilisons des cookies et technologies similaires pour faire fonctionner le site et diffuser des annonces. Des prestataires tiers, dont Google, utilisent des cookies pour diffuser des annonces selon vos visites antérieures. L\'utilisation des cookies publicitaires par Google lui permet, ainsi qu\'à ses partenaires, de diffuser des annonces selon vos intérêts. Vous pouvez désactiver la personnalisation dans les paramètres Google Ads, ou vous exclure des cookies tiers sur aboutads.info.' },
       { h: 'Sources des données et exactitude', p: 'Les prix affichés proviennent de fournisseurs publics tiers et sont donnés à titre indicatif. Ils peuvent être retardés, arrondis ou temporairement indisponibles, et différer de ceux de votre banque, courtier ou station-service. Nous ne garantissons ni l\'exactitude, ni l\'exhaustivité, ni l\'adéquation à un usage particulier.' },
-      { h: 'Vos droits et contact', p: 'Selon votre lieu de résidence, vous pouvez demander l\'accès, la correction ou la suppression des données détenues, et vous opposer à certains traitements. Vous pouvez aussi désactiver les cookies à tout moment. Pour toute question : FENG91111@gmail.com.' },
+      { h: 'Vos droits et contact', p: 'Selon votre lieu de résidence, vous pouvez demander l\'accès, la correction ou la suppression des données détenues, et vous opposer à certains traitements. Vous pouvez aussi désactiver les cookies à tout moment. Pour toute question : juju089@qq.com.' },
     ],
 
     aboutTitle: 'À propos de PriceScope',
@@ -495,7 +495,7 @@ export const T = {
       { h: 'Wie wir Daten nutzen', p: 'Die Daten dienen der Anzeige in Ihrer Sprache, der Analyse aggregierter Zugriffsmuster zur Verbesserung von Leistung und Inhalten, der Sicherheit und Missbrauchsprävention sowie der Auslieferung relevanter Werbung.' },
       { h: 'Cookies & Werbung (Google)', p: 'Wir verwenden Cookies und ähnliche Technologien zum Betrieb der Seite und zur Anzeige von Werbung. Drittanbieter, darunter Google, nutzen Cookies, um Anzeigen auf Basis früherer Besuche zu schalten. Googles Werbe-Cookies ermöglichen ihm und Partnern interessenbasierte Werbung. Sie können personalisierte Werbung in den Google-Anzeigeneinstellungen oder Drittcookies unter aboutads.info abwählen.' },
       { h: 'Datenquellen & Genauigkeit', p: 'Die angezeigten Preise stammen von öffentlichen Drittanbietern und dienen nur der Information. Sie können verzögert, gerundet oder vorübergehend nicht verfügbar sein und von den Kursen Ihrer Bank, Ihres Brokers oder Ihrer Tankstelle abweichen. Wir übernehmen keine Gewähr für Richtigkeit, Vollständigkeit oder Eignung.' },
-      { h: 'Ihre Rechte & Kontakt', p: 'Je nach Wohnsitz können Sie Auskunft, Berichtigung oder Löschung gespeicherter Daten verlangen und bestimmten Verarbeitungen widersprechen. Cookies können Sie jederzeit im Browser deaktivieren. Datenschutzfragen richten Sie bitte an FENG91111@gmail.com.' },
+      { h: 'Ihre Rechte & Kontakt', p: 'Je nach Wohnsitz können Sie Auskunft, Berichtigung oder Löschung gespeicherter Daten verlangen und bestimmten Verarbeitungen widersprechen. Cookies können Sie jederzeit im Browser deaktivieren. Datenschutzfragen richten Sie bitte an juju089@qq.com.' },
     ],
 
     aboutTitle: 'Über PriceScope',
@@ -579,7 +579,7 @@ export const T = {
       { h: 'Como usamos as informações', p: 'As informações são usadas para exibir o site no seu idioma, entender padrões agregados de tráfego para melhorar desempenho e conteúdo, manter a segurança e evitar abusos, e exibir publicidade relevante.' },
       { h: 'Cookies e publicidade (Google)', p: 'Usamos cookies e tecnologias semelhantes para operar o site e veicular anúncios. Fornecedores terceiros, incluindo o Google, usam cookies para veicular anúncios com base em visitas anteriores a este ou outros sites. O uso de cookies publicitários pelo Google permite que ele e seus parceiros veiculem anúncios por interesse. Você pode desativar a personalização nas configurações de anúncios do Google ou recusar cookies de terceiros em aboutads.info.' },
       { h: 'Fontes de dados e precisão', p: 'Os preços exibidos vêm de fornecedores públicos terceiros e servem apenas para informação. Podem sofrer atraso, arredondamento ou indisponibilidade temporária, e diferir dos valores praticados pelo seu banco, corretora ou posto local. Não garantimos precisão, integralidade ou adequação a qualquer finalidade.' },
-      { h: 'Seus direitos e contato', p: 'Dependendo da sua localização, você pode solicitar acesso, correção ou exclusão de dados pessoais que mantemos, e se opor a certos tratamentos. Também é possível desativar cookies no navegador a qualquer momento. Para dúvidas de privacidade, escreva para FENG91111@gmail.com.' },
+      { h: 'Seus direitos e contato', p: 'Dependendo da sua localização, você pode solicitar acesso, correção ou exclusão de dados pessoais que mantemos, e se opor a certos tratamentos. Também é possível desativar cookies no navegador a qualquer momento. Para dúvidas de privacidade, escreva para juju089@qq.com.' },
     ],
 
     aboutTitle: 'Sobre o PriceScope',
