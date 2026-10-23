@@ -382,13 +382,22 @@ export function head({ lang, title, desc, path, noindex }) {
 <link rel="canonical" href="${url}">
   ${alternates}
 <meta name="robots" content="${noindex ? 'noindex,nofollow' : 'index,follow,max-image-preview:large'}">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-16x16.png" sizes="16x16" type="image/png">
+<link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="${SITE.brand}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${url}">
 <meta property="og:locale" content="${L.htmlLang.replace('-', '_')}">
+<meta property="og:image" content="${SITE.domain}/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(SITE.brand)} — ${esc(L.metaTitle || SITE.brand)}">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${SITE.domain}/og-image.png">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(desc)}">
 <meta name="theme-color" content="#070b18">
