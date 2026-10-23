@@ -275,6 +275,10 @@ td.pv{color:#fff;font-weight:600}
 .prose h2{font-size:1.16rem;margin:30px 0 10px;font-weight:700}
 .prose p{color:var(--muted);margin:0 0 14px;font-size:.95rem}
 .prose .lead{font-size:1.04rem;color:#c9d4ee}
+/* 隐私政策正文外链（Google 广告设置 / aboutads.info / youronlinechoices.eu） */
+.pl{color:var(--gold2);text-decoration:underline;text-underline-offset:2px;
+  text-decoration-color:rgba(255,215,102,.45)}
+.pl:hover{text-decoration-color:var(--gold2)}
 .mailto{display:inline-flex;align-items:center;gap:9px;padding:13px 20px;border-radius:12px;
   background:rgba(245,179,1,.12);border:1px solid rgba(245,179,1,.34);
   color:var(--gold2);font-weight:700;margin:6px 0 4px}

@@ -618,10 +618,31 @@ ${sourceBlock(lang)}`;
 // ------------------------------------------------------------
 // PRIVACY
 // ------------------------------------------------------------
+/* ★ 隐私政策正文里的外链占位符
+ * 形式：[[KEY|显示文本]]，KEY ∈ {GAS, DAA, EDAA}
+ * 为什么用占位符而不是直接写 <a>：
+ *   privacySections 的 p 字段会先过 esc() 转义，直接内嵌 HTML 会被
+ *   原样显示成源码文本（用户看到的就是一串标签，点不了）。
+ *   所以先 esc 保证安全，再把占位符换成真正的 <a>，两者顺序不能颠倒。
+ */
+const PRIVACY_LINKS = {
+  GAS: 'https://www.google.com/settings/ads',
+  DAA: 'https://www.aboutads.info/choices/',
+  EDAA: 'https://www.youronlinechoices.eu/',
+};
+
+function linkifyPrivacy(escaped) {
+  return escaped.replace(
+    /\[\[(GAS|DAA|EDAA)\|([^\]]+)\]\]/g,
+    (_m, key, text) =>
+      `<a href="${PRIVACY_LINKS[key]}" class="pl" target="_blank" rel="noopener">${text}</a>`
+  );
+}
+
 export function renderPrivacy(lang, tz) {
   const L = t(lang);
   const secs = L.privacySections.map(s =>
-    `<h2>${esc(s.h)}</h2><p>${esc(s.p)}</p>`).join('');
+    `<h2>${esc(s.h)}</h2><p>${linkifyPrivacy(esc(s.p))}</p>`).join('');
   const body = `<section class="blk"><div class="wrap prose">
   <h2 class="h2"><span class="ico">🔒</span>${esc(L.privacyTitle)}</h2>
   <p class="sub">${esc(L.privacyUpdated)}: <time data-ts="${esc(new Date().toISOString())}" data-date-only="1">${esc(localDate(lang, tz))}</time></p>
