@@ -45,3 +45,25 @@ enabled = true
 enabled = true
 invocation_logs = true      # ★ 记录每次调用，缺了它看不到访问者
 head_sampling_rate = 1      # 100% 采样，不漏
+
+# ---- A17：修复 Workers Builds 预览部署失败 ----
+# 现象：GitHub Actions 上 "Workers Builds: guoji-yuanyou" 报红叉，
+#       但生产部署（wrangler deploy）其实成功、站点正常。
+# 根因：CF 的预览构建跑的是 `npx wrangler preview`，
+#       该命令要求配置里存在 [previews.vars] 块，缺失即报：
+#       "Your Wrangler configuration is missing a `previews` block"
+# 修法：把与 [vars] 一一对应的 12 个变量写入预览块（同样留空占位）。
+# 已用脚本比对：两处变量名、数量完全一致（12/12），无缺漏。
+[previews.vars]
+ADSENSE_CLIENT = ""
+AD_SLOT_HOME   = ""
+AD_SLOT_OIL    = ""
+AD_SLOT_GOLD   = ""
+AD_SLOT_CN     = ""
+AD_SLOT_FX     = ""
+AD_SLOT_WTI    = ""
+AD_SLOT_BLOG   = ""
+AD_SLOT_ARTICLE= ""
+AD_SLOT_LEGAL  = ""
+GA4_ID         = ""
+GSC_VERIFY     = ""

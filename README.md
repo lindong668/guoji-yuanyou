@@ -284,3 +284,49 @@ CF 构建环境可正常运行 wrangler 4.152.0。
 
 **回滚**：部署失败 CF 不会切换（原子部署），线上仍是旧版。
 需回滚则重新上传 A15 包即可。
+
+## A17 变更（2026-10-24）— 修复 Workers Builds 预览构建红叉
+
+**现象**
+GitHub 仓库提交旁出现红叉：
+```
+All checks have failed — 1 failing check
+Workers Builds: guoji-yuanyou
+```
+但生产部署日志显示 `Success: Build completed`，站点访问正常。
+
+**根因（来自 CF 构建日志原文）**
+```
+Executing user deploy command: npx wrangler preview
+✘ [ERROR] Your Wrangler configuration is missing a `previews` block.
+```
+CF 的 Workers Builds 对同一次提交跑两套构建：
+- 生产部署 → `npx wrangler deploy` → 成功（绿）
+- 预览部署 → `npx wrangler preview` → 要求配置中存在 `[previews.vars]` 块
+
+本站从未配置该块，故预览构建一执行即报错。这是**配置缺失**，
+不是代码、图标、超长行或上传方式的问题——此前几轮排查方向均不成立。
+
+**修复**
+在 wrangler.toml 末尾新增 `[previews.vars]`，
+包含与 `[vars]` 一一对应的 12 个变量，值同样留空占位。
+
+**校验**
+```
+[vars] 变量数 12 / [previews.vars] 变量数 12
+仅在 [vars]: 无    仅在 [previews]: 无  ✅ 完全一致
+非空值: 无 ✅（全部为空，符合 CF 建议的 preview-safe 原则）
+其余配置（name/account_id/main/routes/assets/observability）未改动
+```
+
+**部署**：无增删 → 覆盖上传（16 文件），实际只需替换 wrangler.toml。
+
+**可选替代方案**：若不需要预览部署，可在 CF 控制台
+Workers & Pages → guoji-yuanyou → Settings → Build → Branch control
+关闭预览分支自动部署，红叉同样消失（预览构建不再触发）。
+
+**重要更正记录**
+本轮曾据 GitHub Actions 页面显示的 "failed in 0s" 推断
+"构建未启动、未克隆仓库"，该推断错误——0s 是 GitHub 外壳计时，
+真实日志显示已完整克隆并安装依赖，失败发生在命令执行阶段。
+教训：不得以界面摘要数字替代完整日志作判断依据。
