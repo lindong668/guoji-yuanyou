@@ -1,0 +1,47 @@
+name = 'guoji-yuanyou'
+account_id = 'd49e51b1279804c22035a33a9c1cb06e'
+main = "src/index.js"
+compatibility_date = "2025-04-01"   # ★ A16：assets 需要较新的兼容日期
+
+# ---- Custom domain: must use /* so ALL paths reach the Worker ----
+routes = [
+  { pattern = "you.piccalc.com/*", zone_name = "piccalc.com" }
+]
+# workers_dev = true
+
+# Uncomment and fill after `wrangler kv:namespace create PRICESCOPE_CACHE`
+# if you later want persistent caching:
+# [[kv_namespaces]]
+# binding = "PRICESCOPE_CACHE"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# ---- Fill AFTER AdSense approval / Search Console verification ----
+# Leave blank for now; the site shows placeholders instead of real ads.
+# ---- A16：静态资源目录（图标改为真文件，不再 base64 内嵌 JS）----
+# 匹配规则：先找 public/ 下的真文件，找不到才走 Worker。
+# public/ 只放图标，页面/robots/sitemap/ads.txt 仍由 Worker 生成，不冲突。
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[vars]
+ADSENSE_CLIENT = ""   # ca-pub-1234567890123456
+AD_SLOT_HOME   = ""
+AD_SLOT_OIL    = ""
+AD_SLOT_GOLD   = ""
+AD_SLOT_CN     = ""
+AD_SLOT_FX     = ""
+AD_SLOT_WTI    = ""
+AD_SLOT_BLOG   = ""
+AD_SLOT_ARTICLE= ""
+AD_SLOT_LEGAL  = ""
+GA4_ID         = ""   # G-ABCDEF1234
+GSC_VERIFY     = ""   # google-site-verification=...
+
+[observability]
+enabled = true
+
+[observability.logs]
+enabled = true
+invocation_logs = true      # ★ 记录每次调用，缺了它看不到访问者
+head_sampling_rate = 1      # 100% 采样，不漏
