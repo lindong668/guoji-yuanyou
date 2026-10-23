@@ -372,3 +372,54 @@ OG 图 = PNG 1200x630                              格式尺寸正常 ✅
 上传后需等待微信重新抓取。微信缓存通常 24 小时内更新，
 若分享时仍无图，属缓存未过期，非配置问题。
 ```
+
+## A19 变更（2026-10-24）— 微信分享无缩略图（★ 真因：响应头）
+
+### 现象回顾
+iOS 分享面板有图标、手机浏览器能打开 og 图，但分享到微信后
+卡片只有标题文字、没有缩略图。换新文件名（og-v2.png）后依旧无图。
+
+### 对照排查（关键）
+1/4/5 号分享图均正常，唯独 2号 不行；其他站配置完全相同。
+→ 说明不是 CF 策略、不是防盗链、不是缓存时效，而是 2号 自身代码差异。
+
+### 找到的唯一实质差异：页面响应头
+```
+2号（SSR）：cache-control: private, max-age=0, must-revalidate
+1/4/5号（静态）：无 private 头，CF 默认 public 可缓存
+```
+`private` 的语义是「禁止任何共享缓存存储」。微信、Facebook、Twitter
+等抓取器本质是共享代理，拿到 private 响应后通常不做缓存，
+并可能降级处理 —— 表现为只取文字、不取 og:image。
+
+该 private 头当初是为解决「时区在不同访客间串号」而加的，
+本身正确，但误伤了社交平台抓取。
+
+### 修复
+新增 `isCrawler()` / `htmlCache()`：
+- 抓取器（微信/QQ/微博/FB/Twitter/搜索引擎等）→ `public, max-age=3600`
+- 真人访问 → 维持 `private, max-age=0, must-revalidate`
+
+兼顾两头：爬虫拿到可缓存响应（能抓 og:image），
+真人仍保持每访客独立渲染（时区不串号）。
+对爬虫而言时区固定反而更稳定，Google 也建议对爬虫输出稳定内容。
+
+### 改动位置
+```
+src/index.js 新增 CRAWLER_RE / isCrawler() / htmlCache()
+src/index.js 2 处 'cache-control' 由硬编码 private 改为 htmlCache(request)
+（其余 15 个文件未改动）
+```
+
+### 验证
+```
+12 组 UA 行为测试：
+  微信 iOS / 微信安卓 / 微信抓取器 / QQ / Facebook / Twitter /
+  Googlebot / Bingbot / 百度  → public ✅
+  真·Chrome / 真·iPhone Safari / 空 UA → private ✅（真人不受影响）
+node --check 语法通过
+```
+
+### 部署后
+微信缓存通常需 24 小时内更新；建议在 CF 控制台 Purge 一次缓存加速，
+并用「从未分享过的新路径」测试，勿复用旧链接。
