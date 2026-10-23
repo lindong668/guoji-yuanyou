@@ -7,11 +7,6 @@ import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
 import { getMarket, getFx } from './data.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
-  FAVICON_ICO_B64, FAVICON_ICO_MIME,
-  FAVICON_16_B64,  FAVICON_32_B64,
-  APPLE_180_B64,   OG_IMAGE_B64,   OG_IMAGE_MIME, LOGO_128_B64,
-} from './icons.js';
-import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
   renderPrivacy, renderAbout, renderContact, renderFaq, sitemap,
   renderBlogList, renderArticle, renderWti,
@@ -69,29 +64,9 @@ export default {
     // interleave across `await` and would leak it between visitors).
     const tz = pickTz(request);
 
-    /* ★ 站点图标（favicon / apple-touch-icon / OG 分享图）
-     * 纯 SSR 没有静态目录，图标以 base64 内嵌（见 src/icons.js）。
-     * 放在语言路由之前，保证任意语言路径下 /favicon.ico 都能取到。 */
-    if (url.pathname === '/favicon.ico') {
-      return bin(FAVICON_ICO_B64, FAVICON_ICO_MIME);
-    }
-    if (url.pathname === '/favicon-16x16.png') {
-      return bin(FAVICON_16_B64, 'image/png');
-    }
-    if (url.pathname === '/favicon-32x32.png') {
-      return bin(FAVICON_32_B64, 'image/png');
-    }
-    if (url.pathname === '/apple-touch-icon.png') {
-      return bin(APPLE_180_B64, 'image/png');
-    }
-    if (url.pathname === '/og-image.png') {
-      // ★ A15：OG 图改 JPEG（体积 127KB→51KB），MIME 随常量走
-      return bin(OG_IMAGE_B64, OG_IMAGE_MIME);
-    }
-    /* 站内左上角品牌图标（与 OG 分享图同源，保证站内外一致） */
-    if (url.pathname === '/icon-128.png') {
-      return bin(LOGO_128_B64, 'image/png');
-    }
+    /* ★ A16：图标已改为 public/ 下的真静态文件（见 wrangler.toml [assets]）
+     * 由 Cloudflare 直接返回，不再经过 Worker，也不再 base64 内嵌。
+     * 原 6 个图标路由已删除；icons.js 已删除。 */
 
     // ---------- ads.txt (required by AdSense) ----------
     /* ★ v2 修正：ads.txt 必须提前给出真实 publisher ID

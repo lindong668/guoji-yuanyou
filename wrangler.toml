@@ -1,7 +1,7 @@
 name = 'guoji-yuanyou'
 account_id = 'd49e51b1279804c22035a33a9c1cb06e'
 main = "src/index.js"
-compatibility_date = "2024-12-01"
+compatibility_date = "2025-04-01"   # ★ A16：assets 需要较新的兼容日期
 
 # ---- Custom domain: must use /* so ALL paths reach the Worker ----
 routes = [
@@ -17,6 +17,13 @@ routes = [
 
 # ---- Fill AFTER AdSense approval / Search Console verification ----
 # Leave blank for now; the site shows placeholders instead of real ads.
+# ---- A16：静态资源目录（图标改为真文件，不再 base64 内嵌 JS）----
+# 匹配规则：先找 public/ 下的真文件，找不到才走 Worker。
+# public/ 只放图标，页面/robots/sitemap/ads.txt 仍由 Worker 生成，不冲突。
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
 [vars]
 ADSENSE_CLIENT = ""   # ca-pub-1234567890123456
 AD_SLOT_HOME   = ""

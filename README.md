@@ -236,3 +236,51 @@ OG 安全区   内容边界 行33-603 列385-811，安全区 行0-629 列285-915
 package.json 的 wrangler 升到 ^4.152.0，图标放 public/，删掉 icons.js 与
 index.js 中 6 个图标路由。与 1/4/5 号一致，彻底消除"文本里的二进制"问题。
 未采用原因：涉及 wrangler 大版本升级与路由改造，影响面大于本次优化。
+
+## A16 变更（2026-10-24）— 根治：图标改为真静态文件（[assets]）
+
+**为什么根治**：A14 修了超长单行、A15 把 icons.js 从 273KB 压到 101KB，
+但根因未除 —— icons.js 本质是"伪装成纯文本的二进制"（250KB base64 塞在 JS 里），
+GitHub 会当源码做语法高亮/预览/diff，处理成本远高于同等大小的真图片文件。
+对照：5号 og-image.png 88KB 是真 .png，GitHub 直接存储不解析，从未出问题。
+
+**改了 4 处**
+```
+1. wrangler.toml   加 [assets] directory="./public" binding="ASSETS"
+                   compatibility_date 2024-12-01 → 2025-04-01（assets 需较新日期）
+2. package.json    wrangler ^3.90.0 → ^4.152.0（assets 需 wrangler 4）
+3. src/index.js    删 6 个图标路由 + icons.js import（844 字符）
+4. src/icons.js    删除；新增 public/ 6 个真图标文件（213KB 二进制）
+```
+
+**路由优先级（关键）**
+```
+Cloudflare 先找 public/ 下的真文件，找不到才走 Worker。
+public/ 只有 6 个图标，页面 / robots.txt / sitemap.xml / ads.txt / api
+仍由 Worker 生成 —— 已验证无冲突文件（无 index.html 等）。
+```
+
+**★ 链接兼容性**：所有图标 URL 完全不变（/og-image.png 等），
+已分享出去的链接不受影响。
+
+**★ 画质回升**：不再内嵌后体积不再受限，OG 图用回原版 PNG 127KB
+（A15 为 JPEG 51KB），画质最好。
+
+**验证**
+```
+图标文件    6/6 格式正确（ICO 48x48 / PNG 各尺寸）
+OG 安全区   行33-603 列385-811，安全区 行0-629 列285-915 ✅ 100% 保留
+代码语法    7 个 js 全通过；icons.js 引用残留 0
+TOML       语法正确，assets 为独立顶层 section（非 routes.assets）
+包体       16 文件 687 KB
+```
+
+**未能验证**：wrangler 4 的真实构建（本地 Node 20，wrangler 4 要求 Node≥22，
+且沙盒无外网无法升级）。已在 CF 侧有旁证 —— 3号 原油后端的构建日志显示
+CF 构建环境可正常运行 wrangler 4.152.0。
+
+**风险提示**：compatibility_date 变更会切换 Worker 运行时行为。
+本站仅用标准 Web API（fetch / URL / Response），风险极低。
+
+**回滚**：部署失败 CF 不会切换（原子部署），线上仍是旧版。
+需回滚则重新上传 A15 包即可。
