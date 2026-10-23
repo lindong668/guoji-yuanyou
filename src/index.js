@@ -18,33 +18,6 @@ import {
 // visit — survives VPN / wrong CF geo)  2) Cloudflare geo  3) UTC.
 // Always validated: a bogus value must never reach Intl.
 // ------------------------------------------------------------
-// ------------------------------------------------------------
-// ★ A19：社交平台 / 搜索引擎抓取器识别
-// 背景：本站页面为 SSR，且内容随访客时区变化，因此原先对所有请求
-//       都返回 `Cache-Control: private, max-age=0, must-revalidate`。
-//       该响应头意为「禁止任何共享缓存存储」，微信、Facebook、
-//       Twitter 等抓取器拿到后通常不做缓存，并可能降级处理——
-//       表现为分享卡片只有标题文字、没有 og:image 缩略图。
-//       1/4/5 号为静态页面（无 private 头），分享图正常，可作对照。
-// 对策：抓取器返回 public（可缓存，便于其抓取 og:image），
-//       真人仍返回 private，避免时区在不同访客间串号。
-//       （对爬虫而言时区固定为 UTC 反而更稳定，Google 亦推荐对
-//        爬虫输出稳定内容。）
-// ------------------------------------------------------------
-const CRAWLER_RE = /(micromessenger|wechat|weibo|qq\/|qzone|facebookexternalhit|facebookcatalog|twitterbot|linkedinbot|pinterest|slackbot|telegrambot|whatsapp|discordbot|googlebot|bingbot|duckduckbot|baiduspider|yandex(bot)?|applebot|semrushbot|ahrefsbot|petalbot|bytespider|gptbot)/i;
-
-function isCrawler(request) {
-  const ua = request.headers.get('User-Agent') || '';
-  return CRAWLER_RE.test(ua);
-}
-
-// 页面缓存头：抓取器 public，真人 private
-function htmlCache(request) {
-  return isCrawler(request)
-    ? 'public, max-age=3600'
-    : 'private, max-age=0, must-revalidate';
-}
-
 function isValidTz(tz) {
   if (typeof tz !== 'string' || !tz) return false;
   try { new Intl.DateTimeFormat('en-US', { timeZone: tz }); return true; }
@@ -162,7 +135,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
-          'cache-control': htmlCache(request),
+          'cache-control': 'private, max-age=0, must-revalidate',
           // Content varies by Accept-Language, so caches must key on it.
           'vary': 'Accept-Language',
           'x-content-type-options': 'nosniff',
@@ -224,7 +197,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
           // change takes effect immediately instead of being masked by a
           // 60-second local copy. Data itself is cached in Worker memory,
           // so re-rendering costs well under a millisecond.
-          'cache-control': htmlCache(request),
+          'cache-control': 'private, max-age=0, must-revalidate',
           'x-content-type-options': 'nosniff',
         },
       });
