@@ -111,3 +111,33 @@ If your source Worker ever changes a field name, only `normalise()` in `src/data
 
 Right now caching uses the Cloudflare Cache API + per-isolate memory (no setup needed).
 If you want the cache to survive across deploys, create a KV namespace and bind it as `PRICESCOPE_CACHE` in `wrangler.toml`.
+
+## A13 变更（2026-10-24）— 更换品牌图标
+
+**背景**：用户反馈 A12 的"金色油滴"图标缩小后只是一个色块，辨识度差，
+不够匹配行情站调性，希望换成"高端大气、类似 1号 玻璃水晶 3D"的风格。
+
+**新图标**：三根递增的玻璃水晶柱（蓝 / 金 / 红橙），最右侧柱条延伸为
+向右上方的发光箭头 —— 玻璃质感 3D 渲染，深色底。
+
+**裁剪处理（关键）**
+- 原图 1601x1440（含背景渐变、右侧箭头光晕、下方镜面倒影）
+- 逐扫描线定位圆角方形框：框顶 y=108、框底 y=1345、框左 x=196、框右 x=1374
+- 以框中心 (785, 726) 裁 1250x1250 正方形，含完整圆角框，剔除倒影与多余光晕
+
+**★ OG 分享图居中保证**
+- 画布 1200x630，微信/QQ 按中心 630x630 方形裁切
+- 图标 420x420 置于中心 (600, 250)，品牌名与副标题在下方
+- 实测内容范围：行 42-601、列 390-809
+- 中心方形安全区：行 0-630、列 285-915
+- 结论：内容完整落在安全区内，方形裁切后 100% 保留（此前版本仅 ~50%）
+
+**体积优化**
+- OG 图 265KB → 256 色量化 128KB（玻璃质感渐变经抖动处理后无明显色带）
+- icons.js 136KB → 277KB，Workers 脚本上限 1MB（压缩后），余量充足
+- OG 图另存 256 色是专门为控制脚本体积，非画质妥协
+
+**文件**：src/icons.js 内 6 组 base64 全部替换
+  FAVICON_ICO / FAVICON_16 / FAVICON_32 / APPLE_180 / OG_IMAGE / LOGO_128
+- 站内左上角 /icon-128.png 与分享图同源，站内外自动一致，无需改 ui.js
+- 部署：无增删 → 覆盖上传（11 文件）
