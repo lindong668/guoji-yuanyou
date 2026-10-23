@@ -9,7 +9,7 @@ import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   FAVICON_ICO_B64, FAVICON_ICO_MIME,
   FAVICON_16_B64,  FAVICON_32_B64,
-  APPLE_180_B64,   OG_IMAGE_B64,
+  APPLE_180_B64,   OG_IMAGE_B64,   LOGO_128_B64,
 } from './icons.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
@@ -86,6 +86,10 @@ export default {
     }
     if (url.pathname === '/og-image.png') {
       return bin(OG_IMAGE_B64, 'image/png');
+    }
+    /* 站内左上角品牌图标（与 OG 分享图同源，保证站内外一致） */
+    if (url.pathname === '/icon-128.png') {
+      return bin(LOGO_128_B64, 'image/png');
     }
 
     // ---------- ads.txt (required by AdSense) ----------

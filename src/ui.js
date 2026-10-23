@@ -133,8 +133,7 @@ img{max-width:100%}
   border-bottom:1px solid var(--line)}
 .topbar .wrap{display:flex;align-items:center;gap:18px;height:64px}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;white-space:nowrap}
-.logo .mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
-  background:linear-gradient(135deg,var(--gold),#ff8a3d);color:#211a00;font-weight:900;font-size:.95rem;
+.logo .mark{width:30px;height:30px;border-radius:9px;display:block;flex-shrink:0;object-fit:cover;
   box-shadow:0 6px 18px rgba(245,179,1,.32)}
 .logo span{color:#fff;background:linear-gradient(92deg,#fff,var(--gold2));-webkit-background-clip:text;background-clip:text}
 @supports (-webkit-background-clip:text) or (background-clip:text){.logo span{color:transparent}}
@@ -426,7 +425,7 @@ export function topbar(lang, active) {
   const curL = t(cur);
 
   return `<header class="topbar"><div class="wrap">
-  <a class="logo" href="/${lang}/"><span class="mark">P</span><span>${SITE.brand}</span></a>
+  <a class="logo" href="/${lang}/"><img class="mark" src="/icon-128.png" alt="${SITE.brand}" width="30" height="30"><span>${SITE.brand}</span></a>
   <button class="navtoggle" aria-label="menu" onclick="document.getElementById('nv').classList.toggle('open')">☰</button>
   <nav class="nav" id="nv">${links}</nav>
   <div class="langsel" id="ls">
@@ -456,7 +455,7 @@ export function footer(lang, year) {
   return `<footer><div class="wrap">
   <div class="fgrid">
     <div>
-      <a class="logo" href="/${lang}/"><span class="mark">P</span><span>${SITE.brand}</span></a>
+      <a class="logo" href="/${lang}/"><img class="mark" src="/icon-128.png" alt="${SITE.brand}" width="30" height="30"><span>${SITE.brand}</span></a>
       <p class="disc">${esc(L.tagline)}</p>
     </div>
     <div><h4>${esc(L.footerQuick)}</h4><ul>
