@@ -311,6 +311,9 @@ footer a:hover{color:var(--gold2)}
 .fbot{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);
   font-size:.8rem;color:var(--dim);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
 .disc{font-size:.78rem;color:var(--dim);margin-top:10px;line-height:1.6}
+/* ★ v3 新增：页脚广告披露（FTC / 欧盟合规建议项） */
+.ad-note{font-size:.8rem;color:var(--dim);margin-top:12px;padding:9px 12px;
+  border:1px dashed var(--line);border-radius:9px;line-height:1.6}
 
 /* ---------- ad slots ---------- */
 .ad{background:rgba(255,255,255,.03);border:1px dashed var(--line);border-radius:14px;
@@ -460,6 +463,7 @@ export function footer(lang, year) {
     <span>© ${year} ${SITE.brand}. ${esc(L.footerRights)}</span>
     <span>${esc(L.tagline)}</span>
   </div>
+  <p class="ad-note">${esc(L.footerAdDisclosure)}</p>
   <p class="disc">${esc(L.footerDisclaimer)}</p>
 </div></footer>`;
 }

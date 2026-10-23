@@ -75,6 +75,9 @@ export const T = {
       { h: 'How We Use Information', p: 'The information collected is used to display the site in your preferred language, to understand aggregate traffic patterns so we can improve performance and content, to keep the service secure and prevent abuse, and to display relevant advertising.' },
       { h: 'Cookies & Advertising (Google)', p: 'We use cookies and similar technologies to operate the site and to serve advertisements. Third-party vendors, including Google, use cookies to serve ads based on your prior visits to this or other websites. Google\'s use of advertising cookies enables it and its partners to serve ads based on your interests. You may opt out of personalised advertising by visiting Google Ads Settings, or opt out of third-party cookies at aboutads.info.' },
       { h: 'Data Sources & Accuracy', p: 'Market prices shown on this website are obtained from third-party public data providers and are provided for informational and reference purposes only. Prices may be delayed, rounded, or temporarily unavailable, and may differ from the rates offered by your bank, broker or local fuel station. We make no warranty as to accuracy, completeness or fitness for any particular purpose.' },
+      { h: 'Types of Cookies We Use', p: 'Cookies on this site fall into three groups: strictly necessary cookies, which keep the site working and remember your language and time zone preference; analytics cookies, which help us understand aggregate traffic patterns; and advertising cookies set by Google and its partners, used to serve and measure ads. No cookie on this site is used to identify you personally.' },
+      { h: 'How Long We Keep Information', p: 'Aggregate traffic statistics and server logs are retained for no longer than 13 months, after which they are deleted or fully anonymised. Advertising and analytics cookies set by Google are subject to Google’s own retention limits (a maximum of 24 months; 13 months for visitors in the European Economic Area and the United Kingdom). Your language preference is stored locally in your browser until you clear it.' },
+      { h: 'Visitors in the EU / EEA & Consent', p: 'Where prior consent is required by law (including the EU ePrivacy Directive and the GDPR), Google may display its own consent message (Google Funding Choices / the Google consent message) before advertising cookies are set, and non-essential cookies are used only after you agree. You can change or withdraw your choice at any time. If you are in the EEA or the United Kingdom, you also have the right to lodge a complaint with your local data protection authority.' },
       { h: 'Your Rights & Contact', p: 'Depending on your location, you may have the right to request access to, correction of, or deletion of any personal data we hold, and to object to certain processing. You may also disable cookies in your browser settings at any time. For any privacy question, please contact us at juju089@qq.com.' },
     ],
 
@@ -97,6 +100,7 @@ export const T = {
 
     footerRights: 'All rights reserved.',
     footerDisclaimer: 'Prices are indicative reference values from third-party sources and may be delayed or rounded. Not financial advice.',
+    footerAdDisclosure: 'This site contains advertisements. Advertising does not influence the prices, data or editorial recommendations shown on these pages.',
     footerQuick: 'Markets', footerLegal: 'Legal', footerCompany: 'Site',
   },
 
@@ -159,6 +163,9 @@ export const T = {
       { h: '信息的使用方式', p: '所收集的信息用于：以您偏好的语言显示网站、分析汇总流量趋势以优化性能与内容、保障服务安全并防止滥用，以及展示相关广告。' },
       { h: 'Cookie 与广告（Google）', p: '我们使用 Cookie 及类似技术来运行网站并投放广告。包括 Google 在内的第三方供应商会使用 Cookie，基于您此前访问本站或其他网站的记录来投放广告。Google 使用广告 Cookie 使其及合作伙伴能够根据您的兴趣投放广告。您可访问 Google 广告设置关闭个性化广告，或通过 aboutads.info 选择退出第三方 Cookie。' },
       { h: '数据来源与准确性', p: '本站展示的市场价格来自第三方公开数据提供方，仅供信息参考。价格可能存在延迟、四舍五入或暂时不可用的情况，也可能与您所在银行、券商或当地加油站的实际报价存在差异。我们不对数据的准确性、完整性或对特定用途的适用性作出任何保证。' },
+      { h: '本站使用的 Cookie 类型', p: '本站的 Cookie 分为三类：必要 Cookie，用于维持网站正常运行并记住您的语言与时区偏好；分析 Cookie，用于了解汇总流量趋势；以及由 Google 及其合作伙伴设置的广告 Cookie，用于投放与衡量广告效果。本站不会使用任何 Cookie 识别您的个人身份。' },
+      { h: '信息保留期限', p: '汇总流量统计与服务器日志的保留期限不超过 13 个月，到期后删除或完全匿名化处理。由 Google 设置的广告与分析 Cookie 遵循 Google 自身的保留规则（最长 24 个月；欧洲经济区与英国访客为 13 个月）。您的语言偏好保存在浏览器本地，直到您主动清除。' },
+      { h: '欧盟 / 欧洲经济区访客与 Cookie 同意', p: '在法律要求事先取得同意的地区（含欧盟 ePrivacy 指令与 GDPR），Google 可能在设置广告 Cookie 前展示其自身的同意消息（Google Funding Choices / Google 同意消息），在您同意之前不会使用非必要 Cookie。您可以随时更改或撤回选择。若您位于欧洲经济区或英国，您还有权向所在地的数据保护监管机构提出投诉。' },
       { h: '您的权利与联系方式', p: '根据您所在地区，您可能有权要求访问、更正或删除我们所持有的个人数据，并有权拒绝某些处理行为。您也可随时在浏览器设置中禁用 Cookie。如有任何隐私问题，请通过 juju089@qq.com 与我们联系。' },
     ],
 
@@ -181,6 +188,7 @@ export const T = {
 
     footerRights: '保留所有权利。',
     footerDisclaimer: '价格为第三方来源的指示性参考值，可能存在延迟或四舍五入，不构成金融建议。',
+    footerAdDisclosure: '本站包含广告。广告不会影响本页面展示的价格、数据与编辑推荐。',
     footerQuick: '行情', footerLegal: '条款', footerCompany: '站点',
   },
 
@@ -243,6 +251,9 @@ export const T = {
       { h: '情報の利用目的', p: '収集した情報は、お客様の言語での表示、パフォーマンスとコンテンツ改善のための集計トラフィック分析、サービス保護と不正防止、および関連広告の表示に利用されます。' },
       { h: 'Cookie と広告（Google）', p: '当サイトはサイト運営および広告配信のために Cookie および類似技術を使用します。Google を含む第三者ベンダーは、本サイトまたは他サイトへの過去の訪問に基づき Cookie を用いて広告を配信します。Google の広告 Cookie の使用により、Google およびそのパートナーは興味に基づく広告を配信できます。パーソナライズ広告は Google 広告設定から、第三者 Cookie は aboutads.info からオプトアウトできます。' },
       { h: 'データ源と正確性', p: '本サイトに表示される市場価格は第三者の公開データ提供元から取得しており、情報提供のみを目的としています。価格は遅延・丸め・一時的な欠損が生じる場合があり、お客様の銀行・証券会社・最寄りの給油所の実際の価格と異なる場合があります。正確性・完全性・特定目的への適合性について、当サイトは一切の保証を行いません。' },
+      { h: '使用している Cookie の種類', p: '本サイトの Cookie は次の三種類です。サイトの動作と、言語およびタイムゾーンの設定を保持するために必要な Cookie。アクセス傾向を把握するための分析用 Cookie。Google およびそのパートナーが広告の配信と効果測定のために設定する広告用 Cookie。本サイトの Cookie が個人を特定するために使われることはありません。' },
+      { h: '情報の保存期間', p: '集計されたアクセス統計とサーバーログは最長 13 か月間保存され、その後削除または完全に匿名化されます。Google が設定する広告および分析用 Cookie は Google 自身の保存方針に従います（最長 24 か月。欧州経済領域および英国からの訪問者は 13 か月）。言語設定はブラウザにローカル保存され、ご自身で削除するまで保持されます。' },
+      { h: 'EU / EEA の訪問者と同意', p: '法令により事前の同意が必要な地域（EU の ePrivacy 指令および GDPR を含む）では、広告用 Cookie が設定される前に Google 自身の同意メッセージ（Google Funding Choices / Google 同意メッセージ）が表示される場合があり、ご同意いただくまで必須ではない Cookie は使用されません。選択はいつでも変更または撤回できます。EEA または英国にお住まいの場合は、お住まいの地域のデータ保護監督機関に申し立てを行う権利もあります。' },
       { h: 'お客様の権利とお問い合わせ', p: 'お住まいの地域により、保有する個人データへのアクセス、訂正、削除の請求、および一部の処理に対する異議申し立てができる場合があります。またブラウザ設定でいつでも Cookie を無効化できます。プライバシーに関するご質問は juju089@qq.com までご連絡ください。' },
     ],
 
@@ -265,6 +276,7 @@ export const T = {
 
     footerRights: 'All rights reserved.',
     footerDisclaimer: '価格は第三者由来の参考値であり、遅延や丸めが生じる場合があります。金融助言ではありません。',
+    footerAdDisclosure: '本サイトには広告が掲載されています。広告が本ページの価格、データ、編集上の推奨に影響することはありません。',
     footerQuick: 'マーケット', footerLegal: '規約', footerCompany: 'サイト',
   },
 
@@ -327,6 +339,9 @@ export const T = {
       { h: 'Cómo usamos la información', p: 'La información se usa para mostrar el sitio en tu idioma, entender patrones de tráfico agregados para mejorar el rendimiento y el contenido, mantener la seguridad y prevenir abusos, y mostrar publicidad relevante.' },
       { h: 'Cookies y publicidad (Google)', p: 'Usamos cookies y tecnologías similares para operar el sitio y publicar anuncios. Proveedores externos, incluido Google, usan cookies para mostrar anuncios basados en tus visitas anteriores a este u otros sitios. El uso de cookies publicitarias por parte de Google le permite a él y a sus socios mostrar anuncios según tus intereses. Puedes desactivar la publicidad personalizada en la configuración de anuncios de Google, o excluirte de cookies de terceros en aboutads.info.' },
       { h: 'Fuentes de datos y exactitud', p: 'Los precios mostrados provienen de proveedores públicos externos y se ofrecen solo con fines informativos. Pueden tener retraso, redondeo o no estar disponibles temporalmente, y diferir de los que ofrezcan tu banco, bróker o gasolinera local. No garantizamos exactitud, integridad ni idoneidad para ningún fin.' },
+      { h: 'Tipos de cookies que utilizamos', p: 'Las cookies de este sitio se dividen en tres grupos: cookies estrictamente necesarias, que mantienen el sitio en funcionamiento y recuerdan sus preferencias de idioma y zona horaria; cookies analíticas, que nos ayudan a entender patrones de tráfico agregados; y cookies publicitarias establecidas por Google y sus socios, que se usan para mostrar y medir anuncios. Ninguna cookie de este sitio se usa para identificarle personalmente.' },
+      { h: 'Cuánto tiempo conservamos la información', p: 'Las estadísticas de tráfico agregadas y los registros del servidor se conservan durante un máximo de 13 meses, tras lo cual se eliminan o se anonimizan por completo. Las cookies publicitarias y analíticas establecidas por Google están sujetas a los propios plazos de conservación de Google (24 meses como máximo; 13 meses para visitantes del Espacio Económico Europeo y el Reino Unido). Su preferencia de idioma se guarda localmente en su navegador hasta que la borre.' },
+      { h: 'Visitantes de la UE / EEE y consentimiento', p: 'En las regiones donde la ley exige consentimiento previo (incluidas la Directiva ePrivacy de la UE y el GDPR), Google puede mostrar su propio mensaje de consentimiento (Google Funding Choices / el mensaje de consentimiento de Google) antes de establecer cookies publicitarias, y las cookies no esenciales solo se usan después de que usted acepte. Puede cambiar o retirar su elección en cualquier momento. Si se encuentra en el EEE o el Reino Unido, también tiene derecho a presentar una reclamación ante su autoridad de protección de datos.' },
       { h: 'Tus derechos y contacto', p: 'Según tu ubicación, puedes solicitar acceso, corrección o eliminación de los datos personales que tengamos, y oponerte a ciertos tratamientos. También puedes desactivar las cookies en tu navegador en cualquier momento. Para cualquier duda de privacidad, escríbenos a juju089@qq.com.' },
     ],
 
@@ -349,6 +364,7 @@ export const T = {
 
     footerRights: 'Todos los derechos reservados.',
     footerDisclaimer: 'Los precios son valores de referencia de terceros y pueden tener retraso o redondeo. No constituyen asesoramiento financiero.',
+    footerAdDisclosure: 'Este sitio contiene publicidad. La publicidad no influye en los precios, los datos ni las recomendaciones editoriales que se muestran en estas páginas.',
     footerQuick: 'Mercados', footerLegal: 'Legal', footerCompany: 'Sitio',
   },
 
@@ -411,6 +427,9 @@ export const T = {
       { h: 'Comment nous utilisons ces informations', p: 'Elles servent à afficher le site dans votre langue, à analyser le trafic agrégé pour améliorer performances et contenu, à sécuriser le service et prévenir les abus, ainsi qu\'à diffuser des publicités pertinentes.' },
       { h: 'Cookies et publicité (Google)', p: 'Nous utilisons des cookies et technologies similaires pour faire fonctionner le site et diffuser des annonces. Des prestataires tiers, dont Google, utilisent des cookies pour diffuser des annonces selon vos visites antérieures. L\'utilisation des cookies publicitaires par Google lui permet, ainsi qu\'à ses partenaires, de diffuser des annonces selon vos intérêts. Vous pouvez désactiver la personnalisation dans les paramètres Google Ads, ou vous exclure des cookies tiers sur aboutads.info.' },
       { h: 'Sources des données et exactitude', p: 'Les prix affichés proviennent de fournisseurs publics tiers et sont donnés à titre indicatif. Ils peuvent être retardés, arrondis ou temporairement indisponibles, et différer de ceux de votre banque, courtier ou station-service. Nous ne garantissons ni l\'exactitude, ni l\'exhaustivité, ni l\'adéquation à un usage particulier.' },
+      { h: 'Types de cookies utilisés', p: 'Les cookies de ce site se répartissent en trois catégories : les cookies strictement nécessaires, qui assurent le fonctionnement du site et mémorisent vos préférences de langue et de fuseau horaire ; les cookies d’analyse, qui nous aident à comprendre les tendances de trafic agrégées ; et les cookies publicitaires déposés par Google et ses partenaires, utilisés pour diffuser et mesurer les annonces. Aucun cookie de ce site n’est utilisé pour vous identifier personnellement.' },
+      { h: 'Durée de conservation des informations', p: 'Les statistiques de trafic agrégées et les journaux serveur sont conservés au maximum 13 mois, puis supprimés ou entièrement anonymisés. Les cookies publicitaires et d’analyse déposés par Google sont soumis aux propres limites de conservation de Google (24 mois au maximum ; 13 mois pour les visiteurs de l’Espace économique européen et du Royaume-Uni). Votre préférence de langue est stockée localement dans votre navigateur jusqu’à ce que vous la supprimiez.' },
+      { h: 'Visiteurs de l’UE / EEE et consentement', p: 'Dans les régions où la loi exige un consentement préalable (notamment la directive ePrivacy de l’UE et le RGPD), Google peut afficher son propre message de consentement (Google Funding Choices / le message de consentement Google) avant que des cookies publicitaires ne soient déposés, et les cookies non essentiels ne sont utilisés qu’après votre accord. Vous pouvez modifier ou retirer votre choix à tout moment. Si vous vous trouvez dans l’EEE ou au Royaume-Uni, vous avez également le droit d’introduire une réclamation auprès de votre autorité de protection des données.' },
       { h: 'Vos droits et contact', p: 'Selon votre lieu de résidence, vous pouvez demander l\'accès, la correction ou la suppression des données détenues, et vous opposer à certains traitements. Vous pouvez aussi désactiver les cookies à tout moment. Pour toute question : juju089@qq.com.' },
     ],
 
@@ -433,6 +452,7 @@ export const T = {
 
     footerRights: 'Tous droits réservés.',
     footerDisclaimer: 'Les prix sont des valeurs indicatives de tiers, pouvant être retardées ou arrondies. Ne constituent pas un conseil financier.',
+    footerAdDisclosure: 'Ce site contient des publicités. La publicité n’influence pas les prix, les données ni les recommandations éditoriales présentés sur ces pages.',
     footerQuick: 'Marchés', footerLegal: 'Mentions légales', footerCompany: 'Site',
   },
 
@@ -495,6 +515,9 @@ export const T = {
       { h: 'Wie wir Daten nutzen', p: 'Die Daten dienen der Anzeige in Ihrer Sprache, der Analyse aggregierter Zugriffsmuster zur Verbesserung von Leistung und Inhalten, der Sicherheit und Missbrauchsprävention sowie der Auslieferung relevanter Werbung.' },
       { h: 'Cookies & Werbung (Google)', p: 'Wir verwenden Cookies und ähnliche Technologien zum Betrieb der Seite und zur Anzeige von Werbung. Drittanbieter, darunter Google, nutzen Cookies, um Anzeigen auf Basis früherer Besuche zu schalten. Googles Werbe-Cookies ermöglichen ihm und Partnern interessenbasierte Werbung. Sie können personalisierte Werbung in den Google-Anzeigeneinstellungen oder Drittcookies unter aboutads.info abwählen.' },
       { h: 'Datenquellen & Genauigkeit', p: 'Die angezeigten Preise stammen von öffentlichen Drittanbietern und dienen nur der Information. Sie können verzögert, gerundet oder vorübergehend nicht verfügbar sein und von den Kursen Ihrer Bank, Ihres Brokers oder Ihrer Tankstelle abweichen. Wir übernehmen keine Gewähr für Richtigkeit, Vollständigkeit oder Eignung.' },
+      { h: 'Arten der verwendeten Cookies', p: 'Die Cookies dieser Website fallen in drei Gruppen: unbedingt erforderliche Cookies, die den Betrieb der Website ermöglichen und Ihre Sprach- und Zeitzoneneinstellung speichern; Analyse-Cookies, die uns helfen, aggregierte Zugriffsmuster zu verstehen; sowie Werbe-Cookies, die von Google und seinen Partnern gesetzt werden, um Anzeigen auszuliefern und zu messen. Kein Cookie dieser Website wird verwendet, um Sie persönlich zu identifizieren.' },
+      { h: 'Speicherdauer der Informationen', p: 'Aggregierte Zugriffsstatistiken und Serverprotokolle werden längstens 13 Monate aufbewahrt und danach gelöscht oder vollständig anonymisiert. Werbe- und Analyse-Cookies von Google unterliegen den eigenen Aufbewahrungsfristen von Google (maximal 24 Monate; 13 Monate für Besucher aus dem Europäischen Wirtschaftsraum und dem Vereinigten Königreich). Ihre Spracheinstellung wird lokal in Ihrem Browser gespeichert, bis Sie sie löschen.' },
+      { h: 'Besucher aus der EU / dem EWR und Einwilligung', p: 'In Regionen, in denen das Gesetz eine vorherige Einwilligung verlangt (einschließlich der ePrivacy-Richtlinie der EU und der DSGVO), kann Google vor dem Setzen von Werbe-Cookies seine eigene Einwilligungsnachricht anzeigen (Google Funding Choices / Google-Einwilligungsnachricht); nicht notwendige Cookies werden erst nach Ihrer Zustimmung verwendet. Sie können Ihre Wahl jederzeit ändern oder widerrufen. Wenn Sie im EWR oder im Vereinigten Königreich ansässig sind, haben Sie außerdem das Recht, sich bei Ihrer Datenschutzbehörde zu beschweren.' },
       { h: 'Ihre Rechte & Kontakt', p: 'Je nach Wohnsitz können Sie Auskunft, Berichtigung oder Löschung gespeicherter Daten verlangen und bestimmten Verarbeitungen widersprechen. Cookies können Sie jederzeit im Browser deaktivieren. Datenschutzfragen richten Sie bitte an juju089@qq.com.' },
     ],
 
@@ -517,6 +540,7 @@ export const T = {
 
     footerRights: 'Alle Rechte vorbehalten.',
     footerDisclaimer: 'Preise sind indikative Referenzwerte aus Drittquellen und können verzögert oder gerundet sein. Keine Finanzberatung.',
+    footerAdDisclosure: 'Diese Website enthält Werbung. Werbung beeinflusst weder die auf diesen Seiten gezeigten Preise und Daten noch die redaktionellen Empfehlungen.',
     footerQuick: 'Märkte', footerLegal: 'Rechtliches', footerCompany: 'Website',
   },
 
@@ -579,6 +603,9 @@ export const T = {
       { h: 'Como usamos as informações', p: 'As informações são usadas para exibir o site no seu idioma, entender padrões agregados de tráfego para melhorar desempenho e conteúdo, manter a segurança e evitar abusos, e exibir publicidade relevante.' },
       { h: 'Cookies e publicidade (Google)', p: 'Usamos cookies e tecnologias semelhantes para operar o site e veicular anúncios. Fornecedores terceiros, incluindo o Google, usam cookies para veicular anúncios com base em visitas anteriores a este ou outros sites. O uso de cookies publicitários pelo Google permite que ele e seus parceiros veiculem anúncios por interesse. Você pode desativar a personalização nas configurações de anúncios do Google ou recusar cookies de terceiros em aboutads.info.' },
       { h: 'Fontes de dados e precisão', p: 'Os preços exibidos vêm de fornecedores públicos terceiros e servem apenas para informação. Podem sofrer atraso, arredondamento ou indisponibilidade temporária, e diferir dos valores praticados pelo seu banco, corretora ou posto local. Não garantimos precisão, integralidade ou adequação a qualquer finalidade.' },
+      { h: 'Tipos de cookies que utilizamos', p: 'Os cookies deste site dividem-se em três grupos: cookies estritamente necessários, que mantêm o site a funcionar e guardam as suas preferências de idioma e fuso horário; cookies de análise, que nos ajudam a compreender padrões de tráfego agregados; e cookies publicitários definidos pela Google e pelos seus parceiros, usados para exibir e medir anúncios. Nenhum cookie deste site é usado para o identificar pessoalmente.' },
+      { h: 'Durante quanto tempo conservamos a informação', p: 'As estatísticas de tráfego agregadas e os registos do servidor são conservados por um máximo de 13 meses, após o que são eliminados ou totalmente anonimizados. Os cookies publicitários e de análise definidos pela Google estão sujeitos aos próprios prazos de conservação da Google (máximo de 24 meses; 13 meses para visitantes do Espaço Económico Europeu e do Reino Unido). A sua preferência de idioma é guardada localmente no seu navegador até que a elimine.' },
+      { h: 'Visitantes da UE / EEE e consentimento', p: 'Nas regiões onde a lei exige consentimento prévio (incluindo a Diretiva ePrivacy da UE e o RGPD), a Google pode apresentar a sua própria mensagem de consentimento (Google Funding Choices / mensagem de consentimento da Google) antes de os cookies publicitários serem definidos, e os cookies não essenciais só são usados após a sua concordância. Pode alterar ou retirar a sua escolha a qualquer momento. Se estiver no EEE ou no Reino Unido, tem também o direito de apresentar uma reclamação à sua autoridade de proteção de dados.' },
       { h: 'Seus direitos e contato', p: 'Dependendo da sua localização, você pode solicitar acesso, correção ou exclusão de dados pessoais que mantemos, e se opor a certos tratamentos. Também é possível desativar cookies no navegador a qualquer momento. Para dúvidas de privacidade, escreva para juju089@qq.com.' },
     ],
 
@@ -601,6 +628,7 @@ export const T = {
 
     footerRights: 'Todos os direitos reservados.',
     footerDisclaimer: 'Os preços são valores indicativos de terceiros e podem estar atrasados ou arredondados. Não constituem aconselhamento financeiro.',
+    footerAdDisclosure: 'Este site contém publicidade. A publicidade não influencia os preços, os dados nem as recomendações editoriais apresentados nestas páginas.',
     footerQuick: 'Mercados', footerLegal: 'Jurídico', footerCompany: 'Site',
   },
 };

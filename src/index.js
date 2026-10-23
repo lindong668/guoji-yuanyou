@@ -83,7 +83,10 @@ export default {
 
     // ---------- robots.txt ----------
     if (url.pathname === '/robots.txt') {
-      const body = `User-agent: *
+      const body = `User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: *
 Allow: /
 
 Sitemap: ${SITE.domain}/sitemap.xml
