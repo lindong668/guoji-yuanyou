@@ -194,3 +194,45 @@ export const OG_IMAGE_B64 = joinB64([
 ```
 
 以后更换图标时直接替换 joinB64([...]) 内的分块内容，勿写回单行长串。
+
+## A15 变更（2026-10-24）— 图标体积优化 271KB → 101KB
+
+**背景**：A14 修了超长单行（168,949 → 1,205 字符）后，GitHub 网页上传
+仍有文件提示失败。进一步排查定位到第二层原因：
+
+> icons.js 是"伪装成纯文本的二进制"—— 273KB 的 JS 里 250KB 是 base64。
+> GitHub 会把它当源码处理（语法高亮 / 预览 / diff），处理成本远高于
+> 同等体积的真二进制文件。对比 5号：og-image.png 88KB 是真 .png，
+> GitHub 直接存储不解析，上传从未出问题。
+
+**优化**（画质优先，PSNR 36.1dB 视觉无损）
+```
+OG 图        PNG 127KB → JPEG q85  51KB   （PSNR 36.1dB）
+apple-touch  PNG  42KB → 200 色量化 11KB
+logo-128     PNG  23KB → 200 色量化  7KB
+favicon.ico  多尺寸 7.3KB → 仅 16/32 两尺寸 2.9KB
+```
+```
+icons.js   273KB → 101KB
+整包       754KB → 587KB
+```
+
+**★ 接口变化（1 处，必需）**
+OG 图 MIME 由常量驱动，src/index.js 第 88 行 `'image/png'` → `OG_IMAGE_MIME`。
+路由路径仍为 `/og-image.png`（不变，已分享的链接不受影响），
+仅 Content-Type 变为 image/jpeg。所有分享平台（微信/Facebook/X）均支持 JPEG OG。
+
+**验证**
+```
+运行时解码  6/6 成功，魔数校验全通过（ICO 00 00 01 00 / PNG ‰PNG / JPEG FFD8-FFD9）
+语法        8 个 js 文件 node --check 全通过
+OG 安全区   内容边界 行33-603 列385-811，安全区 行0-629 列285-915
+            左余量 100 右余量 104 ✅ 微信方形裁切 100% 保留
+最长行      1205 字符（安全）
+```
+
+**上传仍失败时的根治方案（未采用，需用户确认）**
+把图标改回真正的静态文件：`wrangler.toml` 加 `[assets] directory = "public"`，
+package.json 的 wrangler 升到 ^4.152.0，图标放 public/，删掉 icons.js 与
+index.js 中 6 个图标路由。与 1/4/5 号一致，彻底消除"文本里的二进制"问题。
+未采用原因：涉及 wrangler 大版本升级与路由改造，影响面大于本次优化。
