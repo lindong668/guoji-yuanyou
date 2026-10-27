@@ -791,3 +791,46 @@ onclick="try{window.__psLang('de');}catch(err){}return false;"
 
 ### 部署后验证
 查看源代码搜 `catch(err){}return false` —— 搜到即新代码上线。
+
+
+---
+
+## A22m（2026-10-28）— 先恢复"能切换"，去掉一切依赖与竞态
+
+### A22k 为什么把切换功能弄坏了
+A22k 的 onclick 是 `try{window.__psLang('de');}catch(err){}return false;`。
+只要 `__psLang` **不存在或内部抛错**，catch 吞掉异常后仍 `return false` ——
+默认导航被阻止，替换逻辑又没跑成 → **点了完全没反应**。
+这就是"所有界面都切不了语言"的直接原因。
+
+同时 A22k 还在 head 里留了 capture 阶段的监听。浏览器事件顺序是
+**capture 先于 target**：document 上的监听比 `<a>` 的 onclick **先执行**，
+两者都会触发一次切换逻辑，存在竞态。
+
+### A22m 的做法
+1. **删掉 head 里的 capture 监听** —— 消除竞态，只留一条路径。
+2. **onclick 改成完全自包含**，不依赖 `window.__psLang` 或任何外部定义：
+
+```js
+try{
+  var h=this.getAttribute('href');
+  var m=h.match(/^\/([a-z]{2})(\/|$)/);
+  if(m){
+    document.cookie='ps_lang='+m[1]+'; path=/; max-age=31536000; samesite=lax';
+    localStorage.setItem('ps_lang',m[1]);
+  }
+  location.replace(h);      // 不新增历史条目
+  return false;
+}catch(err){ return true; } // ★ 出错就放行默认导航，保证至少能切换
+```
+
+关键在最后一行：**出错时返回 true，允许浏览器正常跳转**。
+最坏情况只是历史多一条，绝不会出现"点了没反应"。
+
+### 已验证
+- onclick 代码单独 `node --check` 语法通过
+- 模拟四种语言点击：均能阻止默认导航并 replace 到目标 URL
+- 栈模拟：切 3 次后栈为 [首页, /de/gold/]，按一次返回 → 首页 ✅
+
+### 部署后
+查看源代码搜 `return true;}">` 确认新代码上线。

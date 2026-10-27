@@ -440,19 +440,6 @@ export function head({ lang, title, desc, path, noindex }) {
     location.reload();   // reload 不新增历史条目 —— 栈始终只有两层
   };
 
-  /* capture 阶段、在 head 里就注册：不等 DOMContentLoaded，
-     也不受后续脚本报错影响，任何一次点击必然先经过这里。 */
-  document.addEventListener('click',function(e){
-    if(e.defaultPrevented) return;                // 已被内联 onclick 处理
-    if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
-    var el=(e.target&&e.target.closest)?e.target.closest('a[data-langswap]'):null;
-    if(!el) return;
-    e.preventDefault();
-    var h=el.getAttribute('href')||'';
-    var g=h.match(/^\/([a-z]{2})(\/|$)/);
-    if(g) window.__psLang(g[1]);
-  },true);
-
   // 渲染前同步决定语言（无闪烁；也是 cookie 通道的兜底）
   try{
     var want=localStorage.getItem('ps_lang');
@@ -529,7 +516,7 @@ export function topbar(lang, active) {
     <div class="langmenu">
       ${LANGS.map(l => `<a href="/${l}${active === '/' ? '/' : active}" class="${l === lang ? 'on' : ''}"
         hreflang="${l}" data-langswap="1"
-        onclick="try{window.__psLang('${l}');}catch(err){}return false;">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
+        onclick="try{var h=this.getAttribute('href');var m=h.match(/^\/([a-z]{2})(\/|$)/);if(m){try{document.cookie='ps_lang='+m[1]+'; path=/; max-age=31536000; samesite=lax';}catch(e){}try{localStorage.setItem('ps_lang',m[1]);}catch(e){}}location.replace(h);return false;}catch(err){return true;}">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
     </div>
   </div>
 </div></header>`;
