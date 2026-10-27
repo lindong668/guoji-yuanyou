@@ -431,7 +431,7 @@ export function head({ lang, title, desc, path, noindex }) {
        服务端 A22h 起已按 cookie 渲染语言，所以 reload 后内容就是新语言。 */
     try{
       var p=location.pathname,t=null;
-      var m=p.match(/^\/([a-z]{2})(\/.*)?$/);
+      var m=p.match(/^\\/([a-z]{2})(\\/.*)?$/);
       if(m&&OK[m[1]]) t='/'+lang+(m[2]||'/');
       else if(p==='/') t='/'+lang+'/';
       if(t&&t!==p&&window.history&&history.replaceState)
@@ -447,7 +447,7 @@ export function head({ lang, title, desc, path, noindex }) {
     var cur=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
     if(want===cur) return;
     var p=location.pathname,t=null;
-    var mm=p.match(/^\/([a-z]{2})(\/.*)?$/);
+    var mm=p.match(/^\\/([a-z]{2})(\\/.*)?$/);
     if(mm&&OK[mm[1]]) t='/'+want+(mm[2]||'/');
     else if(p==='/') t='/'+want+'/';
     if(t&&t!==p) location.replace(t+location.search+location.hash);
@@ -516,7 +516,7 @@ export function topbar(lang, active) {
     <div class="langmenu">
       ${LANGS.map(l => `<a href="/${l}${active === '/' ? '/' : active}" class="${l === lang ? 'on' : ''}"
         hreflang="${l}" data-langswap="1"
-        onclick="try{var h=this.getAttribute('href');var m=h.match(/^\/([a-z]{2})(\/|$)/);if(m){try{document.cookie='ps_lang='+m[1]+'; path=/; max-age=31536000; samesite=lax';}catch(e){}try{localStorage.setItem('ps_lang',m[1]);}catch(e){}}location.replace(h);return false;}catch(err){return true;}">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
+        onclick="try{var h=this.getAttribute('href');var m=h.match(/^\\/([a-z]{2})(\\/|$)/);if(m){try{document.cookie='ps_lang='+m[1]+'; path=/; max-age=31536000; samesite=lax';}catch(e){}try{localStorage.setItem('ps_lang',m[1]);}catch(e){}}location.replace(h);return false;}catch(err){return true;}">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
     </div>
   </div>
 </div></header>`;
