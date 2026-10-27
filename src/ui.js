@@ -400,6 +400,27 @@ export function head({ lang, title, desc, path, noindex }) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- ★ A22i：语言偏好在【任何渲染之前】同步决定。
+     放在 head 最前面、同步阻塞执行，必要时在画第一帧之前就 replace 走，
+     因此不会出现"先画出旧语言、再整页换成新语言"的闪烁。
+     它同时是 cookie 通道的兜底：万一 cookie 没生效（部分无痕模式、
+     第三方 cookie 限制），localStorage 仍能给出正确语言。 -->
+<script>
+(function(){
+  try{
+    var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
+    var want=localStorage.getItem('ps_lang');
+    if(!want||!OK[want]) return;                 // 没手动选过 -> 不动
+    var cur=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
+    if(want===cur) return;                       // 已一致 -> 不动（也防死循环）
+    var p=location.pathname, t=null;
+    var m=p.match(/^\/([a-z]{2})(\/.*)?$/);
+    if(m&&OK[m[1]]) t='/'+want+(m[2]||'/');      // /en/gold/ -> /ja/gold/
+    else if(p==='/') t='/'+want+'/';             // 裸域名 -> /ja/
+    if(t&&t!==p) location.replace(t+location.search+location.hash);
+  }catch(e){}
+})();
+</script>
 <!-- ★ v2 新增：AdSense 站点归属验证标签。
      AdSense 后台「网站」审核用它把站点与账号绑定；
      这是纯 meta 声明、不含广告代码，审核期间放置完全合规。 -->
@@ -546,12 +567,22 @@ document.addEventListener('click',function(e){
   var mm = href.match(/^\/([a-z]{2})(\/|$)/);
   if (mm) {
     try {
-      // cookie 随请求头自动回传服务端，服务端据此直接渲染正确语言，
-      // 不依赖 JS 是否执行。不用 SameSite=Strict（会导致某些跨页首跳丢 cookie）。
+      // 通道一 cookie：随请求头回传服务端，服务端直接渲染正确语言。
+      // 通道二 localStorage：head 内同步脚本读取，cookie 失效时的兜底。
       document.cookie = 'ps_lang=' + mm[1] + '; path=/; max-age=31536000; samesite=lax';
+      localStorage.setItem('ps_lang', mm[1]);
     } catch(e) {}
   }
-  try { location.replace(href); } catch(err) { location.href = href; }
+  /* ★ A22i：两步都【不产生新的历史条目】，所以按一次返回必定回到进站前那页。
+     replaceState 先把当前这条记录的 URL 改掉（不导航、不新增），
+     reload 再按新 URL 重新请求（reload 本身也不新增历史）。
+     原先只用 location.replace 一条路，实测在连续快速切换时并不可靠。 */
+  if (window.history && history.replaceState) {
+    try { history.replaceState(history.state, '', href); } catch(e) {}
+    location.reload();
+  } else {
+    try { location.replace(href); } catch(err) { location.href = href; }
+  }
 });
 // Re-render every timestamp in the BROWSER's own timezone + interface locale.
 // The server already rendered a correct value (via request.cf.timezone); this
