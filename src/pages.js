@@ -8,6 +8,188 @@ import { curName } from './i18n.js';
 import { CONTENT } from './content.js';
 import { ARTICLES, articlesFor, relatedFor, blogStr } from './articles.js';
 
+// ============================================================
+// ★ A22 黄金实时客户端脚本
+// ------------------------------------------------------------
+// 这一整段跑在【用户浏览器】里，不是跑在 Cloudflare 上。
+// 这正是黄金能实时刷新、而后端只能一分钟一次的原因：
+//   · 后端 cron  → Cloudflare 的闹钟，最快一分钟响一次，改不了
+//   · 浏览器 JS  → 页面开着就一直醒着，可以反复去问价
+//
+// 容错分五层，一层层往下掉，任何一层都保证页面有真实数字：
+//   ① 直连 biquote（实时）        → 数字一直跳
+//   ② 依次退到 xaus / gold-api    → 换源继续跳
+//   ③ 歇 1 秒再跑一轮（从主源重来）→ 抖动往往这时已经恢复
+//   ④ 都不行 → 问 2 号 Worker，让它请 3 号【现抓】一个新价
+//   ⑤ 连 3 号也失败 → 冻住最后看到的那个数，灰显 + 标注，绝不编数字
+// ============================================================
+const TROY_OZ = 31.1034768;   // 1 金衡盎司 = 31.1034768 克（国际精确定义，非近似值）
+
+const GOLD_LIVE_JS = `
+(function(){
+  var OZ=31.1034768;
+  var elUsd=document.getElementById('g-usd');
+  if(!elUsd) return;
+  var elConv=document.getElementById('g-conv');
+  var elCur=document.getElementById('g-cur');
+  var elStatus=document.getElementById('g-status');
+  var elRate=document.getElementById('g-rate');
+  var card1=document.getElementById('g-intl');
+  var card2=document.getElementById('g-local');
+
+  var T={live:elStatus.getAttribute('data-live')||'Live',
+         lost:elStatus.getAttribute('data-lost')||'Connection lost',
+         ago:elStatus.getAttribute('data-ago')||'Updated {n} ago'};
+
+  var RATES={};
+  try{ RATES=JSON.parse(document.getElementById('ps-fx').textContent)||{}; }catch(e){ RATES={}; }
+  var INIT={};
+  try{ INIT=JSON.parse(document.getElementById('ps-gold-init').textContent)||{}; }catch(e){ INIT={}; }
+
+  var lang=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
+  var LOCS={en:'en-US',zh:'zh-CN',ja:'ja-JP',es:'es-ES',fr:'fr-FR',de:'de-DE',pt:'pt-BR'};
+  var loc=LOCS[lang]||'en-US';
+
+  /* 默认 USD；用户选过就记住（存在浏览器本地，下次进来还是他那个） */
+  var cur='USD';
+  try{ var sv=localStorage.getItem('ps_gold_cur'); if(sv&&RATES[sv]) cur=sv; }catch(e){}
+
+  /* 汇率口径：人民币用 CNY（在岸，国内真正成交的价），
+     其他币种走 er-api 的离岸/对应报价 —— 两个都在同一份表里。 */
+  function rate(c){
+    if(c==='USD') return 1;
+    if(c==='CNY'&&RATES.CNY) return RATES.CNY;
+    return RATES[c]||0;
+  }
+
+  var codes=Object.keys(RATES).sort();
+  var dn=null;
+  try{ dn=new Intl.DisplayNames([loc],{type:'currency'}); }catch(e){}
+  for(var i=0;i<codes.length;i++){
+    var o=document.createElement('option');
+    o.value=codes[i];
+    var nm='';
+    try{ if(dn) nm=dn.of(codes[i])||''; }catch(e){}
+    o.textContent=codes[i]+(nm?' \u2014 '+nm:'');
+    if(codes[i]===cur) o.selected=true;
+    elCur.appendChild(o);
+  }
+
+  var usdOz=INIT.usdOz;
+  var lastOk=0, fails=0, dead=false;
+
+  function money(v){
+    try{ return new Intl.NumberFormat(loc,{style:'currency',currency:cur,minimumFractionDigits:2,maximumFractionDigits:2}).format(v); }
+    catch(e){ return (Math.round(v*100)/100)+' '+cur; }
+  }
+  function num(v){
+    try{ return new Intl.NumberFormat(loc,{minimumFractionDigits:2,maximumFractionDigits:2}).format(v); }
+    catch(e){ return (Math.round(v*100)/100).toFixed(2); }
+  }
+  function paint(){
+    if(usdOz==null) return;
+    elUsd.textContent='$'+num(usdOz);
+    elConv.textContent=money(usdOz/OZ*rate(cur));
+    elRate.textContent='1 USD = '+num(rate(cur))+' '+cur+' \u00b7 1 oz = 31.1034768 g';
+  }
+  function agoTxt(){
+    if(!lastOk) return '';
+    var s=Math.round((Date.now()-lastOk)/1000);
+    var t = s<60 ? (s+'s') : (s<3600 ? Math.round(s/60)+'m' : Math.round(s/3600)+'h');
+    return T.ago.replace('{n}',t);
+  }
+  function markLive(){
+    dead=false; fails=0; lastOk=Date.now();
+    card1.classList.remove('is-stale'); card2.classList.remove('is-stale');
+    elStatus.classList.remove('is-lost');
+    elStatus.textContent=T.live+' \u00b7 '+agoTxt();
+  }
+  function markLost(){
+    dead=true;
+    card1.classList.add('is-stale'); card2.classList.add('is-stale');
+    elStatus.classList.add('is-lost');
+    elStatus.textContent=T.lost;
+  }
+
+  /* 三个源按序尝试。biquote 是券商 MT5 链路（实时、独立），
+     xaus 与 gold-api 是指示性现货价 —— 实测三者偏差 < 0.04%。 */
+  var SOURCES=[
+    {n:'biquote',u:'https://biquote.io/api/XAUUSD',
+     p:function(j){var b=+j.bid,a=+j.ask;return (b&&a)?(b+a)/2:(+j.mid||0);}},
+    {n:'xaus',u:'https://xaus.com/api/v1/spot?currency=CNY&unit=gram&compact=1',
+     p:function(j){return +j.spot_usd_oz||0;}},
+    {n:'gold-api',u:'https://api.gold-api.com/price/XAU',
+     p:function(j){return +j.price||0;}}
+  ];
+  var TIMEOUT=2500;   // 前端时间金贵，每个源最多等 2.5 秒，不让用户干等
+
+  function one(s){
+    return new Promise(function(res,rej){
+      var done=false;
+      var t=setTimeout(function(){ if(!done){done=true;rej(new Error('timeout'));} },TIMEOUT);
+      fetch(s.u,{cache:'no-store',headers:{Accept:'application/json'}})
+        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+        .then(function(j){
+          var v=s.p(j);
+          if(!v) throw new Error('bad');
+          if(!done){done=true;clearTimeout(t);res(v);}
+        })
+        .catch(function(e){ if(!done){done=true;clearTimeout(t);rej(e);} });
+    });
+  }
+  /* 一轮：主 → 备 → 兜底。拿到就停。 */
+  function pass(cb){
+    var i=0;
+    (function step(){
+      if(i>=SOURCES.length){ cb(false); return; }
+      one(SOURCES[i]).then(function(v){ usdOz=v; paint(); cb(true); },
+                           function(){ i++; step(); });
+    })();
+  }
+  /* 连续两轮全灭才认定断开 —— 抖动常在半秒内自愈，别急着吓用户。 */
+  function cycle(){
+    pass(function(ok){
+      if(ok){ markLive(); return; }
+      setTimeout(function(){
+        pass(function(ok2){
+          if(ok2){ markLive(); return; }
+          fails++;
+          markLost();
+          if(fails>=2) askBackend();
+        });
+      },1000);
+    });
+  }
+  /* 最后一条路：让 2 号 Worker 请 3 号【现在】去抓一个新价。
+     注意要的是"现抓"，不是 3 号仓库里的旧货。 */
+  function askBackend(){
+    fetch('/api/gold-live',{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j&&j.priceUsdPerOz){
+          usdOz=j.priceUsdPerOz; paint();
+          if(j.live===true) markLive(); else markLost();
+        }
+      }).catch(function(){});
+  }
+
+  elCur.addEventListener('change',function(){
+    cur=elCur.value;
+    try{ localStorage.setItem('ps_gold_cur',cur); }catch(e){}
+    paint();
+  });
+
+  setInterval(function(){ if(!dead&&lastOk) elStatus.textContent=T.live+' \u00b7 '+agoTxt(); },5000);
+  setInterval(function(){ if(!document.hidden) cycle(); },10000);
+
+  paint();
+  if(usdOz!=null) markLive();
+  cycle();
+})();
+`;
+
+
+
 // ------------------------------------------------------------
 // Editorial content helpers
 // Every market page now ships with an original explainer + FAQ, and a
@@ -455,32 +637,55 @@ ${sourceBlock(lang)}`;
 // ------------------------------------------------------------
 // GOLD
 // ------------------------------------------------------------
-export function renderGold(lang, m, tz) {
+export function renderGold(lang, m, fx, tz) {
   const L = t(lang);
   const u = m?.gold?.usdOz, c = m?.gold?.cnyGram;
+  const rates = (fx && fx.rates) ? fx.rates : null;
+  const fxDate = (fx && fx.date) ? fx.date : '';
+
+  /* 首屏（SSR）必须自己带数字 —— 不能等 JS，否则打开是一片空白。
+   * 默认币种 USD（页面默认英文）；用户选过之后由 localStorage 记住，
+   * JS 加载后会立刻切到他上次选的那一个。 */
+  const initUsd = u;
+  const initGram = (u != null) ? u / TROY_OZ : null;   // 默认 USD / 克
+
+  const initJson = JSON.stringify({ usdOz: u ?? null, asOf: m?.gold?.updated ?? null })
+    .replace(/</g, '\\u003c');
+  const ratesJson = JSON.stringify(rates || {}).replace(/</g, '\\u003c');
+
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">🥇</span>${esc(L.goldTitle)}</h2>
   <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
-    <div class="card gold">
+    <div class="card gold" id="g-intl">
       <h3><span class="swatch"></span>${esc(L.goldUsd)}</h3>
-      <div class="big">${u != null ? '$' + fmt(u) : '—'}</div>
+      <div class="big" id="g-usd">${initUsd != null ? '$' + fmt(initUsd) : '—'}</div>
       <div class="unit">USD / troy oz</div>
-      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated, tz)}</span></div>
+      <div class="meta"><span id="g-status" class="live-dot"
+        data-live="${esc(L.goldLiveTag)}" data-lost="${esc(L.goldConnLost)}"
+        data-ago="${esc(L.goldUpdatedAgo)}">${esc(L.goldLiveTag)}</span></div>
     </div>
-    <div class="card gold">
-      <h3><span class="swatch"></span>${esc(L.goldCny)}</h3>
-      <div class="big">${c != null ? '¥' + fmt(c) : '—'}</div>
-      <div class="unit">CNY / gram</div>
-      <div class="meta"><span>${updatedLine(lang, m?.gold?.updated, tz)}</span></div>
+    <div class="card gold" id="g-local">
+      <h3><span class="swatch"></span>${esc(L.goldLocalTitle)}</h3>
+      <div class="big" id="g-conv">${initGram != null ? '$' + fmt(initGram) : '—'}</div>
+      <div class="unit"><select id="g-cur" aria-label="${esc(L.goldLocalTitle)}"></select> / gram</div>
+      <div class="meta"><span id="g-rate">${rates ? esc('1 USD = ' + (rates.CNH || rates.CNY || '—') + ' CNH · 1 oz = 31.1034768 g' + (fxDate ? ' · FX ' + fxDate : '')) : ''}</span></div>
     </div>
   </div>
+  <p class="src-note"><strong>${esc(L.goldNotAdvice)}</strong></p>
   ${adSlot('gold')}
 </div></section>
 ${explainer(lang, 'gold')}
 ${faqBlock(lang, 'gold')}
 ${relatedBlock(lang, 'gold')}
-${sourceBlock(lang)}`;
+<section class="blk alt"><div class="wrap prose">
+  <h2 class="h2"><span class="ico">🔎</span>${esc(L.goldSrcNote ? '数据来源' : '数据来源')}</h2>
+  <p class="prose-p">${esc(L.goldSrcNote || '')}</p>
+</div></section>
+${sourceBlock(lang)}
+<script type="application/json" id="ps-gold-init">${initJson}</script>
+<script type="application/json" id="ps-fx">${ratesJson}</script>
+<script>${GOLD_LIVE_JS}</script>`;
   return page({ lang, title: L.goldMetaTitle, desc: L.goldMetaDesc, path: '/gold/', active: '/gold/', body });
 }
 

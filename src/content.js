@@ -24,7 +24,7 @@ export const CONTENT = {
   en: {
     common: {
       dataSources: 'Data sources',
-      sourcesBody: 'Brent crude and gold prices are sourced from public market data providers (OilPriceAPI, MetalpriceAPI). China retail fuel prices come from ShowAPI. Rates are collected on a daily schedule and cached on a global edge network.',
+      sourcesBody: 'Brent crude comes from OilPriceAPI. Gold (XAU/USD) is sourced from three independent providers — xaus.com (primary), biquote.io (broker MT5 feed, live) and api.gold-api.com (fallback) — tried in order, twice per cycle; the gold price on this page updates in real time in your browser. China retail fuel prices come from ShowAPI. Reference FX rates come from ExchangeRate-API, with Frankfurter as backup. All figures are indicative reference values, not exchange settlement prices.',
       disclaimerTitle: 'Disclaimer',
       disclaimerBody: 'The prices and rates shown here are reference figures for general information only. They are not exchange settlement prices and must not be used for trading, settlement, accounting or any investment decision. Figures may be delayed and may differ from those quoted by your bank, broker or local retailer.',
       learnMore: 'Learn more',
@@ -119,7 +119,7 @@ export const CONTENT = {
   zh: {
     common: {
       dataSources: '数据来源',
-      sourcesBody: '布伦特原油与黄金价格来自公开市场数据服务商（OilPriceAPI、MetalpriceAPI），中国成品油价格来自 ShowAPI。数据按每日计划采集，并通过全球边缘网络缓存分发。',
+      sourcesBody: '布伦特原油来自 OilPriceAPI。黄金（XAU/USD）来自三个独立数据源 —— xaus.com（主）、biquote.io（券商 MT5 实时报价）、api.gold-api.com（兜底），按序尝试、每轮循环重试两次；页面上的金价在你的浏览器中实时更新。中国成品油价格来自 ShowAPI。参考汇率来自 ExchangeRate-API，备用为 Frankfurter。所有数据均为指示性参考价，非交易所结算价。',
       disclaimerTitle: '免责声明',
       disclaimerBody: '本页所示价格与汇率仅为一般性参考信息，并非交易所结算价，不得用于交易、结算、记账或任何投资决策。数据可能存在延迟，且与你的银行、券商或当地零售商所报价格可能存在差异。',
       learnMore: '了解更多',
@@ -214,7 +214,7 @@ export const CONTENT = {
   ja: {
     common: {
       dataSources: 'データ提供元',
-      sourcesBody: 'ブレント原油と金の価格は公開市場データ提供者（OilPriceAPI、MetalpriceAPI）から、中国の小売燃料価格は ShowAPI から取得しています。データは毎日のスケジュールで収集され、グローバルなエッジネットワークで配信されます。',
+      sourcesBody: 'ブレント原油は OilPriceAPI 由来です。金（XAU/USD）は xaus.com（主）・biquote.io（証券MT5リアルタイム配信）・api.gold-api.com（予備）の3系統から取得し、順に試行して1サイクル2回まで再試行します。ページ上の金価格はブラウザ上でリアルタイムに更新されます。中国の小売燃料価格は ShowAPI、参考レートは ExchangeRate-API（予備 Frankfurter）由来です。すべて指示性の参考値であり、取引所の清算価格ではありません。',
       disclaimerTitle: '免責事項',
       disclaimerBody: '本ページの価格と為替レートは一般的な参考情報であり、取引所の清算価格ではありません。取引、決済、会計、投資判断には使用しないでください。データは遅延する場合があり、銀行や証券会社、地域の販売店が提示する数値と異なることがあります。',
       learnMore: '詳しく見る',
@@ -309,7 +309,7 @@ export const CONTENT = {
   es: {
     common: {
       dataSources: 'Fuentes de datos',
-      sourcesBody: 'Los precios del crudo Brent y del oro provienen de proveedores públicos de datos de mercado (OilPriceAPI, MetalpriceAPI). Los precios minoristas de combustible en China provienen de ShowAPI. Los datos se recopilan según un calendario diario y se distribuyen mediante una red perimetral global.',
+      sourcesBody: 'El crudo Brent proviene de OilPriceAPI. El oro (XAU/USD) se obtiene de tres fuentes independientes: xaus.com (principal), biquote.io (feed MT5, en vivo) y api.gold-api.com (respaldo), probadas en orden con dos reintentos por ciclo; el precio del oro en esta página se actualiza en tiempo real en tu navegador. Los combustibles minoristas de China provienen de ShowAPI. Los tipos de cambio de referencia vienen de ExchangeRate-API, con Frankfurter como respaldo. Todas las cifras son valores indicativos de referencia, no precios de liquidación de bolsa.',
       disclaimerTitle: 'Aviso legal',
       disclaimerBody: 'Los precios y tipos de cambio mostrados son cifras de referencia con fines informativos generales. No son precios de liquidación de bolsa y no deben utilizarse para operar, liquidar, contabilizar ni para ninguna decisión de inversión. Las cifras pueden tener retraso y diferir de las indicadas por su banco, bróker o comercio local.',
       learnMore: 'Más información',
@@ -404,7 +404,7 @@ export const CONTENT = {
   fr: {
     common: {
       dataSources: 'Sources des données',
-      sourcesBody: 'Les prix du brut Brent et de l\'or proviennent de fournisseurs publics de données de marché (OilPriceAPI, MetalpriceAPI). Les prix de détail des carburants en Chine proviennent de ShowAPI. Les données sont collectées selon un calendrier quotidien et diffusées via un réseau périphérique mondial.',
+      sourcesBody: 'Le brut Brent provient d’OilPriceAPI. L’or (XAU/USD) provient de trois sources indépendantes : xaus.com (principale), biquote.io (flux MT5, en direct) et api.gold-api.com (secours), essayées dans l’ordre avec deux tentatives par cycle ; le prix de l’or sur cette page se met à jour en temps réel dans votre navigateur. Les prix des carburants en Chine proviennent de ShowAPI. Les taux de change de référence viennent d’ExchangeRate-API, avec Frankfurter en secours. Toutes les valeurs sont indicatives et ne sont pas des prix de règlement de bourse.',
       disclaimerTitle: 'Avertissement',
       disclaimerBody: 'Les prix et taux affichés sont des valeurs de référence fournies à titre d\'information générale. Il ne s\'agit pas de cours de compensation de bourse et ils ne doivent pas être utilisés pour trader, compenser, comptabiliser ni pour toute décision d\'investissement. Les chiffres peuvent être différés et différer de ceux indiqués par votre banque, votre courtier ou votre détaillant local.',
       learnMore: 'En savoir plus',
@@ -499,7 +499,7 @@ export const CONTENT = {
   de: {
     common: {
       dataSources: 'Datenquellen',
-      sourcesBody: 'Die Preise für Brent-Rohöl und Gold stammen von öffentlichen Marktdatenanbietern (OilPriceAPI, MetalpriceAPI). Die chinesischen Einzelhandelspreise für Kraftstoffe stammen von ShowAPI. Die Daten werden nach einem täglichen Zeitplan erhoben und über ein globales Edge-Netzwerk ausgeliefert.',
+      sourcesBody: 'Brent-Rohöl stammt von OilPriceAPI. Gold (XAU/USD) kommt von drei unabhängigen Quellen: xaus.com (primär), biquote.io (MT5-Feed, live) und api.gold-api.com (Rückfall), der Reihe nach getestet mit zwei Versuchen pro Zyklus; der Goldpreis auf dieser Seite aktualisiert sich in Echtzeit in Ihrem Browser. Chinas Einzelhandels-Kraftstoffpreise stammen von ShowAPI. Referenzkurse kommen von ExchangeRate-API, mit Frankfurter als Reserve. Alle Werte sind indikative Referenzwerte, keine Börsenabrechnungspreise.',
       disclaimerTitle: 'Haftungsausschluss',
       disclaimerBody: 'Die hier gezeigten Preise und Kurse sind Referenzwerte für allgemeine Informationszwecke. Es handelt sich nicht um Börsenabrechnungspreise; sie dürfen nicht für Handel, Abrechnung, Buchhaltung oder irgendwelche Anlageentscheidungen verwendet werden. Die Werte können verzögert sein und von den Angaben Ihrer Bank, Ihres Brokers oder des lokalen Händlers abweichen.',
       learnMore: 'Mehr erfahren',
@@ -594,7 +594,7 @@ export const CONTENT = {
   pt: {
     common: {
       dataSources: 'Fontes dos dados',
-      sourcesBody: 'Os preços do petróleo Brent e do ouro vêm de fornecedores públicos de dados de mercado (OilPriceAPI, MetalpriceAPI). Os preços de varejo de combustíveis na China vêm da ShowAPI. Os dados são coletados em cronograma diário e distribuídos por uma rede de borda global.',
+      sourcesBody: 'O Brent vem da OilPriceAPI. O ouro (XAU/USD) vem de três fontes independentes: xaus.com (principal), biquote.io (feed MT5, ao vivo) e api.gold-api.com (reserva), testadas em ordem com duas tentativas por ciclo; o preço do ouro nesta página atualiza em tempo real no seu navegador. Os combustíveis no varejo da China vêm da ShowAPI. As taxas de câmbio de referência vêm da ExchangeRate-API, com Frankfurter como reserva. Todos os valores são indicativos de referência, não preços de liquidação de bolsa.',
       disclaimerTitle: 'Aviso legal',
       disclaimerBody: 'Os preços e taxas exibidos são valores de referência para fins informativos gerais. Não são preços de liquidação de bolsa e não devem ser usados para negociar, liquidar, contabilizar ou para qualquer decisão de investimento. Os valores podem estar defasados e divergir dos informados pelo seu banco, corretora ou revendedor local.',
       learnMore: 'Saiba mais',

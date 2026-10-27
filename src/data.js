@@ -33,7 +33,7 @@ const SOURCE_ACCESS_KEY = 'lfwczh8pa4atakrpj7uwhybo2vexc76u';
 // current. The ECB/Frankfurter feed publishes on business days only, which was
 // why the site kept showing a stale Friday date throughout the weekend.
 export const FX_ENDPOINT = 'https://open.er-api.com/v6/latest/USD';
-export const FX_FALLBACK = 'https://api.frankfurter.app/latest?base=USD';
+export const FX_FALLBACK = 'https://api.frankfurter.dev/v1/latest?base=USD';
 
 // ============================================================
 // Daily refresh schedule (Asia/Shanghai = UTC+8)
@@ -386,4 +386,35 @@ export function rateOf(from, to, fx) {
 export function fmt(n, dp = 2) {
   if (n == null || Number.isNaN(n)) return '—';
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+}
+
+// ============================================================
+// ★ A22：黄金现抓代理（/api/gold-live）
+// ------------------------------------------------------------
+// 前端那条实时链路（直连 biquote）全部失败时的最后一条路：
+// 让 3 号【现在】去源站抓一个新价，而不是把 KV 里的旧值给它。
+//
+// ⚠️ 为什么要走 2 号 Worker 转发，而不是前端直接调 3 号：
+//    3 号是私有后端，调用要带 ACCESS_KEY。
+//    密钥一旦写进前端 JS，就等于公开在页面源码里 —— 绝对不行。
+//    所以由 2 号服务端带密钥去问，前端只调自己域名的 /api/gold-live。
+//    附带好处：同源请求，没有 CORS 问题。
+// ============================================================
+export const GOLD_LIVE_UPSTREAM = 'https://ss.wwok.eu.cc/gold/live';
+
+export async function fetchGoldLive() {
+  try {
+    const res = await fetch(GOLD_LIVE_UPSTREAM, {
+      headers: {
+        'User-Agent': 'PriceScope/1.0 (+https://you.piccalc.com)',
+        'Accept': 'application/json',
+        'X-Access-Key': SOURCE_ACCESS_KEY,
+      },
+      cf: { cacheTtl: 0 },        // 现抓就是要新，一层缓存都不能有
+    });
+    if (!res.ok) return { ok: false, error: `Upstream ${res.status}` };
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
 }

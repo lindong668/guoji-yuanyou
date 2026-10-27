@@ -213,6 +213,24 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card:hover .go{transform:translateX(3px)}
 .card.gold{--c:rgba(245,179,1,.2)} .card.oil{--c:rgba(255,122,69,.2)}
 .card.cn{--c:rgba(34,211,238,.2)}  .card.fx{--c:rgba(167,139,250,.2)}
+
+/* ---------- ★ A22 黄金实时页 ---------- */
+/* 断线时：数字变灰 + 降透明度。不隐藏、不编造 —— 用户一眼看得出"这不是最新的"。 */
+.card.is-stale .big{opacity:.42;filter:grayscale(1)}
+.card.is-stale{border-color:rgba(255,255,255,.05)}
+.live-dot{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-weight:600}
+.live-dot::before{content:"";width:7px;height:7px;border-radius:50%;
+  background:var(--ok);animation:psPulse 2s ease-in-out infinite}
+.live-dot.is-lost{color:var(--dim);font-weight:500}
+.live-dot.is-lost::before{background:var(--dim);animation:none}
+@keyframes psPulse{0%,100%{opacity:1}50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.live-dot::before{animation:none}}
+#g-cur{background:var(--card2);color:var(--txt);border:1px solid var(--line);
+  border-radius:8px;padding:4px 7px;font:inherit;font-size:.8rem;
+  max-width:150px;vertical-align:middle}
+#g-cur:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+.src-note{margin:16px 0 0;font-size:.82rem;color:var(--dim);line-height:1.75;
+  border-left:2px solid var(--gold);padding-left:12px}
 /* ---- article cards & blog chrome ---- */
 .artgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .card.art{--c:rgba(255,255,255,.07);display:flex;flex-direction:column;gap:2px}

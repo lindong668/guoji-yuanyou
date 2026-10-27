@@ -39,6 +39,7 @@ export const T = {
 
     price: 'Price', updatedAt: 'Updated', dataSource: 'Data source', unitBarrel: 'USD / barrel',
     goldUsd: 'Gold (USD / troy ounce)', goldCny: 'Gold (CNY / gram)',
+    goldLocalTitle: 'Gold in your currency', goldLiveTag: 'Live', goldConnLost: 'Connection lost — retrying', goldStaleTag: 'Delayed', goldUpdatedAgo: 'Updated {n} ago', goldNotAdvice: 'Reference only — not investment advice.', goldSrcNote: 'International gold (XAU/USD) updates in real time from biquote.io (broker MT5 feed). Backup chain: xaus.com → biquote.io → api.gold-api.com, retried twice. Gram prices are calculated on this page at 1 troy oz = 31.1034768 g using reference FX rates — they are not exchange-quoted prices.',
     cnNote: 'Provincial maximum retail prices, revised roughly every 10 working days.',
     thProvince: 'Province / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regions covered',
@@ -127,6 +128,7 @@ export const T = {
 
     price: '价格', updatedAt: '更新时间', dataSource: '数据来源', unitBarrel: '美元 / 桶',
     goldUsd: '黄金（美元 / 金衡盎司）', goldCny: '黄金（人民币 / 克）',
+    goldLocalTitle: '按你的币种换算', goldLiveTag: '实时', goldConnLost: '连接中断，正在重试', goldStaleTag: '延迟', goldUpdatedAgo: '{n}前更新', goldNotAdvice: '仅供参考，不构成投资建议。', goldSrcNote: '国际金价（XAU/USD）由 biquote.io（券商 MT5 报价）实时更新；备用链路 xaus.com → biquote.io → api.gold-api.com，失败后循环重试两轮。克价由本页按 1 金衡盎司 = 31.1034768 克自行换算，汇率取参考中间价，非交易所报价。',
     cnNote: '各省最高零售限价，约每 10 个工作日调整一次。',
     thProvince: '省份 / 地区', th92: '92#', th95: '95#', th98: '98#', th0: '0# 柴油',
     provincesCount: '个地区',
@@ -215,6 +217,7 @@ export const T = {
 
     price: '価格', updatedAt: '更新', dataSource: 'データ源', unitBarrel: 'USD / バレル',
     goldUsd: '金（USD / トロイオンス）', goldCny: '金（CNY / グラム）',
+    goldLocalTitle: 'お好みの通貨で換算', goldLiveTag: 'リアルタイム', goldConnLost: '接続が切断されました — 再試行中', goldStaleTag: '遅延', goldUpdatedAgo: '{n}前に更新', goldNotAdvice: '参考値であり、投資助言ではありません。', goldSrcNote: '国際金価格（XAU/USD）は biquote.io（証券MT5配信）からリアルタイム更新。予備経路：xaus.com → biquote.io → api.gold-api.com（2回まで再試行）。グラム価格は1トロイオンス=31.1034768gで本ページが換算したもので、取引所価格ではありません。',
     cnNote: '地域別の小売最高価格。概ね10営業日ごとに改定されます。',
     thProvince: '省・地域', th92: '92#', th95: '95#', th98: '98#', th0: '0# 軽油',
     provincesCount: '地域',
@@ -303,6 +306,7 @@ export const T = {
 
     price: 'Precio', updatedAt: 'Actualizado', dataSource: 'Fuente', unitBarrel: 'USD / barril',
     goldUsd: 'Oro (USD / onza troy)', goldCny: 'Oro (CNY / gramo)',
+    goldLocalTitle: 'Oro en tu moneda', goldLiveTag: 'En vivo', goldConnLost: 'Conexión perdida — reintentando', goldStaleTag: 'Retrasado', goldUpdatedAgo: 'Actualizado hace {n}', goldNotAdvice: 'Solo referencia — no es asesoramiento de inversión.', goldSrcNote: 'El oro internacional (XAU/USD) se actualiza en tiempo real desde biquote.io (feed MT5). Cadena de respaldo: xaus.com → biquote.io → api.gold-api.com, con dos reintentos. Los precios por gramo se calculan en esta página (1 oz troy = 31,1034768 g) con tipos de cambio de referencia; no son precios cotizados en bolsa.',
     cnNote: 'Precios minoristas máximos por provincia, revisados aproximadamente cada 10 días hábiles.',
     thProvince: 'Provincia / Región', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diésel',
     provincesCount: 'regiones',
@@ -391,6 +395,7 @@ export const T = {
 
     price: 'Prix', updatedAt: 'Mis à jour', dataSource: 'Source', unitBarrel: 'USD / baril',
     goldUsd: 'Or (USD / once troy)', goldCny: 'Or (CNY / gramme)',
+    goldLocalTitle: 'Or dans votre devise', goldLiveTag: 'En direct', goldConnLost: 'Connexion perdue — nouvelle tentative', goldStaleTag: 'Différé', goldUpdatedAgo: 'Mis à jour il y a {n}', goldNotAdvice: 'Indicatif uniquement — ne constitue pas un conseil en investissement.', goldSrcNote: "L'or international (XAU/USD) est mis à jour en temps réel depuis biquote.io (flux MT5). Chaîne de secours : xaus.com → biquote.io → api.gold-api.com, avec deux tentatives. Les prix au gramme sont calculés sur cette page (1 once troy = 31,1034768 g) à partir de taux de change de référence ; ce ne sont pas des prix cotés en bourse.",
     cnNote: 'Prix de détail maximaux provinciaux, révisés environ tous les 10 jours ouvrés.',
     thProvince: 'Province / Région', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'régions',
@@ -479,6 +484,7 @@ export const T = {
 
     price: 'Preis', updatedAt: 'Aktualisiert', dataSource: 'Quelle', unitBarrel: 'USD / Barrel',
     goldUsd: 'Gold (USD / Feinunze)', goldCny: 'Gold (CNY / Gramm)',
+    goldLocalTitle: 'Gold in Ihrer Währung', goldLiveTag: 'Live', goldConnLost: 'Verbindung unterbrochen — erneuter Versuch', goldStaleTag: 'Verzögert', goldUpdatedAgo: 'Aktualisiert vor {n}', goldNotAdvice: 'Nur Referenz — keine Anlageberatung.', goldSrcNote: 'Internationales Gold (XAU/USD) wird in Echtzeit von biquote.io (MT5-Feed) aktualisiert. Kette: xaus.com → biquote.io → api.gold-api.com, mit zwei Wiederholungen. Grammpreise werden auf dieser Seite berechnet (1 Feinunze = 31,1034768 g) mit Referenzkursen; es sind keine Börsenpreise.',
     cnNote: 'Provinziale Höchst-Einzelhandelspreise, etwa alle 10 Werktage angepasst.',
     thProvince: 'Provinz / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'Regionen',
@@ -567,6 +573,7 @@ export const T = {
 
     price: 'Preço', updatedAt: 'Atualizado', dataSource: 'Fonte', unitBarrel: 'USD / barril',
     goldUsd: 'Ouro (USD / onça troy)', goldCny: 'Ouro (CNY / grama)',
+    goldLocalTitle: 'Ouro na sua moeda', goldLiveTag: 'Ao vivo', goldConnLost: 'Conexão perdida — tentando novamente', goldStaleTag: 'Atrasado', goldUpdatedAgo: 'Atualizado há {n}', goldNotAdvice: 'Apenas referência — não é aconselhamento de investimento.', goldSrcNote: 'Ouro internacional (XAU/USD) atualizado em tempo real via biquote.io (feed MT5). Cadeia: xaus.com → biquote.io → api.gold-api.com, com duas tentativas. Preços por grama calculados nesta página (1 onça troy = 31,1034768 g) com taxas de câmbio de referência; não são preços de bolsa.',
     cnNote: 'Preços máximos de varejo por província, revisados aproximadamente a cada 10 dias úteis.',
     thProvince: 'Província / Região', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regiões',

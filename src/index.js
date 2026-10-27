@@ -4,7 +4,7 @@
 // Data source:   https://ss.wwok.eu.cc/data  (your existing Worker)
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
-import { getMarket, getFx } from './data.js';
+import { getMarket, getFx, fetchGoldLive } from './data.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
@@ -187,6 +187,14 @@ Sitemap: ${SITE.domain}/sitemap.xml
       return Response.json(m, { headers: { 'cache-control': 'public, max-age=300' } });
     }
 
+    /* ★ A22：黄金现抓代理
+     * 前端实时链路全挂时调用。密钥只在服务端出现，前端页面源码里没有。
+     * 同源（/api/...），因此没有 CORS 问题。 */
+    if (url.pathname === '/api/gold-live') {
+      const r = await fetchGoldLive();
+      return Response.json(r, { headers: { 'cache-control': 'no-store' } });
+    }
+
     // ---------- language-scoped routes ----------
     let lang = (seg[0] || '').toLowerCase();
     if (!LANGS.includes(lang)) {
@@ -262,7 +270,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
       case '/':            return render((l, a, z) => renderHome(l, a.m, a.fx, z), true, true);
       case '/oil/':        return render((l, a, z) => renderOil(l, a.m, z), true, false);
       case '/wti/':        return render((l, a, z) => renderWti(l, a.m, z), true, false);
-      case '/gold/':       return render((l, a, z) => renderGold(l, a.m, z), true, false);
+      case '/gold/':       return render((l, a, z) => renderGold(l, a.m, a.fx, z), true, true);
       case '/china-fuel/': return render((l, a, z) => renderCn(l, a.m, z), true, false);
       case '/currency/':   return render((l, a, z) => renderFx(l, a.fx, z), false, true);
       case '/blog/':       return render((l) => renderBlogList(l), false, false);
