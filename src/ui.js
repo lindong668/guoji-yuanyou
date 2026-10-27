@@ -544,7 +544,12 @@ document.addEventListener('click',function(e){
   // page rendered in the OLD language — can be re-pointed at this language.
   // Without this, going Back silently reverted to the original language.
   var mm = href.match(/^\/([a-z]{2})(\/|$)/);
-  if (mm) { try { localStorage.setItem('ps_lang', mm[1]); } catch(e){} }
+  if (mm) {
+    try {
+      localStorage.setItem('ps_lang', mm[1]);          // 长期偏好
+      sessionStorage.setItem('ps_lang_sw', '1');       // 本次访问内手动切过
+    } catch(e) {}
+  }
   try { location.replace(href); } catch(err) { location.href = href; }
 });
 // Re-render every timestamp in the BROWSER's own timezone + interface locale.
@@ -602,21 +607,34 @@ document.addEventListener('click',function(e){
   // both cases so timestamps always match the browser's current zone.
   window.addEventListener('pageshow',all);
 
-  // Language preference: if the visitor picked a language earlier, honour it
-  // on every page — including the one we land on with the Back button (which
-  // was rendered in the previous language before the switch happened).
-  (function(){
+  // Language preference. The Back button lands on the PREVIOUS history entry,
+  // which was rendered in the OLD language — and when it comes back from the
+  // browser's back/forward cache the scripts are NOT re-run at all. So this
+  // has to be a named function invoked both now and on every pageshow,
+  // otherwise the remembered language silently reverts.
+  var LANGS7={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
+  function applyLangPref(){
     try{
-      var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
       var want=localStorage.getItem('ps_lang');
-      if(!want||!OK[want]) return;
+      if(!want||!LANGS7[want]) return;
       var cur=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
-      if(want===cur) return;
-      var m=location.pathname.match(/^\/([a-z]{2})(\/.*)?$/);
-      if(!m||!OK[m[1]]) return;
-      location.replace('/'+want+(m[2]||'/')+location.search+location.hash);
+      if(want===cur) return;                       // 已经对上了，不折腾
+      var p=location.pathname;
+      var m=p.match(/^\/([a-z]{2})(\/.*)?$/);
+      if(m&&LANGS7[m[1]]){                          // /zh/gold/ -> /en/gold/
+        location.replace('/'+want+(m[2]||'/')+location.search+location.hash);
+        return;
+      }
+      // Bare domain: English is the site's primary language, so only follow
+      // the remembered choice if it was picked during THIS visit — otherwise
+      // we would permanently hijack the English front door.
+      if(p==='/'&&sessionStorage.getItem('ps_lang_sw')){
+        location.replace('/'+want+'/'+location.search+location.hash);
+      }
     }catch(e){}
-  })();
+  }
+  applyLangPref();
+  window.addEventListener('pageshow',applyLangPref);
 
   // Home card: show the per-gram figure in the currency the visitor last
   // chose on the gold page. Server has already rendered USD/gram (the site
