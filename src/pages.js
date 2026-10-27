@@ -1,7 +1,7 @@
 // ============================================================
 // PriceScope — Page renderers (SSR, so crawlers read real numbers)
 // ============================================================
-import { t, provName, LANGS, SITE } from './i18n.js';
+import { t, provName, LANGS, SITE, DEFAULT_LANG } from './i18n.js';
 import { page, hero, esc, adSlot } from './ui.js';
 import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
 import { curName } from './i18n.js';
@@ -90,7 +90,9 @@ const GOLD_LIVE_JS = `
     if(usdOz==null) return;
     elUsd.textContent='$'+num(usdOz);
     elConv.textContent=money(usdOz/OZ*rate(cur));
-    elRate.textContent='1 USD = '+num(rate(cur))+' '+cur+' \u00b7 1 oz = 31.1034768 g';
+    var uo=elRate.getAttribute('data-uo')||'troy oz';
+    var ug=elRate.getAttribute('data-ug')||'gram';
+    elRate.textContent='1 USD = '+num(rate(cur))+' '+cur+' \u00b7 1 '+uo+' = 31.1034768 '+ug;
   }
   function agoTxt(){
     if(!lastOk) return '';
@@ -545,7 +547,7 @@ export function renderHome(lang, m, fx, tz) {
       <h3><span class="swatch"></span>${esc(L.secGold)}<span class="live-chip">● ${esc(L.goldLiveTag)}</span></h3>
       <div class="big">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
-      <div class="meta"><span id="home-gold-gram"${goldUsd != null ? ' data-usdoz="' + goldUsd + '"' : ''}>${goldUsd != null ? '$' + fmt(goldUsd / TROY_OZ) + ' / gram' : ''}</span>
+      <div class="meta"><span id="home-gold-gram" data-ug="${esc(L.goldUnitGram || 'gram')}"${goldUsd != null ? ' data-usdoz="' + goldUsd + '"' : ''}>${goldUsd != null ? '$' + fmt(goldUsd / TROY_OZ) + ' / ' + esc(L.goldUnitGram || 'gram') : ''}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card cn" href="/${lang}/china-fuel/">
@@ -669,6 +671,10 @@ export function renderGold(lang, m, fx, tz) {
     .replace(/</g, '\\u003c');
   const ratesJson = JSON.stringify(rates || {}).replace(/</g, '\\u003c');
 
+  /* 单位跟随界面语言：切到中文显示「金衡盎司 / 克」，日文显示「トロイオンス / グラム」。 */
+  const UOZ = L.goldUnitOz || 'troy oz';
+  const UG  = L.goldUnitGram || 'gram';
+
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">🥇</span>${esc(L.goldTitle)}</h2>
   <p class="sub">${esc(marketNote(lang, tz))}</p>
@@ -676,7 +682,7 @@ export function renderGold(lang, m, fx, tz) {
     <div class="card gold" id="g-intl">
       <h3><span class="swatch"></span>${esc(L.goldUsd)}</h3>
       <div class="big" id="g-usd">${initUsd != null ? '$' + fmt(initUsd) : '—'}</div>
-      <div class="unit">USD / troy oz</div>
+      <div class="unit">USD / ${esc(UOZ)}</div>
       <div class="meta"><span id="g-status" class="live-dot"
         data-live="${esc(L.goldLiveTag)}" data-lost="${esc(L.goldConnLost)}"
         data-ago="${esc(L.goldUpdatedAgo)}">${esc(L.goldLiveTag)}</span></div>
@@ -684,8 +690,8 @@ export function renderGold(lang, m, fx, tz) {
     <div class="card gold" id="g-local">
       <h3><span class="swatch"></span>${esc(L.goldLocalTitle)}</h3>
       <div class="big" id="g-conv">${initGram != null ? '$' + fmt(initGram) : '—'}</div>
-      <div class="unit"><select id="g-cur" aria-label="${esc(L.goldLocalTitle)}"></select> / gram</div>
-      <div class="meta"><span id="g-rate">${rates ? esc('1 USD = ' + (rates.CNH || rates.CNY || '—') + ' CNH · 1 oz = 31.1034768 g' + (fxDate ? ' · FX ' + fxDate : '')) : ''}</span></div>
+      <div class="unit"><select id="g-cur" aria-label="${esc(L.goldLocalTitle)}"></select> / ${esc(UG)}</div>
+      <div class="meta"><span id="g-rate" data-uo="${esc(UOZ)}" data-ug="${esc(UG)}">${rates ? esc('1 USD = ' + (rates.CNH || rates.CNY || '—') + ' CNH · 1 ' + UOZ + ' = 31.1034768 ' + UG + (fxDate ? ' · FX ' + fxDate : '')) : ''}</span></div>
     </div>
   </div>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.goldSrcShort || '')}<br><strong>${esc(L.goldNotAdvice)}</strong></p>
@@ -930,11 +936,16 @@ export function sitemap() {
   for (const p of paths) {
     for (const l of LANGS) {
       const loc = `${D}/${l}${p}`;
+      // English is the primary language, so its URLs carry the higher
+      // priority and own the x-default fallback.
+      const isEn = (l === DEFAULT_LANG);
       const alts = LANGS.map(x =>
-        `<xhtml:link rel="alternate" hreflang="${x}" href="${D}/${x}${p}"/>`).join('');
+        `<xhtml:link rel="alternate" hreflang="${x}" href="${D}/${x}${p}"/>`).join('')
+        + `<xhtml:link rel="alternate" hreflang="x-default" href="${D}/en${p}"/>`;
+      const pr = p === '/' ? (isEn ? '1.0' : '0.8') : (isEn ? '0.8' : '0.6');
       urls.push(`<url><loc>${loc}</loc><lastmod>${today}</lastmod>
     <changefreq>${p === '/' ? 'hourly' : 'daily'}</changefreq>
-    <priority>${p === '/' ? '1.0' : '0.8'}</priority>${alts}</url>`);
+    <priority>${pr}</priority>${alts}</url>`);
     }
   }
   // ------------------------------------------------------------

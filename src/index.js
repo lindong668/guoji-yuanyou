@@ -167,15 +167,16 @@ Sitemap: ${SITE.domain}/sitemap.xml
     // Google consolidates ranking on the language URL — no duplicate content,
     // no redirect for the crawler to trip over.
     if (seg.length === 0) {
-      const langR = detectLang(request.headers.get('Accept-Language'));
+      // English is the site's primary language: the bare domain is the
+      // English door. Auto-detection still applies everywhere else —
+      // an unknown language segment is resolved from Accept-Language below.
+      const langR = DEFAULT_LANG;
       const [mR, fxR] = await Promise.all([getMarket(), getFx()]);
       const html = renderHome(langR, mR, fxR, tz);
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
           'cache-control': 'private, max-age=0, must-revalidate',
-          // Content varies by Accept-Language, so caches must key on it.
-          'vary': 'Accept-Language',
           'x-content-type-options': 'nosniff',
         },
       });

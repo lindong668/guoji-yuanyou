@@ -540,6 +540,11 @@ document.addEventListener('click',function(e){
   var href = el.getAttribute('href');
   if(!href) return;
   e.preventDefault();
+  // Remember the choice so that pressing Back — which lands on the previous
+  // page rendered in the OLD language — can be re-pointed at this language.
+  // Without this, going Back silently reverted to the original language.
+  var mm = href.match(/^\/([a-z]{2})(\/|$)/);
+  if (mm) { try { localStorage.setItem('ps_lang', mm[1]); } catch(e){} }
   try { location.replace(href); } catch(err) { location.href = href; }
 });
 // Re-render every timestamp in the BROWSER's own timezone + interface locale.
@@ -597,6 +602,22 @@ document.addEventListener('click',function(e){
   // both cases so timestamps always match the browser's current zone.
   window.addEventListener('pageshow',all);
 
+  // Language preference: if the visitor picked a language earlier, honour it
+  // on every page — including the one we land on with the Back button (which
+  // was rendered in the previous language before the switch happened).
+  (function(){
+    try{
+      var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
+      var want=localStorage.getItem('ps_lang');
+      if(!want||!OK[want]) return;
+      var cur=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
+      if(want===cur) return;
+      var m=location.pathname.match(/^\/([a-z]{2})(\/.*)?$/);
+      if(!m||!OK[m[1]]) return;
+      location.replace('/'+want+(m[2]||'/')+location.search+location.hash);
+    }catch(e){}
+  })();
+
   // Home card: show the per-gram figure in the currency the visitor last
   // chose on the gold page. Server has already rendered USD/gram (the site
   // default); this only re-labels it, so there is no blank state.
@@ -618,7 +639,7 @@ document.addEventListener('click',function(e){
       txt=new Intl.NumberFormat(loc,{style:'currency',currency:cur,
         maximumFractionDigits:(v<10?3:2)}).format(v);
     }catch(e){ txt=cur+' '+v.toFixed(2); }
-    el.textContent=txt+' / gram';
+    el.textContent=txt+' / '+(el.getAttribute('data-ug')||'gram');
   })();
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='visible') all();
