@@ -82,6 +82,20 @@ export default {
      *
      * 所以这里写死真实 pub ID，且与广告位开关解耦 ——
      * ads.txt 立即生效，广告位仍等批准后由 ADSENSE_CLIENT 控制开启。 */
+    /* Bing 站点所有权 XML 验证。
+     * 本包同时也在 public/ 根目录放了同名静态文件（assets 优先命中）；
+     * 这里再加一层 Worker 兜底，确保任何情况下都能返回。 */
+    if (url.pathname === '/BingSiteAuth.xml') {
+      return new Response(
+        `<?xml version="1.0"?>
+<users>
+\t<user>922DCA6E549674B12068F412FE444631</user>
+</users>
+`,
+        { headers: { 'content-type': 'application/xml; charset=utf-8' } }
+      );
+    }
+
     if (url.pathname === '/ads.txt') {
       const pub = adsTxtPublisher() || 'pub-8915931557404979';
       const body = `google.com, ${pub}, DIRECT, f08c47fec0942fa0\n`;
@@ -102,6 +116,30 @@ export default {
     // ---------- robots.txt ----------
     if (url.pathname === '/robots.txt') {
       const body = `User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+# Applebot：支撑 Spotlight / Siri / Safari 搜索
+# （若 robots 未提 Applebot，它会沿用 Googlebot 的规则；显式声明更稳妥）
+User-agent: Applebot
+Allow: /
+
+# AI 搜索爬虫：允许抓取，让内容可被 AI 回答引用
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
 Allow: /
 
 User-agent: *
