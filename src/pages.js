@@ -545,7 +545,7 @@ export function renderHome(lang, m, fx, tz) {
       <h3><span class="swatch"></span>${esc(L.secGold)}<span class="live-chip">● ${esc(L.goldLiveTag)}</span></h3>
       <div class="big">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
-      <div class="meta"><span>${goldCny != null ? '¥' + fmt(goldCny) + ' / gram' : ''}</span>
+      <div class="meta"><span id="home-gold-gram"${goldUsd != null ? ' data-usdoz="' + goldUsd + '"' : ''}>${goldUsd != null ? '$' + fmt(goldUsd / TROY_OZ) + ' / gram' : ''}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card cn" href="/${lang}/china-fuel/">
@@ -565,6 +565,7 @@ export function renderHome(lang, m, fx, tz) {
   </div>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.goldSrcShort || '')}</p>
   ${adSlot('home')}
+<script type="application/json" id="ps-home-fx">${JSON.stringify((fx && fx.rates) || {}).replace(/</g, '\\u003c')}</script>
 </div></section>`;
 
   const fp = contentFor(lang, 'faqPage');

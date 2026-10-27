@@ -596,6 +596,30 @@ document.addEventListener('click',function(e){
   // and returning to a background tab may skip a re-render too — re-run in
   // both cases so timestamps always match the browser's current zone.
   window.addEventListener('pageshow',all);
+
+  // Home card: show the per-gram figure in the currency the visitor last
+  // chose on the gold page. Server has already rendered USD/gram (the site
+  // default); this only re-labels it, so there is no blank state.
+  (function(){
+    var el=document.getElementById('home-gold-gram');
+    if(!el) return;
+    var usdOz=parseFloat(el.getAttribute('data-usdoz'));
+    if(!isFinite(usdOz)) return;
+    var R={};
+    try{ R=JSON.parse(document.getElementById('ps-home-fx').textContent)||{}; }catch(e){ R={}; }
+    var cur='USD';
+    try{ var sv=localStorage.getItem('ps_gold_cur'); if(sv&&(sv==='USD'||R[sv])) cur=sv; }catch(e){}
+    var r=(cur==='USD')?1:(R[cur]||0);
+    if(!r) return;                      // 没有这个币种的汇率就保持服务器渲染的美元
+    var v=usdOz/31.1034768*r;
+    var loc=document.documentElement.lang||'en';
+    var txt;
+    try{
+      txt=new Intl.NumberFormat(loc,{style:'currency',currency:cur,
+        maximumFractionDigits:(v<10?3:2)}).format(v);
+    }catch(e){ txt=cur+' '+v.toFixed(2); }
+    el.textContent=txt+' / gram';
+  })();
   document.addEventListener('visibilitychange',function(){
     if(document.visibilityState==='visible') all();
   });
