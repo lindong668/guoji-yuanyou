@@ -222,17 +222,21 @@ Sitemap: ${SITE.domain}/sitemap.xml
       return Response.redirect(`${SITE.domain}/${l}/`, 302);
     }
 
-    /* ★ A22g：URL 语言与访客选过的语言不一致时，302 到他选的那个。
-     * 只在这一浏览器真的存过 ps_lang 时才发生；没有 cookie（新访客、爬虫）
-     * 走原路径，分享出去的 /zh/gold/ 链接在别人那里照旧是中文。
-     * 302 会替换掉历史里这一条，所以按返回落回来时就是这个语言，
-     * 再按一次返回即离开本站 —— 不会出现"一层层退语言"的情况。 */
-    if (langCookie && langCookie !== lang) {
-      const rest = '/' + seg.slice(1).join('/');
-      // 目标必须自带尾斜杠，否则会再触发一次 canonical 301 才落地。
-      const tail = (rest.endsWith('/') ? rest : rest + '/') + url.search;
-      return Response.redirect(`${SITE.domain}/${langCookie}${tail}`, 302);
-    }
+    /* ★★ A22h：语言以 cookie 为准，【原地 200 渲染，不做任何跳转】。
+     *
+     * A22g 在这里用的是 302 跳到 cookie 语言。问题在于：按返回键落到历史
+     * 里的上一条（比如 /es/gold/）时，服务端把它 302 回cookie 语言
+     * （/de/gold/）—— 用户看到"闪一下，又回到刚才那个页面"，
+     * 再按返回还是同样的结果，等于被困住，永远回不到首页。
+     * 历史条目一旦生成就无法改写，重定向只会把人弹回来。
+     *
+     * 正确做法：不跟历史较劲。URL 的语言段落照旧解析（爬虫、被分享的
+     * 链接全部按 URL 走，行为一字不变），但对【带 cookie 的真人访客】
+     * 直接按他选过的语言渲染内容，200 原地返回：
+     *   · 没有跳转 → 不闪、不被弹回、不会被困住
+     *   · no-store 已禁用 bfcache → 按返回必重新请求 → 拿到正确语言
+     * 爬虫从不带 cookie，因此 canonical / hreflang / SEO 完全不受影响。 */
+    if (langCookie && langCookie !== lang) lang = langCookie;
 
     // ---------- legacy dated URLs -> 301 to the current, undated form ----------
     // An earlier build appended a date segment to every URL

@@ -546,12 +546,9 @@ document.addEventListener('click',function(e){
   var mm = href.match(/^\/([a-z]{2})(\/|$)/);
   if (mm) {
     try {
-      // cookie 是主通道：它随请求头自动回传服务端，服务端据此直接渲染
-      // 正确语言 —— 按返回键时即便页面从 bfcache 恢复也不受影响。
-      // localStorage 只是无 cookie 环境（部分无痕模式）下的兜底。
+      // cookie 随请求头自动回传服务端，服务端据此直接渲染正确语言，
+      // 不依赖 JS 是否执行。不用 SameSite=Strict（会导致某些跨页首跳丢 cookie）。
       document.cookie = 'ps_lang=' + mm[1] + '; path=/; max-age=31536000; samesite=lax';
-      localStorage.setItem('ps_lang', mm[1]);
-      sessionStorage.setItem('ps_lang_sw', '1');
     } catch(e) {}
   }
   try { location.replace(href); } catch(err) { location.href = href; }
@@ -611,34 +608,17 @@ document.addEventListener('click',function(e){
   // both cases so timestamps always match the browser's current zone.
   window.addEventListener('pageshow',all);
 
-  // Language preference. The Back button lands on the PREVIOUS history entry,
-  // which was rendered in the OLD language — and when it comes back from the
-  // browser's back/forward cache the scripts are NOT re-run at all. So this
-  // has to be a named function invoked both now and on every pageshow,
-  // otherwise the remembered language silently reverts.
-  var LANGS7={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
-  function applyLangPref(){
-    try{
-      var want=localStorage.getItem('ps_lang');
-      if(!want||!LANGS7[want]) return;
-      var cur=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
-      if(want===cur) return;                       // 已经对上了，不折腾
-      var p=location.pathname;
-      var m=p.match(/^\/([a-z]{2})(\/.*)?$/);
-      if(m&&LANGS7[m[1]]){                          // /zh/gold/ -> /en/gold/
-        location.replace('/'+want+(m[2]||'/')+location.search+location.hash);
-        return;
-      }
-      // Bare domain: English is the site's primary language, so only follow
-      // the remembered choice if it was picked during THIS visit — otherwise
-      // we would permanently hijack the English front door.
-      if(p==='/'&&sessionStorage.getItem('ps_lang_sw')){
-        location.replace('/'+want+'/'+location.search+location.hash);
-      }
-    }catch(e){}
-  }
-  applyLangPref();
-  window.addEventListener('pageshow',applyLangPref);
+  /* ★★ A22h：这里原有的"客户端语言纠正"已删除。
+   *
+   * 它会在页面渲染完成后比对 localStorage 与当前语言，不一致就
+   * location.replace 过去 —— 这正是用户看到的"闪一下"：
+   * 旧语言页面先画出来，紧接着被整页替换成新语言。
+   * 而它依赖 localStorage 与 JS 执行，按返回键从 bfcache 恢复时
+   * 根本不会运行，所以既造成闪烁、又没真正解决问题。
+   *
+   * 现在语言由【服务端】读 cookie 决定后 200 原地渲染（见 index.js），
+   * 配合 no-store 禁用 bfcache：按返回必定重新请求，直接拿到正确语言。
+   * 前端不再做任何跳转 —— 无闪烁、无二次加载。 */
 
   // Home card: show the per-gram figure in the currency the visitor last
   // chose on the gold page. Server has already rendered USD/gram (the site
