@@ -546,8 +546,12 @@ document.addEventListener('click',function(e){
   var mm = href.match(/^\/([a-z]{2})(\/|$)/);
   if (mm) {
     try {
-      localStorage.setItem('ps_lang', mm[1]);          // 长期偏好
-      sessionStorage.setItem('ps_lang_sw', '1');       // 本次访问内手动切过
+      // cookie 是主通道：它随请求头自动回传服务端，服务端据此直接渲染
+      // 正确语言 —— 按返回键时即便页面从 bfcache 恢复也不受影响。
+      // localStorage 只是无 cookie 环境（部分无痕模式）下的兜底。
+      document.cookie = 'ps_lang=' + mm[1] + '; path=/; max-age=31536000; samesite=lax';
+      localStorage.setItem('ps_lang', mm[1]);
+      sessionStorage.setItem('ps_lang_sw', '1');
     } catch(e) {}
   }
   try { location.replace(href); } catch(err) { location.href = href; }

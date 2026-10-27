@@ -529,3 +529,39 @@ ui.js og:image → og-v2.png  已生效，无必要再改回
 ```
 https://you.piccalc.com/en/?v=1024
 ```
+
+
+---
+
+## A22g 变更（2026-10-28）— 语言记忆：改走 cookie，并禁用 bfcache
+
+### 问题
+在卡片页切换语言后按返回键，回到的是**上一个语种**，而不是切过的那个。
+A22b / A22f 两版都试图用 `localStorage` + `location.replace` 记住选择，均无效。
+
+### 根因：bfcache（往返缓存）
+按返回时浏览器从内存**原样恢复**上一页：
+不再请求服务端，也**不重跑 JS**。
+任何写在页面里的 localStorage / sessionStorage 记忆逻辑都不会执行 ——
+`pageshow` 也不足以补救（iOS Safari 尤其激进）。
+也就是说：**只要页面进了 bfcache，前端记忆方案必然失效。**
+
+### 改法：三层一起改
+1. **切语言写 cookie**（`ps_lang`，1 年，SameSite=Lax）
+   随请求头自动回传服务端，不依赖 JS 是否执行。
+   localStorage 保留作无 cookie 环境（部分无痕模式）的兜底。
+2. **Worker 读 cookie 决定语言**
+   - 裸域名 `/`：有 cookie 按其渲染，无 cookie 仍是英文正门。
+   - 显式路径 `/zh/gold/`：cookie 与路径不一致时 302 到 cookie 语言。
+     302 会替换历史中这一条，故返回落回来即目标语言，
+     再按一次返回即离开本站，不会「一层层退语言」。
+   - 跳转目标自带尾斜杠，避免多一次 canonical 301。
+3. **HTML 响应头改 `no-store`**
+   这是让页面**不进 bfcache** 的标准做法（原来的
+   `private, max-age=0, must-revalidate` 不阻止 bfcache）。
+   原本就已每次回源，请求量不变。
+
+### SEO 安全
+爬虫不带 cookie → 所有行为与改动前完全一致：
+裸域名英文、`/zh/xxx/` 中文、canonical 与 hreflang 不变。
+分享出去的 `/zh/gold/` 链接在别人（无 cookie）那里照旧是中文。

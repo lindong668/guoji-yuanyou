@@ -159,6 +159,18 @@ Sitemap: ${SITE.domain}/sitemap.xml
       });
     }
 
+    /* ★ A22g：记住访客手动选过的语言。
+     * 用 cookie 而不是 localStorage —— 按返回键时浏览器走 bfcache（往返缓存），
+     * 上一页是从内存原样恢复的，既不再请求服务端也不重跑 JS，
+     * 任何写在页面里的 localStorage 记忆逻辑都不会执行。
+     * cookie 随请求头自动带回服务端，服务端直接给出正确语言，不依赖 JS。
+     * 爬虫不带 cookie，因此行为与改动前完全一致（SEO 无影响）。 */
+    const langCookie = (function () {
+      const jar = request.headers.get('Cookie') || '';
+      const hit = jar.match(/(?:^|;\s*)ps_lang=([a-z]{2})(?:;|$)/);
+      return (hit && LANGS.includes(hit[1])) ? hit[1] : null;
+    })();
+
     // ---------- root: render the landing page IN PLACE (200, no redirect) ----------
     // This used to 302 to /{lang}/. Google Search Console kept reporting
     // "Redirect error" on https://you.piccalc.com/ and never indexed the
@@ -170,13 +182,19 @@ Sitemap: ${SITE.domain}/sitemap.xml
       // English is the site's primary language: the bare domain is the
       // English door. Auto-detection still applies everywhere else —
       // an unknown language segment is resolved from Accept-Language below.
-      const langR = DEFAULT_LANG;
+      // 手动选过语言的访客按他选的渲染；新访客（无 cookie）仍是英文正门。
+      const langR = langCookie || DEFAULT_LANG;
       const [mR, fxR] = await Promise.all([getMarket(), getFx()]);
       const html = renderHome(langR, mR, fxR, tz);
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
-          'cache-control': 'private, max-age=0, must-revalidate',
+          // ★ A22g: no-store also keeps the page OUT of the browser's
+          // back/forward cache (bfcache). A bfcache restore replays the page
+          // from memory without asking the server, so the remembered
+          // language would never be applied. Every response here was already
+          // private/max-age=0, so request volume is unchanged.
+          'cache-control': 'no-store',
           'x-content-type-options': 'nosniff',
         },
       });
@@ -200,8 +218,20 @@ Sitemap: ${SITE.domain}/sitemap.xml
     let lang = (seg[0] || '').toLowerCase();
     if (!LANGS.includes(lang)) {
       // unknown first segment -> send to browser language home
-      const l = detectLang(request.headers.get('Accept-Language'));
+      const l = langCookie || detectLang(request.headers.get('Accept-Language'));
       return Response.redirect(`${SITE.domain}/${l}/`, 302);
+    }
+
+    /* ★ A22g：URL 语言与访客选过的语言不一致时，302 到他选的那个。
+     * 只在这一浏览器真的存过 ps_lang 时才发生；没有 cookie（新访客、爬虫）
+     * 走原路径，分享出去的 /zh/gold/ 链接在别人那里照旧是中文。
+     * 302 会替换掉历史里这一条，所以按返回落回来时就是这个语言，
+     * 再按一次返回即离开本站 —— 不会出现"一层层退语言"的情况。 */
+    if (langCookie && langCookie !== lang) {
+      const rest = '/' + seg.slice(1).join('/');
+      // 目标必须自带尾斜杠，否则会再触发一次 canonical 301 才落地。
+      const tail = (rest.endsWith('/') ? rest : rest + '/') + url.search;
+      return Response.redirect(`${SITE.domain}/${langCookie}${tail}`, 302);
     }
 
     // ---------- legacy dated URLs -> 301 to the current, undated form ----------
@@ -244,7 +274,12 @@ Sitemap: ${SITE.domain}/sitemap.xml
           // change takes effect immediately instead of being masked by a
           // 60-second local copy. Data itself is cached in Worker memory,
           // so re-rendering costs well under a millisecond.
-          'cache-control': 'private, max-age=0, must-revalidate',
+          // ★ A22g: no-store also keeps the page OUT of the browser's
+          // back/forward cache (bfcache). A bfcache restore replays the page
+          // from memory without asking the server, so the remembered
+          // language would never be applied. Every response here was already
+          // private/max-age=0, so request volume is unchanged.
+          'cache-control': 'no-store',
           'x-content-type-options': 'nosniff',
         },
       });
