@@ -461,7 +461,7 @@ export function topbar(lang, active) {
       aria-haspopup="true" aria-expanded="false">${curL.flag} ${esc(curL.label)} ▾</button>
     <div class="langmenu">
       ${LANGS.map(l => `<a href="/${l}${active === '/' ? '/' : active}" class="${l === lang ? 'on' : ''}"
-        hreflang="${l}">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
+        hreflang="${l}" data-langswap="1">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
     </div>
   </div>
 </div></header>`;
@@ -525,6 +525,22 @@ ${footer(lang, year)}
 <script>
 document.addEventListener('click',function(e){
   if(!e.target.closest('#ls')) document.getElementById('ls')?.classList.remove('open');
+});
+// Switching language is a VIEW change, not a new destination: use replace()
+// so the browser history does not accumulate one entry per language.
+// Without this, tapping Back after switching three times walks back through
+// three language copies of the same page instead of returning to where the
+// visitor came from (usually the overview / home page).
+document.addEventListener('click',function(e){
+  if(e.defaultPrevented) return;
+  // Let "open in new tab / new window" behave normally.
+  if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
+  var el = (e.target && e.target.closest) ? e.target.closest('a[data-langswap]') : null;
+  if(!el) return;
+  var href = el.getAttribute('href');
+  if(!href) return;
+  e.preventDefault();
+  try { location.replace(href); } catch(err) { location.href = href; }
 });
 // Re-render every timestamp in the BROWSER's own timezone + interface locale.
 // The server already rendered a correct value (via request.cf.timezone); this
