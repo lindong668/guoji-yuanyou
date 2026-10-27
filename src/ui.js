@@ -421,22 +421,23 @@ export function head({ lang, title, desc, path, noindex }) {
    *   reload 按新 URL 重新请求（reload 本身也不新增）
    * 栈保持 首页 → /xx/gold/ 两层，按一次返回必定回到首页。
    */
-  window.__psLang=function(href){
-    if(!href) return true;                        // 拿不到地址就正常跳转
+  window.__psLang=function(lang){
+    if(!lang||!OK[lang]) return;
     try{
-      var m=href.match(/^\/([a-z]{2})(\/|$)/);
-      if(m){
-        document.cookie='ps_lang='+m[1]+'; path=/; max-age=31536000; samesite=lax';
-        try{ localStorage.setItem('ps_lang',m[1]); }catch(e){}
-      }
-      if(window.history&&history.replaceState){
-        history.replaceState(history.state,'',href);
-        location.reload();
-        return false;                             // 已接管，阻止默认跳转
-      }
-      location.replace(href);                     // 老浏览器兜底
-      return false;
-    }catch(e){ return true; }                     // 出错就退回普通跳转
+      document.cookie='ps_lang='+lang+'; path=/; max-age=31536000; samesite=lax';
+    }catch(e){}
+    try{ localStorage.setItem('ps_lang',lang); }catch(e){}
+    /* 地址栏改成新语言，但【不导航、不新增历史条目】。
+       服务端 A22h 起已按 cookie 渲染语言，所以 reload 后内容就是新语言。 */
+    try{
+      var p=location.pathname,t=null;
+      var m=p.match(/^\/([a-z]{2})(\/.*)?$/);
+      if(m&&OK[m[1]]) t='/'+lang+(m[2]||'/');
+      else if(p==='/') t='/'+lang+'/';
+      if(t&&t!==p&&window.history&&history.replaceState)
+        history.replaceState(history.state,'',t+location.search+location.hash);
+    }catch(e){}
+    location.reload();   // reload 不新增历史条目 —— 栈始终只有两层
   };
 
   /* capture 阶段、在 head 里就注册：不等 DOMContentLoaded，
@@ -447,7 +448,9 @@ export function head({ lang, title, desc, path, noindex }) {
     var el=(e.target&&e.target.closest)?e.target.closest('a[data-langswap]'):null;
     if(!el) return;
     e.preventDefault();
-    window.__psLang(el.getAttribute('href'));
+    var h=el.getAttribute('href')||'';
+    var g=h.match(/^\/([a-z]{2})(\/|$)/);
+    if(g) window.__psLang(g[1]);
   },true);
 
   // 渲染前同步决定语言（无闪烁；也是 cookie 通道的兜底）
@@ -526,7 +529,7 @@ export function topbar(lang, active) {
     <div class="langmenu">
       ${LANGS.map(l => `<a href="/${l}${active === '/' ? '/' : active}" class="${l === lang ? 'on' : ''}"
         hreflang="${l}" data-langswap="1"
-        onclick="return window.__psLang&&window.__psLang(this.getAttribute('href'));">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
+        onclick="try{window.__psLang('${l}');}catch(err){}return false;">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
     </div>
   </div>
 </div></header>`;

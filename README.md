@@ -738,3 +738,56 @@ location.reload();                              // reload 也不新增
 CF 边缘可能缓存着旧 HTML（你清浏览器缓存清不掉它）：
 **Cloudflare 后台 → Caching → Configuration → Purge Everything**。
 然后查看源代码搜索 `__psLang`，搜到才说明新代码真的上线了。
+
+
+---
+
+## A22k（2026-10-28）— 找到六版都没修好的那一行
+
+### 真凶：内联 onclick 的返回值
+
+A22j 写的是：
+
+```html
+onclick="return window.__psLang && window.__psLang(...);"
+```
+
+问题在这：只要 `__psLang` **不存在或返回真值**，
+整个表达式就不是 `false`，浏览器**照常执行默认跳转 = push 一条历史**。
+
+`__psLang` 什么时候会不存在 / 失效：
+- head 脚本被 CF Rocket Loader 延迟执行
+- 无痕模式下 localStorage 抛异常（当时 catch 到就 `return true`）
+- `history.replaceState` 抛 SecurityError
+- 任何一处脚本报错
+
+**只要命中任意一条，拦截就整体失效，退化成普通导航。**
+这正是"换个浏览器、清缓存都没用"的原因 —— 根本不是缓存问题。
+
+### 修复：无条件 return false
+
+```html
+onclick="try{window.__psLang('de');}catch(err){}return false;"
+```
+
+- 无论 `__psLang` 是否成功、是否存在，**点击永远不导航**；
+- 最坏情况只是语言没切换，绝不会往历史里塞新条目；
+- 参数从 href 改成语言代码，不再依赖 `getAttribute`。
+
+### `__psLang` 同时简化
+接收语言代码（而非 URL），做三件事：
+1. 写 cookie（服务端据此渲染，A22h 已支持）
+2. `history.replaceState` 改地址栏（不导航、不新增历史）
+3. `location.reload()` —— reload 本身也不新增历史
+
+### 栈行为（已脚本验证）
+```
+修复前：首页 → /zh/gold/ → /en/gold/ → /ja/gold/ → /de/gold/
+        按返回 → /ja/gold/  ❌ 还在卡片页（用户反馈的现象）
+
+修复后：首页 → /de/gold/
+        按返回 → 首页        ✅
+```
+
+### 部署后验证
+查看源代码搜 `catch(err){}return false` —— 搜到即新代码上线。
