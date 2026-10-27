@@ -407,16 +407,59 @@ export function head({ lang, title, desc, path, noindex }) {
      第三方 cookie 限制），localStorage 仍能给出正确语言。 -->
 <script>
 (function(){
+  var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
+
+  /* ★★ 切语言的核心：必须【替换】当前历史条目，绝不能新增。
+   *
+   * 你反馈的现象——"在卡片页切三四种语言，按返回还停在卡片页，
+   * 只是语言退了一格"——原因只有一个：切换时往历史里 push 了新条目。
+   * 栈变成 首页 → /zh/gold/ → /en/gold/ → /ja/gold/，
+   * 按返回自然只能一层层往回退，退几次都出不去。
+   *
+   * 所以这里两步都不产生新条目：
+   *   replaceState 把当前这条记录的 URL 改掉（不导航）
+   *   reload 按新 URL 重新请求（reload 本身也不新增）
+   * 栈保持 首页 → /xx/gold/ 两层，按一次返回必定回到首页。
+   */
+  window.__psLang=function(href){
+    if(!href) return true;                        // 拿不到地址就正常跳转
+    try{
+      var m=href.match(/^\/([a-z]{2})(\/|$)/);
+      if(m){
+        document.cookie='ps_lang='+m[1]+'; path=/; max-age=31536000; samesite=lax';
+        try{ localStorage.setItem('ps_lang',m[1]); }catch(e){}
+      }
+      if(window.history&&history.replaceState){
+        history.replaceState(history.state,'',href);
+        location.reload();
+        return false;                             // 已接管，阻止默认跳转
+      }
+      location.replace(href);                     // 老浏览器兜底
+      return false;
+    }catch(e){ return true; }                     // 出错就退回普通跳转
+  };
+
+  /* capture 阶段、在 head 里就注册：不等 DOMContentLoaded，
+     也不受后续脚本报错影响，任何一次点击必然先经过这里。 */
+  document.addEventListener('click',function(e){
+    if(e.defaultPrevented) return;                // 已被内联 onclick 处理
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
+    var el=(e.target&&e.target.closest)?e.target.closest('a[data-langswap]'):null;
+    if(!el) return;
+    e.preventDefault();
+    window.__psLang(el.getAttribute('href'));
+  },true);
+
+  // 渲染前同步决定语言（无闪烁；也是 cookie 通道的兜底）
   try{
-    var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
     var want=localStorage.getItem('ps_lang');
-    if(!want||!OK[want]) return;                 // 没手动选过 -> 不动
+    if(!want||!OK[want]) return;
     var cur=(document.documentElement.lang||'en').slice(0,2).toLowerCase();
-    if(want===cur) return;                       // 已一致 -> 不动（也防死循环）
-    var p=location.pathname, t=null;
-    var m=p.match(/^\/([a-z]{2})(\/.*)?$/);
-    if(m&&OK[m[1]]) t='/'+want+(m[2]||'/');      // /en/gold/ -> /ja/gold/
-    else if(p==='/') t='/'+want+'/';             // 裸域名 -> /ja/
+    if(want===cur) return;
+    var p=location.pathname,t=null;
+    var mm=p.match(/^\/([a-z]{2})(\/.*)?$/);
+    if(mm&&OK[mm[1]]) t='/'+want+(mm[2]||'/');
+    else if(p==='/') t='/'+want+'/';
     if(t&&t!==p) location.replace(t+location.search+location.hash);
   }catch(e){}
 })();
@@ -482,7 +525,8 @@ export function topbar(lang, active) {
       aria-haspopup="true" aria-expanded="false">${curL.flag} ${esc(curL.label)} ▾</button>
     <div class="langmenu">
       ${LANGS.map(l => `<a href="/${l}${active === '/' ? '/' : active}" class="${l === lang ? 'on' : ''}"
-        hreflang="${l}" data-langswap="1">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
+        hreflang="${l}" data-langswap="1"
+        onclick="return window.__psLang&&window.__psLang(this.getAttribute('href'));">${t(l).flag} ${esc(t(l).label)}</a>`).join('')}
     </div>
   </div>
 </div></header>`;
@@ -552,38 +596,7 @@ document.addEventListener('click',function(e){
 // Without this, tapping Back after switching three times walks back through
 // three language copies of the same page instead of returning to where the
 // visitor came from (usually the overview / home page).
-document.addEventListener('click',function(e){
-  if(e.defaultPrevented) return;
-  // Let "open in new tab / new window" behave normally.
-  if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button!==0) return;
-  var el = (e.target && e.target.closest) ? e.target.closest('a[data-langswap]') : null;
-  if(!el) return;
-  var href = el.getAttribute('href');
-  if(!href) return;
-  e.preventDefault();
-  // Remember the choice so that pressing Back — which lands on the previous
-  // page rendered in the OLD language — can be re-pointed at this language.
-  // Without this, going Back silently reverted to the original language.
-  var mm = href.match(/^\/([a-z]{2})(\/|$)/);
-  if (mm) {
-    try {
-      // 通道一 cookie：随请求头回传服务端，服务端直接渲染正确语言。
-      // 通道二 localStorage：head 内同步脚本读取，cookie 失效时的兜底。
-      document.cookie = 'ps_lang=' + mm[1] + '; path=/; max-age=31536000; samesite=lax';
-      localStorage.setItem('ps_lang', mm[1]);
-    } catch(e) {}
-  }
-  /* ★ A22i：两步都【不产生新的历史条目】，所以按一次返回必定回到进站前那页。
-     replaceState 先把当前这条记录的 URL 改掉（不导航、不新增），
-     reload 再按新 URL 重新请求（reload 本身也不新增历史）。
-     原先只用 location.replace 一条路，实测在连续快速切换时并不可靠。 */
-  if (window.history && history.replaceState) {
-    try { history.replaceState(history.state, '', href); } catch(e) {}
-    location.reload();
-  } else {
-    try { location.replace(href); } catch(err) { location.href = href; }
-  }
-});
+
 // Re-render every timestamp in the BROWSER's own timezone + interface locale.
 // The server already rendered a correct value (via request.cf.timezone); this
 // only refines it when the visitor's real zone differs (VPN, travel, wrong geo).

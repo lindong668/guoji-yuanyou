@@ -678,3 +678,63 @@ location.reload();                              // reload 也不新增
 ### 如何确认新代码已上线
 浏览器打开页面 → 查看源代码 → 搜索 `A22i`。
 搜到即说明部署生效；搜不到说明还在用旧版本（多为 CDN / 部署未生效）。
+
+
+---
+
+## A22j（2026-10-28）— 终于对准真问题：切语言时历史被 push 了
+
+### 我前几版一直在修错的地方
+A22b / A22f / A22g / A22h / A22i 全都在加固"**记住语言**"，
+而用户反馈的其实是另一件事：
+
+> 在卡片页切三四种语言，按返回**还停在卡片页**，只是语言退了一格。
+
+这句话只有一个解释：**切换时往历史里 push 了新条目**。
+
+```
+实际栈：首页 → /zh/gold/ → /en/gold/ → /ja/gold/ → /de/gold/
+按返回 → /ja/gold/   ← 还在卡片页，语言退一格（用户描述的现象）
+
+应有栈：首页 → /de/gold/
+按返回 → 首页        ← 正确
+```
+
+所以"记住语言"做得再好也没用 —— 栈里堆着一堆卡片页副本，
+按返回只能在副本之间退。**根因是 push，不是记忆失效。**
+
+### 为什么 replace 没生效
+原来的拦截写在 `</body>` 前的 `<script>` 里，靠 `addEventListener` 绑定。
+只要这个脚本没跑（CF 边缘缓存旧 HTML、Rocket Loader 改写、
+页面其它脚本报错、脚本执行前就点了），点击就走默认跳转 = push。
+
+### A22j：三处一起加固，让 replace 一定生效
+1. **内联 `onclick`**（最可靠）
+   ```html
+   <a href="/en/gold/" data-langswap="1"
+      onclick="return window.__psLang&&window.__psLang(this.getAttribute('href'));">
+   ```
+   不依赖任何 addEventListener 的注册时机。
+2. **`__psLang` 定义在 head 的同步脚本里**，点击时必然已存在。
+3. **capture 阶段监听**（第三个参数 true），在 head 里就注册，
+   不等 DOMContentLoaded，也不受后续脚本报错影响；
+   用 `e.defaultPrevented` 判断是否已被内联 onclick 处理，不会重复执行。
+
+`__psLang` 内部两步都不产生新条目：
+```js
+history.replaceState(history.state, '', href);  // 改当前条目，不导航
+location.reload();                              // reload 也不新增
+```
+
+### 已用脚本验证栈行为
+```
+切 en → 栈 [首页, /en/gold/]
+切 ja → 栈 [首页, /ja/gold/]
+切 de → 栈 [首页, /de/gold/]
+按一次返回 → 首页 ✅
+```
+
+### ⚠️ 部署后必须先做这一步
+CF 边缘可能缓存着旧 HTML（你清浏览器缓存清不掉它）：
+**Cloudflare 后台 → Caching → Configuration → Purge Everything**。
+然后查看源代码搜索 `__psLang`，搜到才说明新代码真的上线了。
