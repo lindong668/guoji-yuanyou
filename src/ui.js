@@ -229,8 +229,18 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
   border-radius:8px;padding:4px 7px;font:inherit;font-size:.8rem;
   max-width:150px;vertical-align:middle}
 #g-cur:focus-visible{outline:2px solid var(--gold2);outline-offset:2px}
+/* 首页黄金卡片上的「实时」小角标：让人一眼看出点进去是活的 */
+.live-chip{display:inline-flex;align-items:center;gap:5px;margin-inline-start:8px;
+  padding:2px 8px;border-radius:999px;font-size:.68rem;font-weight:700;
+  color:var(--ok);background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.35);
+  vertical-align:middle;letter-spacing:.02em}
+.live-chip::before{content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--ok);animation:psPulse 2s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.live-chip::before{animation:none}}
 .src-note{margin:16px 0 0;font-size:.82rem;color:var(--dim);line-height:1.75;
   border-left:2px solid var(--gold);padding-left:12px}
+.src-note strong{color:var(--muted);font-weight:600}
+.prose-p.src-own{color:var(--txt);border-left:2px solid var(--gold);padding-left:12px}
 /* ---- article cards & blog chrome ---- */
 .artgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 .card.art{--c:rgba(255,255,255,.07);display:flex;flex-direction:column;gap:2px}

@@ -142,16 +142,20 @@ const GOLD_LIVE_JS = `
     var i=0;
     (function step(){
       if(i>=SOURCES.length){ cb(false); return; }
-      one(SOURCES[i]).then(function(v){ usdOz=v; paint(); cb(true); },
+      one(SOURCES[i]).then(function(v){ busy=false; usdOz=v; paint(); cb(true); },
                            function(){ i++; step(); });
     })();
   }
   /* 连续两轮全灭才认定断开 —— 抖动常在半秒内自愈，别急着吓用户。 */
+  var busy=false;
   function cycle(){
+    if(busy) return;          /* 上一轮还没跑完（慢网络下可能超过 10 秒），不叠加 */
+    busy=true;
     pass(function(ok){
       if(ok){ markLive(); return; }
       setTimeout(function(){
         pass(function(ok2){
+          busy=false;
           if(ok2){ markLive(); return; }
           fails++;
           markLost();
@@ -180,7 +184,7 @@ const GOLD_LIVE_JS = `
   });
 
   setInterval(function(){ if(!dead&&lastOk) elStatus.textContent=T.live+' \u00b7 '+agoTxt(); },5000);
-  setInterval(function(){ if(!document.hidden) cycle(); },10000);
+  setInterval(function(){ if(!document.hidden) cycle(); },30000);   /* 30 秒一轮，别太频繁 */
 
   paint();
   if(usdOz!=null) markLive();
@@ -229,10 +233,20 @@ function faqBlock(lang, key) {
 }
 
 /** Data sources + disclaimer — required on every page that shows figures. */
-function sourceBlock(lang) {
+function sourceBlock(lang, kind) {
   const C = commonFor(lang);
+  const L = t(lang);
+  /* ★ A22.1：每个页面在最底部明确写出【本页这个数据】来自谁。
+   * 以前只有一段全站通用的 sourcesBody，读者点进原油页或黄金页，
+   * 看到的仍是笼统一句，无法确认眼前这个数字出自哪里。
+   * 现在按品种补一条专属行，放在通用说明之前。 */
+  const line = kind ? (L['src' + kind] || '') : '';
+  const own = line
+    ? `<p class="prose-p src-own"><strong>${esc(L.dataSource)}：</strong>${esc(line)}</p>`
+    : '';
   return `<section class="blk alt"><div class="wrap prose">
   <h2 class="h2"><span class="ico">🔎</span>${esc(C.dataSources)}</h2>
+  ${own}
   <p class="prose-p">${esc(C.sourcesBody)}</p>
   <h2 class="h3">${esc(C.disclaimerTitle)}</h2>
   <p class="prose-p disc">${esc(C.disclaimerBody)}</p>
@@ -528,10 +542,10 @@ export function renderHome(lang, m, fx, tz) {
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
-      <h3><span class="swatch"></span>${esc(L.secGold)}</h3>
+      <h3><span class="swatch"></span>${esc(L.secGold)}<span class="live-chip">● ${esc(L.goldLiveTag)}</span></h3>
       <div class="big">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
-      <div class="meta"><span>${goldCny != null ? '¥' + fmt(goldCny) + ' / g' : ''}</span>
+      <div class="meta"><span>${goldCny != null ? '¥' + fmt(goldCny) + ' / gram' : ''}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card cn" href="/${lang}/china-fuel/">
@@ -549,6 +563,7 @@ export function renderHome(lang, m, fx, tz) {
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
   </div>
+  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.goldSrcShort || '')}</p>
   ${adSlot('home')}
 </div></section>`;
 
@@ -585,13 +600,13 @@ export function renderOil(lang, m, tz) {
       <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span></div>
     </div>
   </div>
-  <p class="sub" style="margin-top:22px">${esc(m?.oil?.isSettlement ? 'Settlement price' : L.dataSource)}: ${esc(L.tagline)}</p>
+  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcOil || '')}</p>
   ${adSlot('oil')}
 </div></section>
 ${explainer(lang, 'oil')}
 ${faqBlock(lang, 'oil')}
 ${relatedBlock(lang, 'oil')}
-${sourceBlock(lang)}`;
+${sourceBlock(lang, 'Oil')}`;
   return page({ lang, title: L.oilMetaTitle, desc: L.oilMetaDesc, path: '/oil/', active: '/oil/', body });
 }
 
@@ -624,13 +639,13 @@ export function renderWti(lang, m, tz) {
       <div class="meta"><span>${esc(L.wtiSpreadHint)}</span></div>
     </div>` : ''}
   </div>
-  <p class="sub" style="margin-top:22px">${esc(L.dataSource)}: ${esc(L.tagline)}</p>
+  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcWti || '')}</p>
   ${adSlot('wti')}
 </div></section>
 ${explainer(lang, 'wti')}
 ${faqBlock(lang, 'wti')}
 ${relatedBlock(lang, 'wti')}
-${sourceBlock(lang)}`;
+${sourceBlock(lang, 'Wti')}`;
   return page({ lang, title: L.wtiMetaTitle, desc: L.wtiMetaDesc, path: '/wti/', active: '/wti/', body });
 }
 
@@ -672,17 +687,17 @@ export function renderGold(lang, m, fx, tz) {
       <div class="meta"><span id="g-rate">${rates ? esc('1 USD = ' + (rates.CNH || rates.CNY || '—') + ' CNH · 1 oz = 31.1034768 g' + (fxDate ? ' · FX ' + fxDate : '')) : ''}</span></div>
     </div>
   </div>
-  <p class="src-note"><strong>${esc(L.goldNotAdvice)}</strong></p>
+  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.goldSrcShort || '')}<br><strong>${esc(L.goldNotAdvice)}</strong></p>
   ${adSlot('gold')}
 </div></section>
 ${explainer(lang, 'gold')}
 ${faqBlock(lang, 'gold')}
 ${relatedBlock(lang, 'gold')}
 <section class="blk alt"><div class="wrap prose">
-  <h2 class="h2"><span class="ico">🔎</span>${esc(L.goldSrcNote ? '数据来源' : '数据来源')}</h2>
+  <h2 class="h2"><span class="ico">🔎</span>${esc(L.dataSource)}</h2>
   <p class="prose-p">${esc(L.goldSrcNote || '')}</p>
 </div></section>
-${sourceBlock(lang)}
+${sourceBlock(lang, 'Gold')}
 <script type="application/json" id="ps-gold-init">${initJson}</script>
 <script type="application/json" id="ps-fx">${ratesJson}</script>
 <script>${GOLD_LIVE_JS}</script>`;
@@ -713,13 +728,13 @@ export function renderCn(lang, m, tz) {
     </tr></thead>
     <tbody>${rows || `<tr><td colspan="5">—</td></tr>`}</tbody>
   </table></div>
-  <p class="sub" style="margin-top:14px">${esc(list.length)} ${esc(L.provincesCount)} · ${esc(L.dataSource)}: showapi</p>
+  <p class="src-note">${esc(list.length)} ${esc(L.provincesCount)} · <strong>${esc(L.dataSource)}：</strong>${esc(L.srcCn || '')}</p>
   ${adSlot('cn')}
 </div></section>
 ${explainer(lang, 'cn')}
 ${faqBlock(lang, 'cn')}
 ${relatedBlock(lang, 'cn')}
-${sourceBlock(lang)}`;
+${sourceBlock(lang, 'Cn')}`;
   return page({ lang, title: L.cnMetaTitle, desc: L.cnMetaDesc, path: '/china-fuel/', active: '/china-fuel/', body });
 }
 
@@ -748,6 +763,7 @@ export function renderFx(lang, fx, tz) {
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">💱</span>${esc(L.fxTitle)}</h2>
   <p class="sub">${esc(L.fxNote)}${fx?.date ? ' · ' + fxUpdatedBlock(lang, fx, tz) : ''}</p>
+  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcFx || '')}</p>
 
   <div class="conv">
     <div class="fld"><label>${esc(L.fxAmount)}</label>
@@ -794,7 +810,7 @@ doConvert();
 ${explainer(lang, 'fx')}
 ${faqBlock(lang, 'fx')}
 ${relatedBlock(lang, 'fx')}
-${sourceBlock(lang)}`;
+${sourceBlock(lang, 'Fx')}`;
   return page({ lang, title: L.fxMetaTitle, desc: L.fxMetaDesc, path: '/currency/', active: '/currency/', body });
 }
 

@@ -54,7 +54,7 @@ export const CONTENT = {
         { h: 'What moves the price', p: 'Gold responds to real interest rates, inflation expectations, the strength of the US dollar, central bank purchasing and demand for safe-haven assets during periods of uncertainty. Because it is quoted in dollars, it often moves inversely to the dollar.' },
       ],
       faq: [
-        { q: 'How often is the gold price updated?', a: 'Gold figures come from a public market data provider that publishes on a daily schedule. Intraday moves are not reflected between updates.' },
+        { q: 'How often is the gold price updated?', a: 'Continuously. While the market is open, the figure on this page updates in real time in your browser from a direct feed at biquote.io, falling back to xaus.com and api.gold-api.com if that feed is unavailable. A server-side copy captured every three minutes supplies the first paint and acts as a fallback.' },
         { q: 'Why is the gram price different from what my jeweller quotes?', a: 'Retail prices include making charges, design costs, taxes and a dealer margin on top of the metal value. This page shows the raw metal reference price only.' },
         { q: 'Is this the price I would get if I sold gold?', a: 'Not necessarily. Dealers buy back below the spot price and may apply assay or handling fees. Treat the figure here as a benchmark for comparison.' },
       ],
@@ -105,8 +105,8 @@ export const CONTENT = {
       lead: 'Answers to the questions visitors ask most often about how this site collects and presents market data.',
       items: [
         { q: 'Is PriceScope free to use?', a: 'Yes. Every page is free and requires no registration or subscription.' },
-        { q: 'Where does the data come from?', a: 'Brent crude and gold prices come from public market data providers including OilPriceAPI and MetalpriceAPI. China retail fuel prices come from ShowAPI. Every page names its sources.' },
-        { q: 'How often is data refreshed?', a: 'Market prices are collected on a daily schedule during trading hours. Currency rates are refreshed daily. Because global markets close at weekends, weekend figures reflect the last trading session until markets reopen.' },
+        { q: 'Where does the data come from?', a: 'Every page names its own sources. Brent and WTI crude come from OilPriceAPI. International gold (XAU/USD) comes from three independent providers — xaus.com (primary), biquote.io (broker MT5 feed, live) and api.gold-api.com (fallback) — tried in order and retried twice per cycle. China retail fuel prices come from ShowAPI. Reference FX rates come from ExchangeRate-API, with Frankfurter (ECB) as backup. All figures are indicative reference values, not exchange settlement prices.' },
+        { q: 'How often is data refreshed?', a: 'International gold updates in real time in your browser while the market is open. Brent and WTI are collected hourly during trading hours. China fuel prices follow the official revision cycle of roughly ten working days. Currency rates are refreshed daily. Global markets close at weekends, so weekend figures reflect the last trading session until trading resumes.' },
         { q: 'Are these official prices?', a: 'No. All figures are reference prices intended for general information. They are not exchange settlement prices and should not be used for trading, settlement or accounting.' },
         { q: 'Can I rely on this for investment decisions?', a: 'No. The data is provided for general information only and does not constitute investment advice. Always confirm figures with a licensed professional or an official source before acting.' },
         { q: 'Do you store my personal data?', a: 'The site does not require registration. Please read the privacy policy for full details on cookies and analytics.' },
@@ -149,7 +149,7 @@ export const CONTENT = {
         { h: '影响金价的因素', p: '实际利率、通胀预期、美元强弱、各国央行的购金行为，以及市场不确定性时期的避险需求，都会影响金价。由于以美元计价，金价常与美元呈反向走势。' },
       ],
       faq: [
-        { q: '金价多久更新一次？', a: '金价来自公开市场数据服务商，按每日计划发布。两次更新之间的日内波动不会体现。' },
+        { q: '金价多久更新一次？', a: '持续更新。开市期间，本页数字通过 biquote.io 的直连报价在你的浏览器中实时刷新；若该路不通，则依次回退到 xaus.com 与 api.gold-api.com。服务端另有每 3 分钟采集的副本，用于首屏显示与兜底。' },
         { q: '为什么克价与金店报价不同？', a: '零售价格在此金属价之上还包含工费、设计费、税费和经销商利润。本页显示的仅为金属参考价。' },
         { q: '这是我卖出黄金能得到的价格吗？', a: '不一定。经销商回购价通常低于现货价，并可能收取检测或手续费。请把本页数字当作比价基准。' },
       ],
@@ -200,8 +200,8 @@ export const CONTENT = {
       lead: '关于本站如何采集与呈现市场数据，以下是访客最常提出的问题与解答。',
       items: [
         { q: 'PriceScope 是免费使用的吗？', a: '是的。所有页面免费开放，无需注册或订阅。' },
-        { q: '数据来自哪里？', a: '布伦特原油与黄金价格来自公开市场数据服务商，包括 OilPriceAPI 和 MetalpriceAPI；中国成品油价格来自 ShowAPI。每个页面都标注了数据来源。' },
-        { q: '数据多久刷新一次？', a: '市场行情在交易时段按每日计划采集，汇率每日刷新。由于全球市场周末休市，周末数据反映的是最近一个交易日的情况，直到市场重新开市。' },
+        { q: '数据来自哪里？', a: '每个页面都单独标注自己的来源。布伦特原油与 WTI 原油来自 OilPriceAPI；国际黄金（XAU/USD）来自三个独立数据源 —— xaus.com（主）、biquote.io（券商 MT5 实时报价）、api.gold-api.com（兜底），按序尝试、每轮循环重试两次；中国成品油价格来自 ShowAPI；参考汇率来自 ExchangeRate-API，备用为 Frankfurter（欧洲央行）。所有数据均为指示性参考价，非交易所结算价。' },
+        { q: '数据多久刷新一次？', a: '国际黄金在开市期间于你的浏览器中实时更新；布伦特与 WTI 原油在交易时段每小时采集；国内成品油价格跟随官方约每 10 个工作日的调整周期；参考汇率每日刷新。全球市场周末休市，周末显示的是最近一个交易日的数值。' },
         { q: '这些是官方价格吗？', a: '不是。所有数字均为一般性参考信息，并非交易所结算价，不得用于交易、结算或记账。' },
         { q: '可以作为投资决策依据吗？', a: '不可以。本站数据仅供一般性参考，不构成投资建议。实际操作前请务必向持牌专业人士或官方渠道核实。' },
         { q: '你们会存储我的个人数据吗？', a: '本站无需注册即可使用。关于 Cookie 和分析工具的完整说明，请参阅隐私政策。' },
@@ -244,7 +244,7 @@ export const CONTENT = {
         { h: '価格を動かす要因', p: '実質金利、インフレ期待、米ドルの強弱、各国中央銀行の購入動向、不透明感が高まる局面での安全資産需要などが影響します。米ドル建てのため、金価格はドルと逆方向に動くことが多いです。' },
       ],
       faq: [
-        { q: '金価格はどのくらいの頻度で更新されますか？', a: '金価格は公開市場データ提供者から毎日のスケジュールで取得しています。更新と更新の間の日内変動は反映されません。' },
+        { q: '金価格はどのくらいの頻度で更新されますか？', a: '継続的に更新されます。取引時間中、本ページの数値は biquote.io からの直接配信によりブラウザ上でリアルタイムに更新され、不通時は xaus.com、api.gold-api.com へ順に切り替わります。サーバー側では3分ごとのコピーも保持し、初回表示とバックアップに使われます。' },
         { q: 'グラム価格が宝飾店の提示と違うのはなぜですか？', a: '小売価格には地金価格に加えて加工費、デザイン料、税金、販売店の利益が含まれます。本ページは地金そのものの参考価格のみを表示しています。' },
         { q: '金を売るときの価格と同じですか？', a: '必ずしも同じではありません。買取業者はスポット価格より低く買い取り、分析料や手数料を差し引く場合があります。比較のための目安としてご利用ください。' },
       ],
@@ -295,8 +295,8 @@ export const CONTENT = {
       lead: '本サイトが市場データをどのように収集・表示しているかについて、よく寄せられる質問と回答です。',
       items: [
         { q: 'PriceScope は無料で使えますか？', a: 'はい。すべてのページが無料で、登録も購読も必要ありません。' },
-        { q: 'データはどこから取得していますか？', a: 'ブレント原油と金の価格は OilPriceAPI、MetalpriceAPI などの公開市場データ提供者から、中国の小売燃料価格は ShowAPI から取得しています。各ページに提供元を明記しています。' },
-        { q: 'データはどのくらいの頻度で更新されますか？', a: '市場価格は取引時間中に毎日のスケジュールで収集され、為替レートは毎日更新されます。世界の市場は週末に休場するため、週末の数値は市場再開まで直近の営業日のものを反映します。' },
+        { q: 'データはどこから取得していますか？', a: '各ページがそれぞれの提供元を明記しています。ブレント原油とWTI原油は OilPriceAPI、国際金価格（XAU/USD）は xaus.com（主）・biquote.io（証券MT5リアルタイム配信）・api.gold-api.com（予備）の3系統を順に試行し1サイクル2回まで再試行、中国の小売燃料価格は ShowAPI、参考レートは ExchangeRate-API（予備 Frankfurter／ECB）から取得しています。いずれも指示性の参考値であり、取引所の清算価格ではありません。' },
+        { q: 'データはどのくらいの頻度で更新されますか？', a: '国際金価格は取引時間中、ブラウザ上でリアルタイムに更新されます。ブレント原油とWTI原油は取引時間中に1時間ごとに収集、中国の燃料価格は概ね10営業日ごとの公式改定に追随、為替レートは毎日更新されます。世界の市場は週末休場のため、週末は直近の営業日の数値を表示します。' },
         { q: 'これらは公式価格ですか？', a: 'いいえ。すべての数値は一般的な参考情報であり、取引所の清算価格ではありません。取引、決済、記帳には使用できません。' },
         { q: '投資判断の根拠にできますか？', a: 'できません。本サイトのデータは一般的な参考情報であり、投資助言を構成するものではありません。行動する前に必ず資格を持つ専門家または公的機関でご確認ください。' },
         { q: '個人データは保存されますか？', a: '本サイトの利用に登録は不要です。Cookie と分析ツールの詳細はプライバシーポリシーをご覧ください。' },
@@ -339,7 +339,7 @@ export const CONTENT = {
         { h: 'Qué mueve el precio', p: 'El oro responde a los tipos de interés reales, las expectativas de inflación, la fortaleza del dólar, las compras de los bancos centrales y la demanda de activos refugio en periodos de incertidumbre. Al cotizarse en dólares, suele moverse de forma inversa al dólar.' },
       ],
       faq: [
-        { q: '¿Con qué frecuencia se actualiza el precio del oro?', a: 'Las cifras del oro provienen de un proveedor público de datos de mercado que publica según un calendario diario. Los movimientos intradía entre actualizaciones no se reflejan.' },
+        { q: '¿Con qué frecuencia se actualiza el precio del oro?', a: 'De forma continua. Mientras el mercado está abierto, la cifra de esta página se actualiza en tiempo real en tu navegador desde un feed directo de biquote.io, con respaldo en xaus.com y api.gold-api.com si ese feed no está disponible. Una copia del servidor capturada cada tres minutos alimenta la primera carga y sirve de respaldo.' },
         { q: '¿Por qué el precio por gramo difiere del que indica mi joyero?', a: 'Los precios minoristas incluyen cargos de fabricación, costes de diseño, impuestos y el margen del distribuidor además del valor del metal. Esta página muestra únicamente el precio de referencia del metal.' },
         { q: '¿Es este el precio que recibiría si vendiera oro?', a: 'No necesariamente. Los distribuidores compran por debajo del precio al contado y pueden aplicar cargos de ensayo o gestión. Considere la cifra como una referencia para comparar.' },
       ],
@@ -390,8 +390,8 @@ export const CONTENT = {
       lead: 'Respuestas a las preguntas que los visitantes plantean con más frecuencia sobre cómo este sitio recopila y presenta los datos de mercado.',
       items: [
         { q: '¿Es PriceScope gratuito?', a: 'Sí. Todas las páginas son gratuitas y no requieren registro ni suscripción.' },
-        { q: '¿De dónde provienen los datos?', a: 'Los precios del crudo Brent y del oro provienen de proveedores públicos de datos de mercado, incluidos OilPriceAPI y MetalpriceAPI. Los precios minoristas de combustible en China provienen de ShowAPI. Cada página indica sus fuentes.' },
-        { q: '¿Con qué frecuencia se actualizan los datos?', a: 'Los precios de mercado se recopilan según un calendario diario durante el horario de negociación. Los tipos de cambio se actualizan a diario. Como los mercados mundiales cierran los fines de semana, las cifras del fin de semana reflejan la última sesión hasta que los mercados reabren.' },
+        { q: '¿De dónde provienen los datos?', a: 'Cada página indica sus propias fuentes. El crudo Brent y el WTI provienen de OilPriceAPI. El oro internacional (XAU/USD) proviene de tres proveedores independientes: xaus.com (principal), biquote.io (feed MT5, en vivo) y api.gold-api.com (respaldo), probados en orden con dos reintentos por ciclo. Los combustibles minoristas de China provienen de ShowAPI. Los tipos de cambio de referencia vienen de ExchangeRate-API, con Frankfurter (BCE) como respaldo. Todas las cifras son valores indicativos de referencia, no precios de liquidación de bolsa.' },
+        { q: '¿Con qué frecuencia se actualizan los datos?', a: 'El oro internacional se actualiza en tiempo real en tu navegador mientras el mercado está abierto. El Brent y el WTI se recopilan cada hora durante el horario de negociación. Los combustibles de China siguen el ciclo oficial de revisión de unos diez días hábiles. Los tipos de cambio se actualizan a diario. Como los mercados cierran los fines de semana, las cifras reflejan la última sesión hasta la reapertura.' },
         { q: '¿Son precios oficiales?', a: 'No. Todas las cifras son precios de referencia con fines informativos generales. No son precios de liquidación de bolsa y no deben usarse para operar, liquidar ni contabilizar.' },
         { q: '¿Puedo basar decisiones de inversión en ellos?', a: 'No. Los datos se ofrecen solo con fines informativos generales y no constituyen asesoramiento de inversión. Confirme siempre las cifras con un profesional autorizado o una fuente oficial antes de actuar.' },
         { q: '¿Almacenan mis datos personales?', a: 'El sitio no requiere registro. Consulte la política de privacidad para conocer todos los detalles sobre cookies y analítica.' },
@@ -434,7 +434,7 @@ export const CONTENT = {
         { h: 'Ce qui fait bouger le prix', p: 'L\'or réagit aux taux d\'intérêt réels, aux anticipations d\'inflation, à la force du dollar, aux achats des banques centrales et à la demande de valeurs refuges en période d\'incertitude. Libellé en dollars, il évolue souvent à contre-courant du dollar.' },
       ],
       faq: [
-        { q: 'À quelle fréquence le prix de l\'or est-il actualisé ?', a: 'Les valeurs de l\'or proviennent d\'un fournisseur public de données de marché qui publie selon un calendrier quotidien. Les mouvements intrajournaliers entre deux mises à jour ne sont pas reflétés.' },
+        { q: 'À quelle fréquence le prix de l\'or est-il actualisé ?', a: 'En continu. Pendant les heures de marché, le chiffre de cette page est actualisé en temps réel dans votre navigateur depuis un flux direct de biquote.io, avec repli sur xaus.com et api.gold-api.com si ce flux est indisponible. Une copie côté serveur capturée toutes les trois minutes alimente le premier affichage et sert de secours.' },
         { q: 'Pourquoi le prix au gramme diffère-t-il de celui de mon bijoutier ?', a: 'Les prix de détail incluent des frais de fabrication, des coûts de design, des taxes et la marge du distributeur en plus de la valeur du métal. Cette page n\'affiche que le prix de référence du métal brut.' },
         { q: 'Est-ce le prix que j\'obtiendrais en vendant de l\'or ?', a: 'Pas nécessairement. Les négociants rachètent en dessous du prix au comptant et peuvent appliquer des frais d\'essai ou de manipulation. Considérez ce chiffre comme une base de comparaison.' },
       ],
@@ -485,8 +485,8 @@ export const CONTENT = {
       lead: 'Réponses aux questions les plus fréquentes des visiteurs sur la façon dont ce site collecte et présente les données de marché.',
       items: [
         { q: 'PriceScope est-il gratuit ?', a: 'Oui. Toutes les pages sont gratuites et ne nécessitent ni inscription ni abonnement.' },
-        { q: 'D\'où proviennent les données ?', a: 'Les prix du brut Brent et de l\'or proviennent de fournisseurs publics de données de marché, notamment OilPriceAPI et MetalpriceAPI. Les prix de détail des carburants en Chine proviennent de ShowAPI. Chaque page cite ses sources.' },
-        { q: 'À quelle fréquence les données sont-elles actualisées ?', a: 'Les prix de marché sont collectés selon un calendrier quotidien pendant les heures de négociation. Les taux de change sont actualisés chaque jour. Les marchés mondiaux fermant le week-end, les chiffres du week-end reflètent la dernière séance jusqu\'à la réouverture.' },
+        { q: 'D\'où proviennent les données ?', a: 'Chaque page cite ses propres sources. Le brut Brent et le WTI proviennent d\'OilPriceAPI. L\'or international (XAU/USD) provient de trois fournisseurs indépendants : xaus.com (principal), biquote.io (flux MT5, en direct) et api.gold-api.com (secours), essayés dans l\'ordre avec deux tentatives par cycle. Les carburants de détail chinois proviennent de ShowAPI. Les taux de change de référence viennent d\'ExchangeRate-API, avec Frankfurter (BCE) en secours. Toutes les valeurs sont indicatives, et non des prix de liquidation de bourse.' },
+        { q: 'À quelle fréquence les données sont-elles actualisées ?', a: 'L\'or international est actualisé en temps réel dans votre navigateur pendant les heures de marché. Le Brent et le WTI sont collectés chaque heure pendant les heures de négociation. Les carburants chinois suivent le cycle officiel de révision d\'environ dix jours ouvrés. Les taux de change sont actualisés chaque jour. Les marchés ferment le week-end : les chiffres reflètent alors la dernière séance jusqu\'à la réouverture.' },
         { q: 'S\'agit-il de prix officiels ?', a: 'Non. Tous les chiffres sont des prix de référence à titre d\'information générale. Il ne s\'agit pas de cours de compensation de bourse et ils ne doivent pas servir à trader, compenser ou comptabiliser.' },
         { q: 'Puis-je m\'en servir pour des décisions d\'investissement ?', a: 'Non. Les données sont fournies à titre d\'information générale uniquement et ne constituent pas un conseil en investissement. Vérifiez toujours les chiffres auprès d\'un professionnel agréé ou d\'une source officielle avant d\'agir.' },
         { q: 'Stockez-vous mes données personnelles ?', a: 'Le site ne nécessite aucune inscription. Consultez la politique de confidentialité pour tous les détails sur les cookies et l\'analyse.' },
@@ -529,7 +529,7 @@ export const CONTENT = {
         { h: 'Was den Preis bewegt', p: 'Gold reagiert auf Realzinsen, Inflationserwartungen, die Stärke des US-Dollar, Käufe der Zentralbanken und die Nachfrage nach sicheren Häfen in unsicheren Zeiten. Da es in Dollar notiert wird, bewegt es sich oft gegenläufig zum Dollar.' },
       ],
       faq: [
-        { q: 'Wie oft wird der Goldpreis aktualisiert?', a: 'Die Goldwerte stammen von einem öffentlichen Marktdatenanbieter, der nach einem täglichen Zeitplan veröffentlicht. Intraday-Bewegungen zwischen zwei Aktualisierungen werden nicht abgebildet.' },
+        { q: 'Wie oft wird der Goldpreis aktualisiert?', a: 'Fortlaufend. Während der Handelszeiten wird der Wert auf dieser Seite in Ihrem Browser in Echtzeit aus einem Direkt-Feed von biquote.io aktualisiert; ist dieser nicht verfügbar, wird auf xaus.com und api.gold-api.com zurückgegriffen. Eine serverseitige Kopie alle drei Minuten liefert die Erstanzeige und dient als Ausweichwert.' },
         { q: 'Warum weicht der Grammpreis von der Angabe meines Juweliers ab?', a: 'Einzelhandelspreise enthalten über dem Metallwert auch Verarbeitungskosten, Designkosten, Steuern und die Marge des Händlers. Diese Seite zeigt ausschließlich den Referenzpreis des Metalls.' },
         { q: 'Ist das der Preis, den ich beim Goldverkauf erhalte?', a: 'Nicht unbedingt. Händler kaufen unter dem Spotpreis an und können Prüf- oder Bearbeitungsgebühren erheben. Betrachten Sie den Wert hier als Vergleichsmaßstab.' },
       ],
@@ -580,8 +580,8 @@ export const CONTENT = {
       lead: 'Antworten auf die Fragen, die Besucher am häufigsten dazu stellen, wie diese Website Marktdaten erhebt und darstellt.',
       items: [
         { q: 'Ist PriceScope kostenlos?', a: 'Ja. Alle Seiten sind kostenlos und erfordern weder Registrierung noch Abonnement.' },
-        { q: 'Woher stammen die Daten?', a: 'Die Preise für Brent-Rohöl und Gold stammen von öffentlichen Marktdatenanbietern, darunter OilPriceAPI und MetalpriceAPI. Die chinesischen Einzelhandelspreise für Kraftstoffe stammen von ShowAPI. Jede Seite nennt ihre Quellen.' },
-        { q: 'Wie oft werden die Daten aktualisiert?', a: 'Marktpreise werden während der Handelszeiten nach einem täglichen Zeitplan erhoben; Wechselkurse werden täglich aktualisiert. Da die Weltmärkte am Wochenende geschlossen sind, spiegeln die Wochenendwerte die letzte Sitzung bis zur Wiedereröffnung.' },
+        { q: 'Woher stammen die Daten?', a: 'Jede Seite nennt ihre eigenen Quellen. Brent- und WTI-Rohöl stammen von OilPriceAPI. Internationales Gold (XAU/USD) stammt von drei unabhängigen Anbietern: xaus.com (primär), biquote.io (MT5-Feed, live) und api.gold-api.com (Ausweich), der Reihe nach mit zwei Versuchen pro Zyklus. Chinas Einzelhandelspreise für Kraftstoffe stammen von ShowAPI. Referenzwechselkurse stammen von ExchangeRate-API, mit Frankfurter (EZB) als Ausweich. Alle Werte sind indikative Referenzwerte, keine Börsenabrechnungspreise.' },
+        { q: 'Wie oft werden die Daten aktualisiert?', a: 'Internationales Gold wird während der Handelszeiten in Echtzeit in Ihrem Browser aktualisiert. Brent und WTI werden während der Handelszeiten stündlich erhoben. Chinas Kraftstoffpreise folgen dem offiziellen Überprüfungszyklus von etwa zehn Werktagen. Wechselkurse werden täglich aktualisiert. Die Weltmärkte sind am Wochenende geschlossen, daher zeigen die Wochenendwerte die letzte Sitzung bis zur Wiedereröffnung.' },
         { q: 'Sind das offizielle Preise?', a: 'Nein. Alle Werte sind Referenzpreise für allgemeine Informationszwecke. Es sind keine Börsenabrechnungspreise und sie dürfen nicht für Handel, Abrechnung oder Buchhaltung verwendet werden.' },
         { q: 'Kann ich mich für Anlageentscheidungen darauf verlassen?', a: 'Nein. Die Daten dienen ausschließlich der allgemeinen Information und stellen keine Anlageberatung dar. Bestätigen Sie Werte vor einer Entscheidung stets bei einer zugelassenen Fachkraft oder einer offiziellen Quelle.' },
         { q: 'Speichern Sie meine persönlichen Daten?', a: 'Die Website erfordert keine Registrierung. Alle Details zu Cookies und Analysen finden Sie in der Datenschutzerklärung.' },
@@ -624,7 +624,7 @@ export const CONTENT = {
         { h: 'O que move o preço', p: 'O ouro reage às taxas de juros reais, às expectativas de inflação, à força do dólar, às compras de bancos centrais e à demanda por ativos de refúgio em períodos de incerteza. Por ser cotado em dólares, costuma mover-se de forma inversa ao dólar.' },
       ],
       faq: [
-        { q: 'Com que frequência o preço do ouro é atualizado?', a: 'Os valores do ouro vêm de um fornecedor público de dados de mercado que publica em cronograma diário. Movimentos intradiários entre atualizações não são refletidos.' },
+        { q: 'Com que frequência o preço do ouro é atualizado?', a: 'Continuamente. Enquanto o mercado está aberto, o valor nesta página é atualizado em tempo real no seu navegador a partir de um feed direto da biquote.io, com recurso a xaus.com e api.gold-api.com se esse feed estiver indisponível. Uma cópia do servidor capturada a cada três minutos fornece a primeira exibição e serve de backup.' },
         { q: 'Por que o preço por grama difere do que meu joalheiro cobra?', a: 'Os preços de varejo incluem, além do valor do metal, custos de fabricação, design, impostos e a margem do revendedor. Esta página mostra apenas o preço de referência do metal.' },
         { q: 'É o preço que receberia ao vender ouro?', a: 'Não necessariamente. Revendedores compram abaixo do preço à vista e podem cobrar taxas de ensaio ou manuseio. Use o valor daqui como base de comparação.' },
       ],
@@ -675,8 +675,8 @@ export const CONTENT = {
       lead: 'Respostas às perguntas que os visitantes mais fazem sobre como este site coleta e apresenta os dados de mercado.',
       items: [
         { q: 'O PriceScope é gratuito?', a: 'Sim. Todas as páginas são gratuitas e não exigem cadastro nem assinatura.' },
-        { q: 'De onde vêm os dados?', a: 'Os preços do petróleo Brent e do ouro vêm de fornecedores públicos de dados de mercado, incluindo OilPriceAPI e MetalpriceAPI. Os preços de varejo de combustíveis na China vêm da ShowAPI. Cada página indica suas fontes.' },
-        { q: 'Com que frequência os dados são atualizados?', a: 'Os preços de mercado são coletados em cronograma diário durante o horário de negociação. As taxas de câmbio são atualizadas diariamente. Como os mercados globais fecham nos fins de semana, os valores do fim de semana refletem a última sessão até a reabertura.' },
+        { q: 'De onde vêm os dados?', a: 'Cada página indica suas próprias fontes. O petróleo Brent e o WTI vêm da OilPriceAPI. O ouro internacional (XAU/USD) vem de três fornecedores independentes: xaus.com (principal), biquote.io (feed MT5, ao vivo) e api.gold-api.com (backup), testados em ordem com duas tentativas por ciclo. Os combustíveis de varejo da China vêm da ShowAPI. As taxas de câmbio de referência vêm da ExchangeRate-API, com Frankfurter (BCE) como backup. Todos os valores são referências indicativas, não preços de liquidação de bolsa.' },
+        { q: 'Com que frequência os dados são atualizados?', a: 'O ouro internacional é atualizado em tempo real no seu navegador enquanto o mercado está aberto. Brent e WTI são coletados de hora em hora durante o horário de negociação. Os combustíveis da China seguem o ciclo oficial de revisão de cerca de dez dias úteis. As taxas de câmbio são atualizadas diariamente. Como os mercados fecham nos fins de semana, os valores refletem a última sessão até a reabertura.' },
         { q: 'Estes são preços oficiais?', a: 'Não. Todos os valores são preços de referência para fins informativos gerais. Não são preços de liquidação de bolsa e não devem ser usados para negociar, liquidar ou contabilizar.' },
         { q: 'Posso me basear neles para decisões de investimento?', a: 'Não. Os dados são fornecidos apenas para fins informativos gerais e não constituem aconselhamento de investimento. Sempre confirme os valores com um profissional licenciado ou uma fonte oficial antes de agir.' },
         { q: 'Vocês armazenam meus dados pessoais?', a: 'O site não exige cadastro. Leia a política de privacidade para detalhes completos sobre cookies e análise.' },
