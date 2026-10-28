@@ -211,8 +211,12 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
    *   现在改为：行内永不换行，空间不够时由 .ttl（标题）自己收缩/换行吸收，
    *   徽标始终留在标题同一行。 */
   flex-wrap:nowrap;min-width:0}
-/* 标题：可收缩、可在内部断行。它来吸收宽度变化，徽标就不用动了。 */
-.card h3 .ttl{flex:1 1 auto;min-width:0;overflow-wrap:break-word}
+/* 标题：可收缩，但【只能在词与词之间换行】，绝不在单词内部断开。
+ * ★ 上一轮这里写了 overflow-wrap:break-word，结果法语
+ *   "Pétrole brut Brent" 被从单词中间劈开（Pétro / le / Brent…），
+ *   标题被拆成三四行，非常难看。
+ *   改为 normal 后最多按空格折成两行，单词保持完整。 */
+.card h3 .ttl{flex:0 1 auto;min-width:0;overflow-wrap:normal;word-break:normal}
 .card h3 .swatch{flex:0 0 auto}
 .card .big{font-size:2.05rem;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px;color:#fff}
 .card .unit{font-size:.8rem;color:var(--dim)}

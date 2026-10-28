@@ -135,14 +135,30 @@ console.log('==== 七、v0 回归（前面各版成果不能丢）====');
   /* ★ 本次修复：整行 nowrap —— 徽标宽度变化（4s→14s）时不再掉到下一行 */
   chk('标题行禁止换行（徽标永不下掉）', /\.card h3\{[^}]*flex-wrap:nowrap/.test(css));
   chk('已不再是 flex-wrap:wrap', !/\.card h3\{[^}]*flex-wrap:wrap/.test(css));
-  chk('标题 .ttl 可收缩（吸收宽度变化）', /\.card h3 \.ttl\{[^}]*flex:1 1 auto/.test(css));
-  chk('标题 .ttl 可断行', /\.card h3 \.ttl\{[^}]*overflow-wrap:break-word/.test(css));
+  chk('标题 .ttl 可收缩（吸收宽度变化）', /\.card h3 \.ttl\{[^}]*flex:0 1 auto/.test(css));
+  /* ★ 本次修复：标题只能在【词与词之间】换行，绝不在单词内部断开
+   *   （break-word 曾把 "Pétrole brut Brent" 劈成三四行） */
+  chk('标题 .ttl 禁止词内断行', /\.card h3 \.ttl\{[^}]*overflow-wrap:normal/.test(css));
+  chk('标题 .ttl 不再是 break-word', !/\.card h3 \.ttl\{[^}]*overflow-wrap:break-word/.test(css));
+  chk('标题 .ttl 不强制伸展', /\.card h3 \.ttl\{[^}]*flex:0 1 auto/.test(css));
   chk('秒数锁宽 3ch（一位/两位不换宽度）', /\.live-dot \.ago\{[^}]*min-width:3ch/.test(css));
   chk('色块不收缩', /\.card h3 \.swatch\{[^}]*flex:0 0 auto/.test(css));
   /* 三张卡片的标题必须真的包进 .ttl，否则上面的 CSS 无处生效 */
   for (const id of ['home-oil-chip','home-wti-chip','home-gold-chip']) {
     chk(id + ' 同行标题已包 .ttl',
         new RegExp('<span class="ttl">[^<]*</span><span id="' + id + '"').test(r.body));
+  }
+  /* ★ 首页徽标必须是「精简文案」（不含 "Mis à jour il y a" 这类长前缀后缀），
+   *   否则与法语长标题挤在一行必然换行。用真实渲染的法语首页验证。 */
+  {
+    const fr = await get('/fr/');
+    const i = fr.body.indexOf('const HOME_LIVE_JS') >= 0 ? -1 : -1;
+    // 首页脚本内联在页面里，直接取脚本源码片段
+    const m = fr.body.match(/var AGOPRE[\s\S]{0,40}?AGOTAIL=_A\[1\]\|\|'';/);
+    chk('首页脚本仍解析出 AGOPRE/AGOTAIL 定义', !!m);
+    chk('首页 setAgo 不再拼接 AGOPRE 长前缀',
+        !/createTextNode\(T\.live\+' · '\+AGOPRE\)/.test(
+          fr.body.slice(fr.body.indexOf('const HOME_LIVE_JS') >= 0 ? 0 : 0)));
   }
   const pj = fs.readFileSync(ROOT + '/src/pages.js','utf8');
   chk('setAgo 幂等（不推倒重建）', /el\.querySelector\('\.ago'\)/.test(pj));

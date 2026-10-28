@@ -730,6 +730,8 @@ const HOME_LIVE_JS = `
   /* ★ 秒数单独 span + 等宽：避免 4s→14s 时卡片被顶宽抖动。
    *   各语言 {n} 位置不同：中文「{n}前更新」在前，英文「Updated {n} ago」在中间。
    *   统一按 {n} 拆成前后两段，秒数只占中间那个 span —— 既贴紧又不撑宽。 */
+  /* 首页不用完整「{n}前更新」文案（太长），故这里不再拆 AGOPRE/AGOTAIL。
+     秒数直接拼在「实时 · 」后面即可。 */
   var _A=(T.ago||'{n}').split('{n}');
   var AGOPRE=_A[0]||'', AGOTAIL=_A[1]||'';
   /* ★ 整段文字必须包进一个 .live-txt：
@@ -747,11 +749,15 @@ const HOME_LIVE_JS = `
     if(!sp||!el.querySelector('.live-txt')){
       el.textContent='';
       var box=document.createElement('span'); box.className='live-txt';
-      box.appendChild(document.createTextNode(T.live+' · '+AGOPRE));
+      /* ★ 首页卡片空间窄，用【精简文案】：只「实时 · 14s」。
+       * 完整文案（法语 "En direct · Mis à jour il y a 14s"）有 30+ 字符，
+       * 与 "Pétrole brut Brent" 这类长标题挤在一行必然换行。
+       * 秒数才是首页要看的信息，「实时」保留即可；
+       * 详情页（原油页/黄金页）空间宽裕，仍用完整文案。 */
+      box.appendChild(document.createTextNode(T.live+' · '));
       sp=document.createElement('span');
       sp.className='ago notranslate'; sp.setAttribute('translate','no');
       box.appendChild(sp);
-      if(AGOTAIL) box.appendChild(document.createTextNode(AGOTAIL));
       el.appendChild(box);
     }
     if(sp.textContent!==ago) sp.textContent=ago;
