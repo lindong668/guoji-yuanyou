@@ -39,7 +39,9 @@ const GOLD_LIVE_JS = `
 
   var T={live:elStatus.getAttribute('data-live')||'Live',
          lost:elStatus.getAttribute('data-lost')||'Connection lost',
+         closed:elStatus.getAttribute('data-closed')||'Market closed',
          ago:elStatus.getAttribute('data-ago')||'Updated {n} ago'};
+  var elNote=document.getElementById('g-closed-note');
 
   var RATES={};
   try{ RATES=JSON.parse(document.getElementById('ps-fx').textContent)||{}; }catch(e){ RATES={}; }
@@ -105,12 +107,46 @@ const GOLD_LIVE_JS = `
     card1.classList.remove('is-stale'); card2.classList.remove('is-stale');
     elStatus.classList.remove('is-lost');
     elStatus.textContent=T.live+' \u00b7 '+agoTxt();
+    if(elNote) elNote.hidden=true;
   }
   function markLost(){
     dead=true;
     card1.classList.add('is-stale'); card2.classList.add('is-stale');
     elStatus.classList.add('is-lost');
     elStatus.textContent=T.lost;
+  }
+
+  /* 黄金休市判断 —— 与 3 号后台同一套规则，纽约时间为准。
+     周日 18:00 开盘，周五 17:00 周收盘，每天 17:00-18:00 结算休市，周六周日全天休市。
+     用 Intl 标准时区名，冬令时自动跟随，不需要改代码。 */
+  function nyParts(){
+    try{
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',hour12:false});
+      var o={};
+      f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
+      var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
+      var hh=parseInt(o.hour,10);
+      if(wd>=0&&!isNaN(hh)) return {wd:wd,hour:hh};
+    }catch(e){}
+    return null;
+  }
+  function goldState(){
+    var p=nyParts();
+    if(!p) return 'open';
+    if(p.wd===6) return 'weekend';
+    if(p.wd===0) return p.hour>=18?'open':'weekend';
+    if(p.wd===5) return p.hour<17?'open':'weekend';
+    if(p.hour===17) return 'settlement';
+    return 'open';
+  }
+  /* 休市：数字照常显示（是休市前最后一次真实成交价），
+     但状态栏写「休市中」，并且不再去轮询 —— 休市时抓到的只是沿用值。 */
+  function markClosed(){
+    dead=false;
+    card1.classList.remove('is-stale'); card2.classList.remove('is-stale');
+    elStatus.classList.add('is-lost');
+    elStatus.textContent=T.closed;
+    if(elNote) elNote.hidden=false;
   }
 
   /* 三个源按序尝试。biquote 是券商 MT5 链路（实时、独立），
@@ -151,7 +187,8 @@ const GOLD_LIVE_JS = `
   /* 连续两轮全灭才认定断开 —— 抖动常在半秒内自愈，别急着吓用户。 */
   var busy=false;
   function cycle(){
-    if(busy) return;          /* 上一轮还没跑完（慢网络下可能超过 10 秒），不叠加 */
+    if(busy) return;
+    if(goldState()!=='open'){ markClosed(); return; }          /* 上一轮还没跑完（慢网络下可能超过 10 秒），不叠加 */
     busy=true;
     pass(function(ok){
       if(ok){ markLive(); return; }
@@ -189,8 +226,16 @@ const GOLD_LIVE_JS = `
   setInterval(function(){ if(!document.hidden) cycle(); },30000);   /* 30 秒一轮，别太频繁 */
 
   paint();
-  if(usdOz!=null) markLive();
+  if(usdOz!=null){
+    if(goldState()==='open') markLive(); else markClosed();
+  }
   cycle();
+  /* 每分钟核对一次开休市状态：休市结束（或进入结算）能自动切换显示 */
+  setInterval(function(){
+    var st=goldState();
+    if(st!=='open'){ markClosed(); }
+    else if(!dead&&lastOk){ markLive(); }
+  },60000);
 })();
 `;
 
@@ -685,7 +730,9 @@ export function renderGold(lang, m, fx, tz) {
       <div class="unit">USD / ${esc(UOZ)}</div>
       <div class="meta"><span id="g-status" class="live-dot"
         data-live="${esc(L.goldLiveTag)}" data-lost="${esc(L.goldConnLost)}"
+        data-closed="${esc(L.goldClosedTag || 'Market closed')}"
         data-ago="${esc(L.goldUpdatedAgo)}">${esc(L.goldLiveTag)}</span></div>
+      <p class="src-note" id="g-closed-note" hidden>${esc(L.goldClosedNote || '')}</p>
     </div>
     <div class="card gold" id="g-local">
       <h3><span class="swatch"></span>${esc(L.goldLocalTitle)}</h3>
