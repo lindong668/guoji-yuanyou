@@ -204,18 +204,19 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
   background:radial-gradient(420px 130px at 92% -12%,var(--c,rgba(255,255,255,.08)),transparent 70%)}
 .card>*{position:relative;z-index:1}
-.card h3{margin:0 0 4px;font-size:.98rem;font-weight:650;display:flex;align-items:center;gap:9px;
-  /* ★ 关键：整行【禁止换行】（nowrap）。
-   *   之前用 flex-wrap:wrap，结果徽标宽度一变（4s→14s 多一个字符），
-   *   刚好跨过阈值时徽标就整块掉到下一行 —— 用户看到"个位数在右边、十位数跳到下面"。
-   *   现在改为：行内永不换行，空间不够时由 .ttl（标题）自己收缩/换行吸收，
-   *   徽标始终留在标题同一行。 */
-  flex-wrap:nowrap;min-width:0}
+.card h3{margin:0 0 4px;font-size:.98rem;font-weight:650;
+  /* ★ 定死两行布局，彻底不再跟宽度较劲：
+   *     第一行  .hd   色块 + 标题（独占一行，随便多长都折在自己这一行内）
+   *     第二行  .live-dot  实时徽标（独占一行）
+   *   之前不管是 wrap 还是 nowrap，本质都是"让浏览器猜放不放得下"，
+   *   所以秒数 4s→14s 一变宽就跳位。现在徽标没有横向邻居，
+   *   它本来就在第二行，宽度再变也不影响位置 —— 结构上就不可能跳。 */
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+/* 第一行：色块 + 标题 */
+.card h3 .hd{display:flex;align-items:center;gap:9px;min-width:0;max-width:100%}
 /* 标题：可收缩，但【只能在词与词之间换行】，绝不在单词内部断开。
- * ★ 上一轮这里写了 overflow-wrap:break-word，结果法语
- *   "Pétrole brut Brent" 被从单词中间劈开（Pétro / le / Brent…），
- *   标题被拆成三四行，非常难看。
- *   改为 normal 后最多按空格折成两行，单词保持完整。 */
+ * ★ 曾写过 overflow-wrap:break-word，结果法语
+ *   "Pétrole brut Brent" 被从单词中间劈开（Pétro / le / Brent…），拆成三四行。 */
 .card h3 .ttl{flex:0 1 auto;min-width:0;overflow-wrap:normal;word-break:normal}
 .card h3 .swatch{flex:0 0 auto}
 .card .big{font-size:2.05rem;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px;color:#fff}

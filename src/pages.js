@@ -633,21 +633,21 @@ export function renderHome(lang, m, fx, tz) {
   <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
     <a class="card oil" href="/${lang}/oil/">
-      <h3><span class="swatch o"></span><span class="ttl">${esc(L.secOil)}</span><span id="home-oil-chip" class="live-dot" hidden></span></h3>
+      <h3><span class="hd"><span class="swatch o"></span><span class="ttl">${esc(L.secOil)}</span></span><span id="home-oil-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-oil-price">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card oil" href="/${lang}/wti/">
-      <h3><span class="swatch w"></span><span class="ttl">${esc(L.nav.wti)}</span><span id="home-wti-chip" class="live-dot" hidden></span></h3>
+      <h3><span class="hd"><span class="swatch w"></span><span class="ttl">${esc(L.nav.wti)}</span></span><span id="home-wti-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-wti-price">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
-      <h3><span class="swatch"></span><span class="ttl">${esc(L.secGold)}</span><span id="home-gold-chip" class="live-dot" hidden></span></h3>
+      <h3><span class="hd"><span class="swatch"></span><span class="ttl">${esc(L.secGold)}</span></span><span id="home-gold-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-gold-price">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
       <div class="meta"><span id="home-gold-gram" data-ug="${esc(L.goldUnitGram || 'gram')}"${goldUsd != null ? ' data-usdoz="' + goldUsd + '"' : ''}>${goldUsd != null ? '$' + fmt(goldUsd / TROY_OZ) + ' / ' + esc(L.goldUnitGram || 'gram') : ''}</span>
@@ -749,15 +749,12 @@ const HOME_LIVE_JS = `
     if(!sp||!el.querySelector('.live-txt')){
       el.textContent='';
       var box=document.createElement('span'); box.className='live-txt';
-      /* ★ 首页卡片空间窄，用【精简文案】：只「实时 · 14s」。
-       * 完整文案（法语 "En direct · Mis à jour il y a 14s"）有 30+ 字符，
-       * 与 "Pétrole brut Brent" 这类长标题挤在一行必然换行。
-       * 秒数才是首页要看的信息，「实时」保留即可；
-       * 详情页（原油页/黄金页）空间宽裕，仍用完整文案。 */
-      box.appendChild(document.createTextNode(T.live+' · '));
+      /* ★ 徽标独占第二行，空间充足，用完整文案（与详情页一致）。 */
+      box.appendChild(document.createTextNode(T.live+' \u00b7 '+AGOPRE));
       sp=document.createElement('span');
       sp.className='ago notranslate'; sp.setAttribute('translate','no');
       box.appendChild(sp);
+      if(AGOTAIL) box.appendChild(document.createTextNode(AGOTAIL));
       el.appendChild(box);
     }
     if(sp.textContent!==ago) sp.textContent=ago;

@@ -131,10 +131,14 @@ console.log('==== 七、v0 回归（前面各版成果不能丢）====');
   chk('首页三卡都有实时徽标节点',
       r.body.includes('home-oil-chip') && r.body.includes('home-wti-chip') && r.body.includes('home-gold-chip'));
   const css = stripCss(fs.readFileSync(ROOT + '/src/ui.js','utf8'));
+  const pj  = fs.readFileSync(ROOT + '/src/pages.js','utf8');
   chk('徽标不可压缩（不被压扁裁字）', /\.live-dot\{[^}]*flex:0 0 auto/.test(css));
-  /* ★ 本次修复：整行 nowrap —— 徽标宽度变化（4s→14s）时不再掉到下一行 */
-  chk('标题行禁止换行（徽标永不下掉）', /\.card h3\{[^}]*flex-wrap:nowrap/.test(css));
-  chk('已不再是 flex-wrap:wrap', !/\.card h3\{[^}]*flex-wrap:wrap/.test(css));
+  /* ★ 本次修复：h3 改为【纵向两行】—— 第一行 .hd（色块+标题），第二行徽标。
+   *   徽标没有横向邻居，宽度变化（4s→14s）不可能导致跳位。 */
+  chk('h3 纵向排列（标题在上、徽标在下）', /\.card h3\{[^}]*flex-direction:column/.test(css));
+  chk('h3 不再是横向 nowrap', !/\.card h3\{[^}]*flex-wrap:nowrap/.test(css));
+  chk('第一行 .hd 为横向（色块+标题同行）', /\.card h3 \.hd\{[^}]*display:flex/.test(css));
+  chk('.hd 不纵向排列', !/\.card h3 \.hd\{[^}]*flex-direction:column/.test(css));
   chk('标题 .ttl 可收缩（吸收宽度变化）', /\.card h3 \.ttl\{[^}]*flex:0 1 auto/.test(css));
   /* ★ 本次修复：标题只能在【词与词之间】换行，绝不在单词内部断开
    *   （break-word 曾把 "Pétrole brut Brent" 劈成三四行） */
@@ -145,22 +149,17 @@ console.log('==== 七、v0 回归（前面各版成果不能丢）====');
   chk('色块不收缩', /\.card h3 \.swatch\{[^}]*flex:0 0 auto/.test(css));
   /* 三张卡片的标题必须真的包进 .ttl，否则上面的 CSS 无处生效 */
   for (const id of ['home-oil-chip','home-wti-chip','home-gold-chip']) {
-    chk(id + ' 同行标题已包 .ttl',
-        new RegExp('<span class="ttl">[^<]*</span><span id="' + id + '"').test(r.body));
+    /* 结构必须是：.hd（含色块+标题）在其前，徽标在其后 —— 这才构成两行 */
+    chk(id + ' 徽标位于 .hd 之后（独占第二行）',
+        new RegExp('<span class="hd"><span class="swatch[^"]*"></span><span class="ttl">[^<]*</span></span><span id="' + id + '"').test(r.body));
   }
-  /* ★ 首页徽标必须是「精简文案」（不含 "Mis à jour il y a" 这类长前缀后缀），
-   *   否则与法语长标题挤在一行必然换行。用真实渲染的法语首页验证。 */
-  {
-    const fr = await get('/fr/');
-    const i = fr.body.indexOf('const HOME_LIVE_JS') >= 0 ? -1 : -1;
-    // 首页脚本内联在页面里，直接取脚本源码片段
-    const m = fr.body.match(/var AGOPRE[\s\S]{0,40}?AGOTAIL=_A\[1\]\|\|'';/);
-    chk('首页脚本仍解析出 AGOPRE/AGOTAIL 定义', !!m);
-    chk('首页 setAgo 不再拼接 AGOPRE 长前缀',
-        !/createTextNode\(T\.live\+' · '\+AGOPRE\)/.test(
-          fr.body.slice(fr.body.indexOf('const HOME_LIVE_JS') >= 0 ? 0 : 0)));
-  }
-  const pj = fs.readFileSync(ROOT + '/src/pages.js','utf8');
+  /* ★ 徽标独占第二行后空间充足，首页恢复【完整文案】（与详情页一致）：
+   *   "实时 · 14s 前更新" / "En direct · Mis à jour il y a 14s"。
+   *   上一版为塞进窄行砍成 "En direct · 14s"，现在不必了。 */
+  chk('首页 setAgo 拼接完整文案（含 AGOPRE）',
+      /createTextNode\(T\.live\+' · '\+AGOPRE\)/.test(pj));
+  chk('首页 setAgo 拼接 AGOTAIL 后缀', /AGOTAIL\) box\.appendChild/.test(pj));
+
   chk('setAgo 幂等（不推倒重建）', /el\.querySelector\('\.ago'\)/.test(pj));
   chk('秒数标 notranslate', /ago notranslate/.test(pj));
 }
