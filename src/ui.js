@@ -238,7 +238,17 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
   font-size:.7rem;line-height:1;vertical-align:middle;white-space:nowrap;
   /* ★ 关键：作为 flex item 时默认可收缩，空间不足会被压扁导致文字被裁掉。
    *   设为不可收缩后，放不下就整块换行到下一行，完整可见。 */
-  flex:0 0 auto}
+  flex:0 0 auto;
+  /* ★ 整段标 notranslate 由 JS 加（class="live-txt notranslate"）；
+   *   这里补一条：徽标自身高度锁死。
+   *   ★ 复现原因（法语+浏览器翻译时秒数上下跳）：
+   *     翻译插件在翻译过程中会【先把节点摘掉、插入 <font> 包裹层、再放回】，
+   *     这一瞬间徽标高度为 0，父级 .card h3（column 布局）的第二行塌陷，
+   *     卡片整体变矮；翻译完成又恢复 —— 于是反复"上下跳"。
+   *     锁死 min-height 后，即使内容被临时摘走，这一行仍占位，高度恒定。 */
+  min-height:1em;
+  /* 超长时横向溢出由外层裁掉，绝不换行（换行=高度变化=跳动） */
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;display:inline-flex}
 .live-dot::before{content:"";width:6px;height:6px;flex:0 0 auto;border-radius:50%;
   background:var(--ok);animation:psPulse 2s ease-in-out infinite}
 /* ★ 秒数只需等宽，不再预留宽度：

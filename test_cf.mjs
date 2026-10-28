@@ -146,6 +146,11 @@ console.log('==== 七、v0 回归（前面各版成果不能丢）====');
   chk('标题 .ttl 不再是 break-word', !/\.card h3 \.ttl\{[^}]*overflow-wrap:break-word/.test(css));
   chk('标题 .ttl 不强制伸展', /\.card h3 \.ttl\{[^}]*flex:0 1 auto/.test(css));
   chk('秒数锁宽 3ch（一位/两位不换宽度）', /\.live-dot \.ago\{[^}]*min-width:3ch/.test(css));
+  /* ★ 徽标锁高：浏览器翻译插件会【先摘掉节点、插 <font> 包裹、再放回】，
+   *   那一瞬间徽标高度为 0 → column 布局第二行塌陷 → 卡片变矮 → 反复上下跳。
+   *   锁 min-height 后该行恒占位，高度不再变化。 */
+  chk('徽标锁死高度（翻译插件摘节点时不塌陷）', /\.live-dot\{[^}]*min-height:1em/.test(css));
+  chk('徽标不换行（换行=高度变化=跳动）', /\.live-dot\{[^}]*overflow:hidden/.test(css));
   chk('色块不收缩', /\.card h3 \.swatch\{[^}]*flex:0 0 auto/.test(css));
   /* 三张卡片的标题必须真的包进 .ttl，否则上面的 CSS 无处生效 */
   for (const id of ['home-oil-chip','home-wti-chip','home-gold-chip']) {
