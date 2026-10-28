@@ -721,6 +721,44 @@ const HOME_LIVE_JS = `
   var wti=mk('home-wti-chip','home-wti-price');
   var gold=mk('home-gold-chip','home-gold-price','home-gold-gram');
   if(!items.length) return;
+  /* ★ 每张卡绑定自己的交易时区 —— 布伦特(伦敦)与 WTI(纽约)时段不同，
+   *   经常出现"布伦特休市、WTI 开市"（例如北京 07:00 前后）。
+   *   所以必须【各自独立】判断，不能共用一个状态。 */
+  if(oil)  oil.tz='Europe/London';
+  if(wti)  wti.tz='America/New_York';
+  if(gold) gold.tz='America/New_York';
+
+  /* ★ 开休市判断（IANA 时区名 —— 冬令时/夏令时自动跟随，永不写死 UTC 偏移）
+   *   布伦特 Europe/London    01:00–23:00 交易，23:00–01:00 结算休市，周六周日休市
+   *   WTI    America/New_York 周日 18:00 开盘 → 周五 17:00 周收盘，
+   *                           每日 17:00–18:00 结算休市，周六全天休市
+   *   ★ 取不到时区信息时默认 open —— 宁可多抓一次，也不要误显示"休市中"。 */
+  function mktParts(tz){
+    try{
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',hour:'2-digit',hour12:false});
+      var o={}; f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
+      var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
+      var hh=parseInt(o.hour,10);
+      if(wd>=0&&!isNaN(hh)) return {wd:wd,hour:hh};
+    }catch(e){}
+    return null;
+  }
+  function mktOpen(tz){
+    var p=mktParts(tz);
+    if(!p) return true;
+    if(tz==='America/New_York'){
+      if(p.wd===6) return false;
+      if(p.wd===0) return p.hour>=18;
+      if(p.wd===5) return p.hour<17;
+      if(p.hour===17) return false;
+      return true;
+    }
+    /* Europe/London（布伦特）
+     * ⚠️ 周日是否开盘各源口径不一（ICE 官方为周日 23:00 伦敦开盘），
+     *    这里保守按"周末休市"处理 —— 休市时抓到的只是沿用值，抓了也白抓。 */
+    if(p.wd===6||p.wd===0) return false;
+    return p.hour>=1 && p.hour<23;
+  }
 
   function fm(v){ try{ return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }catch(e){ return '$'+v; } }
   function agoTxt(ms){
@@ -762,21 +800,30 @@ const HOME_LIVE_JS = `
   function paint(it){
     if(!it||!it.chip) return;
     it.chip.hidden=false;
-    if(it.state==='lost'){ it.chip.classList.add('is-lost'); it.chip.textContent=T.lost; return; }
-    if(it.state==='closed'){ it.chip.classList.add('is-lost'); it.chip.textContent=T.closed; return; }
+    /* ★ 休市/断线也要幂等：paint 每秒都被调用一次，
+     *   若每次都 textContent= 重写，翻译插件会被反复打断 → 徽标忽大忽小。
+     *   加"值没变就不写"的判断后，休市状态下 DOM 完全不动。 */
+    if(it.state==='lost'){ it.chip.classList.add('is-lost');
+      if(it.chip.textContent!==T.lost) it.chip.textContent=T.lost; return; }
+    if(it.state==='closed'){ it.chip.classList.add('is-lost');
+      if(it.chip.textContent!==T.closed) it.chip.textContent=T.closed; return; }
     it.chip.classList.remove('is-lost');
     if(it.lastOk) setAgo(it.chip,agoTxt(it.lastOk));
     else it.chip.textContent=T.live;
   }
 
+  /* 一次请求同时拿布伦特 + WTI，但【各自独立判断开休市】：
+   *   某一腿休市时，即使拿到数字也只是沿用值 → 不写、显示"休市中"。 */
   function pullOil(){
     fetch('/api/oil-live',{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
         var now=Date.now();
         var b=+j.brent||0, w=+j.wti||0;
-        if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now; oil.state='live'; paint(oil); }
-        if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now; wti.state='live'; paint(wti); }
+        if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now;
+                    oil.state=mktOpen(oil.tz)?'live':'closed'; paint(oil); }
+        if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now;
+                    wti.state=mktOpen(wti.tz)?'live':'closed'; paint(wti); }
       })
       .catch(function(){
         if(oil){ oil.state='lost'; paint(oil); }
@@ -820,25 +867,16 @@ const HOME_LIVE_JS = `
     })();
   }
 
-  /* 黄金休市判断（纽约时间），与黄金页同一套规则 */
-  function goldState(){
-    try{
-      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',hour12:false});
-      var o={}; f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
-      var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
-      var hh=parseInt(o.hour,10);
-      if(wd===6) return 'closed';
-      if(wd===0) return hh>=18?'open':'closed';
-      if(wd===5) return hh<17?'open':'closed';
-      if(hh===17) return 'closed';
-      return 'open';
-    }catch(e){ return 'open'; }
-  }
-
   function cycle(){
-    pullOil();
+    /* 布伦特与 WTI 各自判断：只要有一腿开市就去拉（一次请求拿两个数），
+     * 休市那一腿在 pullOil 里会被置为 closed，不会把沿用值当新数据显示。
+     * 两腿都休市 → 完全不发请求，直接显示「休市中」。 */
+    var bOpen=oil?mktOpen(oil.tz):false, wOpen=wti?mktOpen(wti.tz):false;
+    if(bOpen||wOpen) pullOil();
+    else { if(oil){ oil.state='closed'; paint(oil); } if(wti){ wti.state='closed'; paint(wti); } }
     if(gold){
-      if(goldState()==='open') pullGold();
+      /* 黄金与 WTI 同为纽约时段，直接复用 mktOpen，去掉重复的 goldState */
+      if(mktOpen(gold.tz)) pullGold();
       else { gold.state='closed'; paint(gold); }
     }
   }
@@ -853,7 +891,9 @@ function liveT(lang){
   const L = t(lang);
   return '<script type="application/json" id="ps-live-t">'
     + JSON.stringify({live:L.goldLiveTag, lost:L.goldConnLost,
-                      closed:L.goldClosedTag || 'Market closed', ago:L.goldUpdatedAgo})
+                      closed:L.goldClosedTag || 'Market closed', ago:L.goldUpdatedAgo,
+                      /* 休市说明：黄金与原油各一套（文案里点明了品种） */
+                      closedNote:L.goldClosedNote || '', oilClosedNote:L.oilClosedNote || ''})
         .replace(/</g, '\\u003c')
     + '</script>';
 }
@@ -869,7 +909,10 @@ function oilLiveJs(kind) {
   var chip=document.getElementById('oil-live-chip');
   if(!el) return;
   var KIND='${kind}';
-  var T={live:'Live',lost:'Connection lost',ago:'Updated {n} ago'};
+  /* ★ 布伦特看伦敦时段，WTI 看纽约时段 —— 两者不同，不能共用一个判断。
+   *   用 IANA 时区名，冬令时/夏令时自动跟随（今年美国 11/1 切冬令时，无需改代码）。 */
+  var TZ=(KIND==='wti')?'America/New_York':'Europe/London';
+  var T={live:'Live',lost:'Connection lost',closed:'Market closed',ago:'Updated {n} ago'};
   var tEl=document.getElementById('ps-live-t');
   if(tEl){ try{ T=JSON.parse(tEl.textContent)||T; }catch(e){} }
   var lastOk=0,state='init';
@@ -877,6 +920,37 @@ function oilLiveJs(kind) {
   function agoTxt(){
     var s=Math.round((Date.now()-lastOk)/1000);
     return s<60?(s+'s'):(s<3600?Math.round(s/60)+'m':Math.round(s/3600)+'h');
+  }
+  /* ★ 开休市判断（IANA 时区名，冬令时自动跟随）
+   *   布伦特 Europe/London    01:00–23:00 交易，23:00–01:00 结算休市，周六周日休市
+   *   WTI    America/New_York 周日 18:00 开盘 → 周五 17:00 周收盘，
+   *                           每日 17:00–18:00 结算休市，周六全天休市
+   *   ⚠️ 布伦特周日是否开盘各源口径不一，这里保守按休市处理。
+   *   ★ 取不到时区信息时默认开市 —— 宁可多抓一次，也不误显示"休市中"。 */
+  function mktOpen(tz){
+    try{
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',hour:'2-digit',hour12:false});
+      var o={}; f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
+      var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
+      var hh=parseInt(o.hour,10);
+      if(wd<0||isNaN(hh)) return true;
+      if(tz==='America/New_York'){
+        if(wd===6) return false;
+        if(wd===0) return hh>=18;
+        if(wd===5) return hh<17;
+        if(hh===17) return false;
+        return true;
+      }
+      if(wd===6||wd===0) return false;
+      return hh>=1 && hh<23;
+    }catch(e){ return true; }
+  }
+  var noteEl=document.getElementById('oil-closed-note');
+  function setNote(show){
+    if(!noteEl) return;
+    noteEl.hidden=!show;
+    if(show && T.oilClosedNote && noteEl.textContent!==T.oilClosedNote)
+      noteEl.textContent=T.oilClosedNote;
   }
   /* ★ 秒数单独 span + 等宽：避免 4s→14s 时卡片被顶宽抖动。
    *   各语言 {n} 位置不同：中文「{n}前更新」在前，英文「Updated {n} ago」在中间。
@@ -910,19 +984,26 @@ function oilLiveJs(kind) {
   function paint(){
     if(!chip) return;
     chip.hidden=false;
-    if(state==='lost'){ chip.classList.add('is-lost'); chip.textContent=T.lost; return; }
-    chip.classList.remove('is-lost');
+    /* ★ 休市/断线也幂等：paint 每秒都跑一次，重复写 textContent 会打断翻译插件 */
+    if(state==='lost'){ chip.classList.add('is-lost'); setNote(false);
+      if(chip.textContent!==T.lost) chip.textContent=T.lost; return; }
+    if(state==='closed'){ chip.classList.add('is-lost'); setNote(true);
+      if(chip.textContent!==T.closed) chip.textContent=T.closed; return; }
+    chip.classList.remove('is-lost'); setNote(false);
     if(lastOk) setAgo(chip,agoTxt());
     else chip.textContent=T.live;
   }
   function pull(){
+    /* ★ 休市时抓到的只是沿用值，抓了也白抓 —— 直接置为「休市中」。
+     *   数字照常显示（服务端首屏值，即休市前最后一次真实成交价）。 */
+    if(!mktOpen(TZ)){ state='closed'; paint(); return Promise.resolve(); }
     return fetch('/api/oil-live',{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
         var v=(KIND==='wti')?(j.wti||0):(j.brent||0);
         if(!v) return;
         el.textContent=fm(v);
-        lastOk=Date.now(); state='live';
+        lastOk=Date.now(); state=mktOpen(TZ)?'live':'closed';
         /* 源名称不再占徽标（徽标统一显示「实时 · Ns 前」），改为悬停可见 */
         if(chip&&j.providerLabel) chip.title=j.providerLabel;
         paint();
@@ -949,6 +1030,7 @@ export function renderOil(lang, m, tz) {
       <div class="meta"><span id="oil-live-chip" class="live-dot" hidden></span></div>
     </div>
   </div>
+  <p class="src-note" id="oil-closed-note" hidden></p>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcOil || '')}</p>
   ${L.netHint ? `<p class="src-note soft">${esc(L.netHint)}</p>` : ''}
   ${L.srcDisclaimer ? `<p class="src-note soft">${esc(L.srcDisclaimer)}</p>` : ''}
@@ -992,6 +1074,7 @@ export function renderWti(lang, m, tz) {
       <div class="meta"><span>${esc(L.wtiSpreadHint)}</span></div>
     </div>` : ''}
   </div>
+  <p class="src-note" id="oil-closed-note" hidden></p>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcWti || '')}</p>
   ${L.netHint ? `<p class="src-note soft">${esc(L.netHint)}</p>` : ''}
   ${L.srcDisclaimer ? `<p class="src-note soft">${esc(L.srcDisclaimer)}</p>` : ''}

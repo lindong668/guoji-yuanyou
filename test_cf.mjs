@@ -169,6 +169,50 @@ console.log('==== 七、v0 回归（前面各版成果不能丢）====');
   chk('秒数标 notranslate', /ago notranslate/.test(pj));
 }
 
+console.log('==== 七之二、原油开休市判断（本次新增）====');
+{
+  const pj = fs.readFileSync(ROOT + '/src/pages.js','utf8');
+  chk('详情页按品种绑定时区（布伦特伦敦 / WTI 纽约）',
+      /var TZ=\(KIND==='wti'\)\?'America\/New_York':'Europe\/London'/.test(pj));
+  chk('首页三卡各自绑定时区', /oil\.tz='Europe\/London'/.test(pj) && /wti\.tz='America\/New_York'/.test(pj));
+  chk('用 IANA 时区名（不写死 UTC 偏移）',
+      pj.includes("timeZone:tz") && !/UTC[+-]\d/.test(pj.slice(pj.indexOf('function mktOpen'))));
+  chk('休市时不发请求', /if\(!mktOpen\(TZ\)\)\{ state='closed'; paint\(\); return/.test(pj));
+  chk('两腿独立判断（一开一休时不互相覆盖）',
+      /oil\.state=mktOpen\(oil\.tz\)\?'live':'closed'/.test(pj) &&
+      /wti\.state=mktOpen\(wti\.tz\)\?'live':'closed'/.test(pj));
+  chk('休市/断线也幂等（不每秒重写 DOM）',
+      /state==='closed'\)\{ chip\.classList\.add\('is-lost'\); setNote\(true\);\s*\n?\s*if\(chip\.textContent!==T\.closed\)/.test(pj));
+  chk('两页都有休市说明元素', (pj.match(/id="oil-closed-note"/g)||[]).length === 2);
+  /* 七语都要有原油休市说明 */
+  const ib = fs.readFileSync(ROOT + '/src/i18n.js','utf8');
+  chk('七语都有 oilClosedNote', (ib.match(/oilClosedNote:/g)||[]).length === 7);
+  for (const lg of ['zh','en','ja','es','fr','de','pt']) {
+    const r = await get('/' + lg + '/oil/');
+    chk(lg + ' 原油页含休市说明元素', r.body.includes('oil-closed-note'));
+  }
+  /* ★ 真实执行开休市判断：冻结时刻，验证状态 */
+  const i2 = pj.indexOf('function mktOpen(tz){', pj.indexOf('var KIND='));
+  const body = pj.slice(i2, pj.indexOf('\n  }', i2)+4);
+  const mk = (tz) => new Function('tz', body.replace(/^function mktOpen\(tz\)\{/,'').replace(/\}$/,''))(tz);
+  const RealDate = Date;
+  const at = (iso) => {
+    globalThis.Date = class extends RealDate {
+      constructor(...a){ return a.length ? new RealDate(...a) : new RealDate(iso); }
+      static now(){ return new RealDate(iso).getTime(); }
+    };
+  };
+  at('2026-10-29T07:26:00+08:00');   // 当前：伦敦 23:26、纽约 19:26
+  chk('当前时刻：布伦特休市（伦敦 23:00-01:00 结算）', mk('Europe/London') === false);
+  chk('当前时刻：WTI 开市（纽约已过 17-18 休市）', mk('America/New_York') === true);
+  at('2026-10-31T08:00:00+08:00');   // 周六
+  chk('周六：布伦特休市', mk('Europe/London') === false);
+  chk('周六：WTI 休市', mk('America/New_York') === false);
+  at('2026-11-02T08:00:00+08:00');   // 周一，美国 11/1 已切冬令时
+  chk('冬令时切换后仍能正确判断（WTI 周日 18:00 后开市）', mk('America/New_York') === true);
+  globalThis.Date = RealDate;
+}
+
 console.log('==== 八、CF 专属配置====');
 {
   const w = fs.readFileSync(ROOT + '/wrangler.toml','utf8');
