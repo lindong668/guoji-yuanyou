@@ -3,7 +3,7 @@
 // ============================================================
 import { t, provName, LANGS, SITE, DEFAULT_LANG } from './i18n.js';
 import { page, hero, esc, adSlot } from './ui.js';
-import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt } from './data.js';
+import { CURRENCIES, POPULAR_PAIRS, convert, rateOf, fmt, fmtFx, fxDp, cnyRateOf } from './data.js';
 import { curName } from './i18n.js';
 import { CONTENT } from './content.js';
 import { ARTICLES, articlesFor, relatedFor, blogStr } from './articles.js';
@@ -88,13 +88,29 @@ const GOLD_LIVE_JS = `
     try{ return new Intl.NumberFormat(loc,{minimumFractionDigits:2,maximumFractionDigits:2}).format(v); }
     catch(e){ return (Math.round(v*100)/100).toFixed(2); }
   }
+  /* ★ A22p：汇率行固定显示美元兑【人民币】，不再跟着上面的币种下拉变。
+   * 改之前这行跟着 cur 走，页面默认是 USD，于是显示成
+   * 「1 USD = 1.00 USD」—— 首屏还是 6.6810 CNY，JS 一跑就跳成 1.00 USD，
+   * 既难看又让访客以为数据错了。现在与汇率页口径一致，固定人民币。 */
+  function fxdp(v){
+    var a=Math.abs(Number(v));
+    if(!isFinite(a)) return 4;
+    return a>=100?2:4;
+  }
+  function fxnum(v){
+    var d=fxdp(v);
+    try{ return Number(v).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+    catch(e){ return String(v); }
+  }
   function paint(){
     if(usdOz==null) return;
     elUsd.textContent='$'+num(usdOz);
     elConv.textContent=money(usdOz/OZ*rate(cur));
     var uo=elRate.getAttribute('data-uo')||'troy oz';
     var ug=elRate.getAttribute('data-ug')||'gram';
-    elRate.textContent='1 USD = '+num(rate(cur))+' '+cur+' \u00b7 1 '+uo+' = 31.1034768 '+ug;
+    var cnyCode=elRate.getAttribute('data-cny-code')||'CNY';
+    var cnyVal=parseFloat(elRate.getAttribute('data-cny-rate'));
+    elRate.textContent='1 USD = '+(isNaN(cnyVal)?'\u2014':fxnum(cnyVal))+' '+cnyCode+' \u00b7 1 '+uo+' = 31.1034768 '+ug;
   }
   function agoTxt(){
     if(!lastOk) return '';
@@ -604,8 +620,8 @@ export function renderHome(lang, m, fx, tz) {
     </a>
     <a class="card fx" href="/${lang}/currency/">
       <h3><span class="swatch f"></span>${esc(L.secFx)}</h3>
-      <div class="big">${fx ? fmt(rateOf('USD', 'EUR', fx) ?? 0, 4) : '—'}</div>
-      <div class="unit">1 USD = ${fx ? fmt(rateOf('USD', 'EUR', fx), 4) : '—'} EUR</div>
+      <div class="big">${fx ? fmtFx(rateOf('USD', 'EUR', fx) ?? 0) : '—'}</div>
+      <div class="unit">1 USD = ${fx ? fmtFx(rateOf('USD', 'EUR', fx)) : '—'} EUR</div>
       <div class="meta"><span>${fxUpdatedBlock(lang, fx, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
@@ -720,6 +736,13 @@ export function renderGold(lang, m, fx, tz) {
   const UOZ = L.goldUnitOz || 'troy oz';
   const UG  = L.goldUnitGram || 'gram';
 
+  /* ★ A22p：人民币汇率统一走 CNY（与汇率页口径一致）。
+   * 改之前这里优先取 CNH（离岸），而汇率页取 CNY（在岸），
+   * 同一个站两个数字对不上。现在全站统一在岸。
+   * 源里若没有 CNY 才退回 CNH，且标签跟着实际取值走。 */
+  const CNY = cnyRateOf(rates);
+  const cnyTxt = (CNY.value != null) ? fmtFx(CNY.value) : '—';
+
   const body = `<section class="blk"><div class="wrap">
   <h2 class="h2"><span class="ico">🥇</span>${esc(L.goldTitle)}</h2>
   <p class="sub">${esc(marketNote(lang, tz))}</p>
@@ -738,7 +761,7 @@ export function renderGold(lang, m, fx, tz) {
       <h3><span class="swatch"></span>${esc(L.goldLocalTitle)}</h3>
       <div class="big" id="g-conv">${initGram != null ? '$' + fmt(initGram) : '—'}</div>
       <div class="unit"><select id="g-cur" aria-label="${esc(L.goldLocalTitle)}"></select> / ${esc(UG)}</div>
-      <div class="meta"><span id="g-rate" data-uo="${esc(UOZ)}" data-ug="${esc(UG)}">${rates ? esc('1 USD = ' + (rates.CNH || rates.CNY || '—') + ' CNH · 1 ' + UOZ + ' = 31.1034768 ' + UG + (fxDate ? ' · FX ' + fxDate : '')) : ''}</span></div>
+      <div class="meta"><span id="g-rate" data-uo="${esc(UOZ)}" data-ug="${esc(UG)}" data-cny-code="${esc(CNY.code)}" data-cny-rate="${CNY.value != null ? esc(String(CNY.value)) : ''}">${rates ? esc('1 USD = ' + cnyTxt + ' ' + CNY.code + ' · 1 ' + UOZ + ' = 31.1034768 ' + UG + (fxDate ? ' · FX ' + fxDate : '')) : ''}</span></div>
     </div>
   </div>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.goldSrcShort || '')}<br><strong>${esc(L.goldNotAdvice)}</strong></p>
@@ -807,7 +830,7 @@ export function renderFx(lang, fx, tz) {
     const r = rateOf(a, b, fx);
     return `<div class="pair">
       <div class="p">${esc(curName(lang, a))} (${a}) → ${esc(curName(lang, b))} (${b})</div>
-      <div class="v">${r != null ? fmt(r, 4) : '—'}</div>
+      <div class="v">${r != null ? fmtFx(r) : '—'}</div>
     </div>`;
   }).join('');
 
@@ -849,14 +872,25 @@ const NAMES = ${JSON.stringify(Object.fromEntries(CURRENCIES.map(c => [c.c, curN
 const F = document.getElementById('from'), T = document.getElementById('to'),
       A = document.getElementById('amt'), O = document.getElementById('out'),
       RT = document.getElementById('rt');
+/* ★ A22p：小数位按银行牌价惯例 —— 面值大的货币 2 位，主要货币对 4 位。
+   原来这里写死 6 位，会输出 6.681042 这种，看着像程序原始值，不像牌价。 */
+function fxdp(v){
+  const a = Math.abs(Number(v));
+  if(!isFinite(a)) return 4;
+  return a >= 100 ? 2 : 4;
+}
+function fxnum(v){
+  const d = fxdp(v);
+  return Number(v).toLocaleString(UILOCALE,{minimumFractionDigits:d,maximumFractionDigits:d});
+}
 function doConvert(){
   const a = parseFloat(A.value);
   if(isNaN(a)){ O.textContent='—'; return; }
   const f = RATES[F.value], t2 = RATES[T.value];
   if(f==null||t2==null){ O.textContent='—'; return; }
   const v = (a/f)*t2;
-  O.textContent = v.toLocaleString(UILOCALE,{maximumFractionDigits:4}) + ' ' + (NAMES[T.value]||T.value);
-  RT.textContent = '1 ' + (NAMES[F.value]||F.value) + ' (' + F.value + ') = ' + (t2/f).toLocaleString(UILOCALE,{maximumFractionDigits:6}) + ' ' + (NAMES[T.value]||T.value) + ' (' + T.value + ')';
+  O.textContent = fxnum(v) + ' ' + (NAMES[T.value]||T.value);
+  RT.textContent = '1 ' + (NAMES[F.value]||F.value) + ' (' + F.value + ') = ' + fxnum(t2/f) + ' ' + (NAMES[T.value]||T.value) + ' (' + T.value + ')';
 }
 [F,T,A].forEach(el=>el.addEventListener('input',doConvert));
 doConvert();

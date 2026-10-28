@@ -388,6 +388,42 @@ export function fmt(n, dp = 2) {
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 
+/* ============================================================
+ * ★ A22p：汇率小数位统一（A22p 新增）
+ * ------------------------------------------------------------
+ * 背景：改之前同一个站出现两个不同的美元兑人民币数字 ——
+ *   黄金页取 CNH（离岸）→ 显示 6.67
+ *   汇率页取 CNY（在岸）→ 显示 6.681042
+ * 数字本身都真实，但同一个站两个数对不上，访客会觉得不专业。
+ *
+ * 定案：人民币一律走 CNY（在岸，国内实际成交价），全站统一。
+ *
+ * 小数位按【银行外汇牌价惯例】：
+ *   面值大的货币（日元 152.30、韩元 1380.50）→ 2 位
+ *   主要货币对（USD/CNY 6.6810、EUR/USD 1.0810）→ 4 位
+ * 不用 6 位 —— 六位小数看着像程序原始输出，不像牌价。
+ */
+export function fxDp(v) {
+  const a = Math.abs(Number(v));
+  if (!isFinite(a)) return 4;
+  return a >= 100 ? 2 : 4;
+}
+
+export function fmtFx(n) {
+  if (n == null || Number.isNaN(n)) return '—';
+  return fmt(n, fxDp(n));
+}
+
+/* 人民币统一口径：优先在岸 CNY，源里没有才退回离岸 CNH。
+ * 返回 { code, value }，标签跟着实际取值走 —— 避免
+ * 「数字是离岸的、标签却写着 CNH」这类名不副实的情况。 */
+export function cnyRateOf(rates) {
+  if (!rates) return { code: 'CNY', value: null };
+  if (rates.CNY != null) return { code: 'CNY', value: rates.CNY };
+  if (rates.CNH != null) return { code: 'CNH', value: rates.CNH };
+  return { code: 'CNY', value: null };
+}
+
 // ============================================================
 // ★ A22：黄金现抓代理（/api/gold-live）
 // ------------------------------------------------------------
