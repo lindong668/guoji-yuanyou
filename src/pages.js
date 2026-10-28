@@ -633,21 +633,21 @@ export function renderHome(lang, m, fx, tz) {
   <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
     <a class="card oil" href="/${lang}/oil/">
-      <h3><span class="swatch o"></span>${esc(L.secOil)}<span id="home-oil-chip" class="live-dot" hidden></span></h3>
+      <h3><span class="swatch o"></span><span class="ttl">${esc(L.secOil)}</span><span id="home-oil-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-oil-price">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card oil" href="/${lang}/wti/">
-      <h3><span class="swatch w"></span>${esc(L.nav.wti)}<span id="home-wti-chip" class="live-dot" hidden></span></h3>
+      <h3><span class="swatch w"></span><span class="ttl">${esc(L.nav.wti)}</span><span id="home-wti-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-wti-price">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
-      <h3><span class="swatch"></span>${esc(L.secGold)}<span id="home-gold-chip" class="live-dot" hidden></span></h3>
+      <h3><span class="swatch"></span><span class="ttl">${esc(L.secGold)}</span><span id="home-gold-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-gold-price">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
       <div class="meta"><span id="home-gold-gram" data-ug="${esc(L.goldUnitGram || 'gram')}"${goldUsd != null ? ' data-usdoz="' + goldUsd + '"' : ''}>${goldUsd != null ? '$' + fmt(goldUsd / TROY_OZ) + ' / ' + esc(L.goldUnitGram || 'gram') : ''}</span>

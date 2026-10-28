@@ -47,6 +47,12 @@ globalThis.fetch = async (u, o) => {
   return new Response('{}', { status:200, headers:{'content-type':'application/json'} });
 };
 
+
+/* ★ CSS 断言必须先剥掉 /*...*\/ 注释再匹配。
+ *   之前踩过坑：注释里写了 "之前用 flex-wrap:wrap"，
+ *   正则直接在注释里命中 → 规则其实已改成 nowrap，测试却仍报通过（假阳性）。 */
+const stripCss = (c) => c.replace(/\/\*[\s\S]*?\*\//g, '');
+
 async function get(p, hdrs = {}) {
   const req = new Request('https://you.piccalc.com' + p, { headers: hdrs });
   const res = await worker.fetch(req, {}, { waitUntil(){}, passThroughOnException(){} });
@@ -124,9 +130,20 @@ console.log('==== 七、v0 回归（前面各版成果不能丢）====');
   chk('免责用"数据"口径', !r.body.includes('以上价格') && r.body.includes('以上数据'));
   chk('首页三卡都有实时徽标节点',
       r.body.includes('home-oil-chip') && r.body.includes('home-wti-chip') && r.body.includes('home-gold-chip'));
-  const css = fs.readFileSync(ROOT + '/src/ui.js','utf8');
-  chk('徽标不可压缩（长语言不被挤掉）', /\.live-dot\{[^}]*flex:0 0 auto/.test(css));
-  chk('标题行允许换行', /\.card h3\{[^}]*flex-wrap:wrap/.test(css));
+  const css = stripCss(fs.readFileSync(ROOT + '/src/ui.js','utf8'));
+  chk('徽标不可压缩（不被压扁裁字）', /\.live-dot\{[^}]*flex:0 0 auto/.test(css));
+  /* ★ 本次修复：整行 nowrap —— 徽标宽度变化（4s→14s）时不再掉到下一行 */
+  chk('标题行禁止换行（徽标永不下掉）', /\.card h3\{[^}]*flex-wrap:nowrap/.test(css));
+  chk('已不再是 flex-wrap:wrap', !/\.card h3\{[^}]*flex-wrap:wrap/.test(css));
+  chk('标题 .ttl 可收缩（吸收宽度变化）', /\.card h3 \.ttl\{[^}]*flex:1 1 auto/.test(css));
+  chk('标题 .ttl 可断行', /\.card h3 \.ttl\{[^}]*overflow-wrap:break-word/.test(css));
+  chk('秒数锁宽 3ch（一位/两位不换宽度）', /\.live-dot \.ago\{[^}]*min-width:3ch/.test(css));
+  chk('色块不收缩', /\.card h3 \.swatch\{[^}]*flex:0 0 auto/.test(css));
+  /* 三张卡片的标题必须真的包进 .ttl，否则上面的 CSS 无处生效 */
+  for (const id of ['home-oil-chip','home-wti-chip','home-gold-chip']) {
+    chk(id + ' 同行标题已包 .ttl',
+        new RegExp('<span class="ttl">[^<]*</span><span id="' + id + '"').test(r.body));
+  }
   const pj = fs.readFileSync(ROOT + '/src/pages.js','utf8');
   chk('setAgo 幂等（不推倒重建）', /el\.querySelector\('\.ago'\)/.test(pj));
   chk('秒数标 notranslate', /ago notranslate/.test(pj));

@@ -1,4 +1,4 @@
-import { JSDOM } from 'jsdom';
+import { JSDOM } from '/usr/local/lib/node_modules/jsdom/lib/api.js';
 import { renderHome } from './src/pages.js';
 
 let pass=0, fail=0;

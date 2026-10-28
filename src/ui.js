@@ -205,10 +205,15 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
   background:radial-gradient(420px 130px at 92% -12%,var(--c,rgba(255,255,255,.08)),transparent 70%)}
 .card>*{position:relative;z-index:1}
 .card h3{margin:0 0 4px;font-size:.98rem;font-weight:650;display:flex;align-items:center;gap:9px;
-  /* ★ 法语/西语/德语标题比中文长很多：图标+长标题+徽标一行放不下时，
-   *   旧行为是把徽标压扁（内容被裁掉、看起来"绿字不见了"）。
-   *   现在允许换行，并且长单词也能断开 —— 布伦特/WTI 原本就会换行所以没暴露问题。 */
-  flex-wrap:wrap;overflow-wrap:break-word;min-width:0}
+  /* ★ 关键：整行【禁止换行】（nowrap）。
+   *   之前用 flex-wrap:wrap，结果徽标宽度一变（4s→14s 多一个字符），
+   *   刚好跨过阈值时徽标就整块掉到下一行 —— 用户看到"个位数在右边、十位数跳到下面"。
+   *   现在改为：行内永不换行，空间不够时由 .ttl（标题）自己收缩/换行吸收，
+   *   徽标始终留在标题同一行。 */
+  flex-wrap:nowrap;min-width:0}
+/* 标题：可收缩、可在内部断行。它来吸收宽度变化，徽标就不用动了。 */
+.card h3 .ttl{flex:1 1 auto;min-width:0;overflow-wrap:break-word}
+.card h3 .swatch{flex:0 0 auto}
 .card .big{font-size:2.05rem;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px;color:#fff}
 .card .unit{font-size:.8rem;color:var(--dim)}
 .card .meta{margin-top:12px;font-size:.76rem;color:var(--dim);
@@ -241,7 +246,13 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .live-dot .ago{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
   /* ★ inline-block：让秒数成为一个独立的、宽度可预期的盒子。
    *   配合 tabular-nums（0-9 等宽），"4s"→"14s" 只差约半个字符，肉眼几乎无感。 */
-  display:inline-block}
+  display:inline-block;
+  /* ★ min-width:3ch —— 只锁"最长形态"（14s / 59s / 10m 都是 3ch）。
+   *   目的：秒数从一位跳到两位时徽标宽度【不变】，
+   *   于是 .ttl 不用重新收缩、标题行数不变、卡片高度不跳。
+   *   代价：一位数时右侧最多多留约 1 个字符（≈6px，0.7rem 下），
+   *   远小于之前 3.2ch 留白 + 双重 flex gap 造成的那种明显"分开"。 */
+  min-width:3ch}
 /* 徽标落在卡片底部 meta 里时（黄金页 / 原油页统一位置），与右侧更新时间留点间距 */
 .card .meta .live-dot{margin-inline-end:8px}
 .live-dot.is-lost{color:var(--dim);font-weight:500}
