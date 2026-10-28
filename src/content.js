@@ -32,7 +32,7 @@ export const CONTENT = {
       aboutThisData: 'About this data',
     },
     oil: {
-      intro: 'Brent crude is the price benchmark for roughly two thirds of the world\'s internationally traded oil. The figure below is quoted in US dollars per barrel and refreshed on a daily schedule.',
+      intro: 'Brent crude is the price benchmark for roughly two thirds of the world\'s internationally traded oil. The figure below is quoted in US dollars per barrel and updated in real time during trading hours.',
       sections: [
         { h: 'What is Brent crude oil?', p: 'Brent is a light, sweet crude blend produced from oil fields in the North Sea between the United Kingdom and Norway. Because it is low in sulphur and relatively easy to refine, it became the reference grade against which most internationally traded crude is priced. When news reports say "the oil price", they are usually quoting Brent.' },
         { h: 'Why Brent is the global benchmark', p: 'Unlike landlocked grades, Brent can be loaded onto tankers directly at sea, which makes it easy to trade and ship anywhere. That physical flexibility, combined with a deep futures market on the ICE exchange, turned it into the pricing anchor for crude sold from Europe, Africa and the Middle East to Asia.' },
@@ -40,7 +40,7 @@ export const CONTENT = {
         { h: 'What moves the price', p: 'Supply decisions by OPEC and other major producers, geopolitical events in producing regions, changes in global demand, refinery maintenance seasons and currency swings in the US dollar all influence the quote. Because oil is priced in dollars, currency moves alone can shift the figure.' },
       ],
       faq: [
-        { q: 'How often is the Brent price updated?', a: 'Prices are collected on a daily schedule during trading hours and cached for fast delivery. Markets close at weekends, so the most recent trading day figure is shown until trading resumes.' },
+        { q: 'How often is the Brent price updated?', a: 'Prices update in real time during trading hours, with a brief cache so pages load fast. Markets close at weekends, so the most recent trading day figure is shown until trading resumes.' },
         { q: 'Is this the official settlement price?', a: 'No. The figure is a market reference price from public data providers, not an official exchange settlement. It is suitable for tracking general trends, not for settlement or trading.' },
         { q: 'Why does the price not change at weekends?', a: 'Global oil markets close for the weekend. Any figure shown over Saturday and Sunday is the last price from the previous trading session.' },
       ],
@@ -69,12 +69,12 @@ export const CONTENT = {
       ],
       faq: [
         { q: 'Are these the exact prices at the pump?', a: 'They are provincial maximum retail guidance prices. Individual stations may offer discounts or adjustments, so the price you actually pay can be slightly lower.' },
-        { q: 'How often does the price change?', a: 'The guidance is reviewed roughly every ten working days, or sooner when international crude moves sharply. This page refreshes on a daily schedule.' },
+        { q: 'How often does the price change?', a: 'The guidance is reviewed roughly every ten working days, or sooner when international crude moves sharply. This page follows the official revision cycle.' },
         { q: 'Why is my city different from the provincial figure?', a: 'Some provinces publish a single provincial ceiling while others differentiate by city or region. Check the entry closest to your location.' },
       ],
     },
     fx: {
-      intro: 'The converter below uses reference exchange rates that are refreshed on a daily schedule. It is designed for quick estimates rather than exact settlement.',
+      intro: 'The converter below uses reference exchange rates that are updated in real time during trading hours. It is designed for quick estimates rather than exact settlement.',
       sections: [
         { h: 'What is a reference exchange rate?', p: 'A mid-market or reference rate sits roughly halfway between the buy and sell prices that banks quote each other. It is the fairest single number to describe what a currency is worth at a point in time, and it is what most public rate tables display.' },
         { h: 'Why your bank gives a different number', p: 'Retail and commercial banks add a margin on top of the mid-market rate, and card networks add their own spread and fees. That is why the rate you receive in practice is usually a little worse than the reference rate shown here.' },
@@ -82,13 +82,13 @@ export const CONTENT = {
         { h: 'What moves exchange rates', p: 'Interest rate differentials between countries, inflation outlook, trade balances, capital flows, political stability and central bank policy all influence rates. Currency markets are open around the clock on weekdays but close at weekends, which is why rates appear frozen from Friday evening to Sunday.' },
       ],
       faq: [
-        { q: 'How current are these rates?', a: 'Rates are refreshed on a daily schedule. They are suitable for budgeting and comparison, but not for executing a transfer.' },
+        { q: 'How current are these rates?', a: 'Rates are updated in real time during trading hours. They are suitable for budgeting and comparison, but not for executing a transfer.' },
         { q: 'Is this the rate my bank will give me?', a: 'No. Banks and money transfer services apply a margin and fees on top of the reference rate. Expect the practical rate to differ.' },
         { q: 'Can I use this for accounting or settlement?', a: 'No. Use the official rate published by your bank, payment provider or tax authority for any financial record.' },
       ],
     },
     wti: {
-      intro: 'WTI is the benchmark crude for the United States and the second most quoted oil price in the world after Brent. It is quoted in US dollars per barrel and refreshed while US markets are trading.',
+      intro: 'WTI is the benchmark crude for the United States and the second most quoted oil price in the world after Brent. It is quoted in US dollars per barrel and updated in real time while US markets are trading.',
       sections: [
         { h: 'What is WTI crude oil?', p: 'West Texas Intermediate is a light, sweet crude grade produced primarily in the US Permian Basin and the mid-continent. It is very light and very low in sulphur — arguably the highest quality of the major benchmarks — which makes it especially attractive to refineries configured for gasoline production. Despite the name, it is no longer produced only in Texas; the grade now describes a specification rather than a single geographic source.' },
         { h: 'Why WTI is delivered at Cushing', p: 'The WTI futures contract settles at Cushing, Oklahoma — an inland hub where dozens of pipelines converge and hundreds of storage tanks sit. That concentration of infrastructure makes it the natural pricing point for US inland crude. But it is also WTI\'s structural weakness: oil sitting in Cushing must leave by pipeline, and when those pipelines are full the local price can fall out of step with the seaborne international market.' },
@@ -98,7 +98,7 @@ export const CONTENT = {
       faq: [
         { q: 'Is WTI the oil price US drivers pay?', a: 'It is the main reference for US crude, but pump prices also depend on refining costs, distribution, taxes and regional supply. WTI tells you what the raw crude costs, not what the finished fuel costs.' },
         { q: 'Why is WTI usually cheaper than Brent?', a: 'It often is, but not always. WTI is priced at an inland hub rather than a seaport, so it is more sensitive to US pipeline bottlenecks and domestic inventory. A wide gap generally reflects a logistics constraint rather than a difference in oil quality.' },
-        { q: 'How often is the WTI price updated?', a: 'The figure is collected while markets are trading and cached for fast delivery. Markets close at weekends, so the most recent trading day level is shown until trading resumes.' },
+        { q: 'How often is the WTI price updated?', a: 'The figure updates in real time while markets are trading, with a brief cache for fast delivery. Markets close at weekends, so the most recent trading day level is shown until trading resumes.' },
       ],
     },
     faqPage: {
@@ -106,7 +106,7 @@ export const CONTENT = {
       items: [
         { q: 'Is PriceScope free to use?', a: 'Yes. Every page is free and requires no registration or subscription.' },
         { q: 'Where does the data come from?', a: 'Every page names its own sources. Brent and WTI crude are the international and US oil benchmark prices. International gold (XAU/USD) is the open spot market price, taken from several independent providers. China retail fuel prices are provincial maximum retail guidance prices. Reference FX rates are mid-market rates. All figures are indicative reference values, not exchange settlement prices.' },
-        { q: 'How often is data refreshed?', a: 'International gold updates in real time in your browser while the market is open. Brent and WTI are collected hourly during trading hours. China fuel prices follow the official revision cycle of roughly ten working days. Currency rates are refreshed daily. Global markets close at weekends, so weekend figures reflect the last trading session until trading resumes.' },
+        { q: 'How often is data refreshed?', a: 'International gold updates in real time in your browser while the market is open. Brent and WTI update in real time during trading hours. China fuel prices follow the official revision cycle of roughly ten working days. Currency rates are refreshed daily. Global markets close at weekends, so weekend figures reflect the last trading session until trading resumes.' },
         { q: 'Are these official prices?', a: 'No. All figures are reference prices intended for general information. They are not exchange settlement prices and should not be used for trading, settlement or accounting.' },
         { q: 'Can I rely on this for investment decisions?', a: 'No. The data is provided for general information only and does not constitute investment advice. Always confirm figures with a licensed professional or an official source before acting.' },
         { q: 'Do you store my personal data?', a: 'The site does not require registration. Please read the privacy policy for full details on cookies and analytics.' },
@@ -127,7 +127,7 @@ export const CONTENT = {
       aboutThisData: '关于本页数据',
     },
     oil: {
-      intro: '布伦特原油是全球约三分之二国际原油贸易的定价基准。下方报价以美元/桶计，按每日计划更新。',
+      intro: '布伦特原油是全球约三分之二国际原油贸易的定价基准。下方报价以美元/桶计，交易时段实时更新。',
       sections: [
         { h: '什么是布伦特原油？', p: '布伦特是产自英国与挪威之间北海油田的一种轻质低硫原油。由于含硫量低、易于炼化，它成为国际原油贸易中最主要的参考油种。当新闻报道提到「国际油价」时，通常指的就是布伦特价格。' },
         { h: '为什么它成为全球基准', p: '与内陆油种不同，布伦特原油可在海上直接装船，便于运输到世界任何地方。这种物流上的灵活性，加上 ICE 交易所成熟的期货市场，使它成为欧洲、非洲、中东销往亚洲原油的定价锚。' },
@@ -135,7 +135,7 @@ export const CONTENT = {
         { h: '影响价格的因素', p: 'OPEC 及主要产油国的产量决策、产区的地缘政治事件、全球需求变化、炼厂检修季节以及美元汇率波动都会影响报价。因为石油以美元计价，汇率变动本身就能改变数字。' },
       ],
       faq: [
-        { q: '布伦特价格多久更新一次？', a: '价格在交易时段按每日计划采集并缓存以便快速分发。市场周末休市，因此在恢复交易前显示的是最近一个交易日的价格。' },
+        { q: '布伦特价格多久更新一次？', a: '价格在交易时段实时更新，并做短暂缓存以便快速分发。市场周末休市，因此在恢复交易前显示的是最近一个交易日的价格。' },
         { q: '这是官方结算价吗？', a: '不是。这是来自公开数据服务商的市场参考价，并非交易所官方结算价。适合用于观察整体趋势，不适用于结算或交易。' },
         { q: '为什么周末价格不变？', a: '全球原油市场周末休市。周六和周日显示的均为上一交易日最后一笔价格。' },
       ],
@@ -164,7 +164,7 @@ export const CONTENT = {
       ],
       faq: [
         { q: '这是加油站的实际价格吗？', a: '这是各省最高零售指导价。个别加油站可能提供优惠或向下浮动，因此你实际支付的价格可能略低。' },
-        { q: '价格多久调整一次？', a: '指导价大致每十个工作日调整一次，若国际原油价格剧烈波动则会更频繁。本页按每日计划刷新。' },
+        { q: '价格多久调整一次？', a: '指导价大致每十个工作日调整一次，若国际原油价格剧烈波动则会更频繁。本页跟随官方调整周期更新。' },
         { q: '为什么我所在城市与省级价格不同？', a: '部分省份只公布省级统一上限，另一些则按城市或区域分别定价。请选择与你所在地最接近的条目。' },
       ],
     },
@@ -201,7 +201,7 @@ export const CONTENT = {
       items: [
         { q: 'PriceScope 是免费使用的吗？', a: '是的。所有页面免费开放，无需注册或订阅。' },
         { q: '数据来自哪里？', a: '每个页面都单独标注自己的来源。布伦特原油与 WTI 原油为国际与美国原油基准报价；国际黄金（XAU/USD）为公开现货市场报价，取自多个独立数据源；中国成品油价格为各省最高零售指导价；参考汇率为中间市场汇率。所有数据均为指示性参考价，非交易所结算价。' },
-        { q: '数据多久刷新一次？', a: '国际黄金在开市期间于你的浏览器中实时更新；布伦特与 WTI 原油在交易时段每小时采集；国内成品油价格跟随官方约每 10 个工作日的调整周期；参考汇率每日刷新。全球市场周末休市，周末显示的是最近一个交易日的数值。' },
+        { q: '数据多久刷新一次？', a: '国际黄金在开市期间于你的浏览器中实时更新；布伦特与 WTI 原油在交易时段实时更新；国内成品油价格跟随官方约每 10 个工作日的调整周期；参考汇率每日刷新。全球市场周末休市，周末显示的是最近一个交易日的数值。' },
         { q: '这些是官方价格吗？', a: '不是。所有数字均为一般性参考信息，并非交易所结算价，不得用于交易、结算或记账。' },
         { q: '可以作为投资决策依据吗？', a: '不可以。本站数据仅供一般性参考，不构成投资建议。实际操作前请务必向持牌专业人士或官方渠道核实。' },
         { q: '你们会存储我的个人数据吗？', a: '本站无需注册即可使用。关于 Cookie 和分析工具的完整说明，请参阅隐私政策。' },
@@ -222,7 +222,7 @@ export const CONTENT = {
       aboutThisData: 'このデータについて',
     },
     oil: {
-      intro: 'ブレント原油は、国際的に取引される原油の約3分の2の価格指標です。以下の価格は1バレルあたりの米ドルで表示され、毎日のスケジュールで更新されます。',
+      intro: 'ブレント原油は、国際的に取引される原油の約3分の2の価格指標です。以下の価格は1バレルあたりの米ドルで表示され、取引時間中はリアルタイムで更新されます。',
       sections: [
         { h: 'ブレント原油とは', p: 'ブレントは、英国とノルウェーの間の北海油田で産出される軽質・低硫黄の原油ブレンドです。硫黄分が少なく精製しやすいため、国際的な原油取引の基準油種となりました。報道で「原油価格」と言われる場合、通常はブレントの価格を指します。' },
         { h: '世界的な指標となった理由', p: '内陸の油種と異なり、ブレントは海上で直接タンカーに積めるため、世界中へ輸送しやすいという特徴があります。この物流上の柔軟性と、ICE取引所の成熟した先物市場により、欧州・アフリカ・中東からアジアへ販売される原油の価格指標となりました。' },
@@ -230,7 +230,7 @@ export const CONTENT = {
         { h: '価格を動かす要因', p: 'OPECや主要産油国の生産判断、産油地域の地政学的イベント、世界需要の変化、製油所の定期修理時期、米ドルの為替変動などが価格に影響します。ドル建てであるため、為替の動きだけでも数値は変化します。' },
       ],
       faq: [
-        { q: 'ブレント価格はどのくらいの頻度で更新されますか？', a: '取引時間中は毎日のスケジュールで価格を収集し、高速配信のためキャッシュしています。市場は週末に閉まるため、取引再開までは直近の営業日の数値を表示します。' },
+        { q: 'ブレント価格はどのくらいの頻度で更新されますか？', a: '取引時間中はリアルタイムで価格を更新し、高速配信のため短時間キャッシュしています。市場は週末に閉まるため、取引再開までは直近の営業日の数値を表示します。' },
         { q: 'これは公式の清算価格ですか？', a: 'いいえ。公開データ提供者による市場参考価格であり、取引所の公式清算価格ではありません。全体的な傾向の把握には適していますが、決済や取引には使用できません。' },
         { q: '週末に価格が変わらないのはなぜですか？', a: '世界の原油市場は週末に休場します。土曜・日曜に表示されるのは、直前の営業日の最終価格です。' },
       ],
@@ -259,7 +259,7 @@ export const CONTENT = {
       ],
       faq: [
         { q: 'これは給油所の実際の価格ですか？', a: '各省の小売上限指導価格です。個々の給油所が割引や調整を行う場合があるため、実際の支払額はやや低くなることがあります。' },
-        { q: '価格はどのくらいの頻度で変わりますか？', a: '指導価格は概ね10営業日ごとに見直され、国際原油価格が急変した場合はより短い間隔で調整されます。本ページは毎日のスケジュールで更新されます。' },
+        { q: '価格はどのくらいの頻度で変わりますか？', a: '指導価格は概ね10営業日ごとに見直され、国際原油価格が急変した場合はより短い間隔で調整されます。本ページは公式の改定サイクルに追随して更新されます。' },
         { q: '私の都市の価格が省の数値と違うのはなぜですか？', a: '省全体で単一の上限を公表する地域もあれば、都市や地域ごとに設定する地域もあります。お住まいの地域に最も近い項目をご確認ください。' },
       ],
     },
@@ -296,7 +296,7 @@ export const CONTENT = {
       items: [
         { q: 'PriceScope は無料で使えますか？', a: 'はい。すべてのページが無料で、登録も購読も必要ありません。' },
         { q: 'データはどこから取得していますか？', a: '各ページがそれぞれの提供元を明記しています。ブレント原油とWTI原油は国際および米国の原油指標価格、国際金価格（XAU/USD）は公開スポット市場価格（複数の独立した情報源から取得）、中国の小売燃料価格は省別の小売最高指導価格、参考レートは仲値レートです。いずれも指示性の参考値であり、取引所の清算価格ではありません。' },
-        { q: 'データはどのくらいの頻度で更新されますか？', a: '国際金価格は取引時間中、ブラウザ上でリアルタイムに更新されます。ブレント原油とWTI原油は取引時間中に1時間ごとに収集、中国の燃料価格は概ね10営業日ごとの公式改定に追随、為替レートは毎日更新されます。世界の市場は週末休場のため、週末は直近の営業日の数値を表示します。' },
+        { q: 'データはどのくらいの頻度で更新されますか？', a: '国際金価格は取引時間中、ブラウザ上でリアルタイムに更新されます。ブレント原油とWTI原油は取引時間中にリアルタイムで更新、中国の燃料価格は概ね10営業日ごとの公式改定に追随、為替レートは毎日更新されます。世界の市場は週末休場のため、週末は直近の営業日の数値を表示します。' },
         { q: 'これらは公式価格ですか？', a: 'いいえ。すべての数値は一般的な参考情報であり、取引所の清算価格ではありません。取引、決済、記帳には使用できません。' },
         { q: '投資判断の根拠にできますか？', a: 'できません。本サイトのデータは一般的な参考情報であり、投資助言を構成するものではありません。行動する前に必ず資格を持つ専門家または公的機関でご確認ください。' },
         { q: '個人データは保存されますか？', a: '本サイトの利用に登録は不要です。Cookie と分析ツールの詳細はプライバシーポリシーをご覧ください。' },
@@ -317,7 +317,7 @@ export const CONTENT = {
       aboutThisData: 'Sobre estos datos',
     },
     oil: {
-      intro: 'El crudo Brent es la referencia de precio de aproximadamente dos tercios del petróleo comercializado internacionalmente. La cifra siguiente se expresa en dólares estadounidenses por barril y se actualiza según un calendario diario.',
+      intro: 'El crudo Brent es la referencia de precio de aproximadamente dos tercios del petróleo comercializado internacionalmente. La cifra siguiente se expresa en dólares estadounidenses por barril y se actualiza en tiempo real durante el horario de negociación.',
       sections: [
         { h: '¿Qué es el crudo Brent?', p: 'El Brent es una mezcla de crudo ligero y de bajo contenido en azufre extraída de yacimientos del mar del Norte, entre el Reino Unido y Noruega. Por su bajo azufre y relativa facilidad de refinado se convirtió en el grado de referencia con el que se precio la mayor parte del crudo que se comercializa internacionalmente. Cuando los medios hablan de «el precio del petróleo», suelen citar el Brent.' },
         { h: 'Por qué el Brent es la referencia mundial', p: 'A diferencia de los grados situados en el interior, el Brent puede cargarse directamente en buques cisterna en el mar, lo que facilita su comercio y envío a cualquier lugar. Esa flexibilidad logística, junto con un profundo mercado de futuros en la bolsa ICE, lo convirtió en el ancla de precios del crudo vendido desde Europa, África y Oriente Medio hacia Asia.' },
@@ -325,7 +325,7 @@ export const CONTENT = {
         { h: 'Qué mueve el precio', p: 'Las decisiones de producción de la OPEP y otros grandes productores, los acontecimientos geopolíticos en las regiones productoras, los cambios en la demanda global, las temporadas de mantenimiento de refinerías y las oscilaciones del dólar influyen en la cotización. Como el petróleo se precio en dólares, el movimiento de las divisas por sí solo puede alterar la cifra.' },
       ],
       faq: [
-        { q: '¿Con qué frecuencia se actualiza el precio del Brent?', a: 'Los precios se recopilan según un calendario diario durante el horario de negociación y se almacenan en caché para una entrega rápida. Los mercados cierran los fines de semana, por lo que se muestra la cifra de la sesión más reciente hasta que se reanuda la negociación.' },
+        { q: '¿Con qué frecuencia se actualiza el precio del Brent?', a: 'Los precios se actualizan en tiempo real durante el horario de negociación y se guardan en caché brevemente para una entrega rápida. Los mercados cierran los fines de semana, por lo que se muestra la cifra de la sesión más reciente hasta que se reanuda la negociación.' },
         { q: '¿Es este el precio oficial de liquidación?', a: 'No. Es un precio de referencia de mercado de proveedores públicos de datos, no una liquidación oficial de bolsa. Sirve para seguir tendencias generales, no para liquidar ni operar.' },
         { q: '¿Por qué el precio no cambia los fines de semana?', a: 'Los mercados mundiales de petróleo cierran el fin de semana. Las cifras de sábado y domingo son el último precio de la sesión anterior.' },
       ],
@@ -354,7 +354,7 @@ export const CONTENT = {
       ],
       faq: [
         { q: '¿Son estos los precios exactos en la gasolinera?', a: 'Son precios máximos minoristas de orientación provincial. Las estaciones individuales pueden ofrecer descuentos o ajustes, por lo que el precio que pague en la práctica puede ser algo menor.' },
-        { q: '¿Con qué frecuencia cambia el precio?', a: 'La orientación se revisa aproximadamente cada diez días laborables, o antes si el crudo internacional se mueve bruscamente. Esta página se actualiza según un calendario diario.' },
+        { q: '¿Con qué frecuencia cambia el precio?', a: 'La orientación se revisa aproximadamente cada diez días laborables, o antes si el crudo internacional se mueve bruscamente. Esta página sigue el ciclo oficial de revisión.' },
         { q: '¿Por qué mi ciudad difiere de la cifra provincial?', a: 'Algunas provincias publican un único techo provincial mientras que otras diferencian por ciudad o región. Consulte la entrada más cercana a su ubicación.' },
       ],
     },
@@ -391,7 +391,7 @@ export const CONTENT = {
       items: [
         { q: '¿Es PriceScope gratuito?', a: 'Sí. Todas las páginas son gratuitas y no requieren registro ni suscripción.' },
         { q: '¿De dónde provienen los datos?', a: 'Cada página indica sus propias fuentes. El crudo Brent y el WTI son los precios de referencia internacional y estadounidense del petróleo. El oro internacional (XAU/USD) es el precio del mercado spot abierto, tomado de varios proveedores independientes. Los combustibles minoristas de China son precios máximos de venta al público por provincia. Los tipos de cambio de referencia son tipos medios de mercado. Todas las cifras son valores indicativos de referencia, no precios de liquidación de bolsa.' },
-        { q: '¿Con qué frecuencia se actualizan los datos?', a: 'El oro internacional se actualiza en tiempo real en tu navegador mientras el mercado está abierto. El Brent y el WTI se recopilan cada hora durante el horario de negociación. Los combustibles de China siguen el ciclo oficial de revisión de unos diez días hábiles. Los tipos de cambio se actualizan a diario. Como los mercados cierran los fines de semana, las cifras reflejan la última sesión hasta la reapertura.' },
+        { q: '¿Con qué frecuencia se actualizan los datos?', a: 'El oro internacional se actualiza en tiempo real en tu navegador mientras el mercado está abierto. El Brent y el WTI se actualizan en tiempo real durante el horario de negociación. Los combustibles de China siguen el ciclo oficial de revisión de unos diez días hábiles. Los tipos de cambio se actualizan a diario. Como los mercados cierran los fines de semana, las cifras reflejan la última sesión hasta la reapertura.' },
         { q: '¿Son precios oficiales?', a: 'No. Todas las cifras son precios de referencia con fines informativos generales. No son precios de liquidación de bolsa y no deben usarse para operar, liquidar ni contabilizar.' },
         { q: '¿Puedo basar decisiones de inversión en ellos?', a: 'No. Los datos se ofrecen solo con fines informativos generales y no constituyen asesoramiento de inversión. Confirme siempre las cifras con un profesional autorizado o una fuente oficial antes de actuar.' },
         { q: '¿Almacenan mis datos personales?', a: 'El sitio no requiere registro. Consulte la política de privacidad para conocer todos los detalles sobre cookies y analítica.' },
@@ -412,7 +412,7 @@ export const CONTENT = {
       aboutThisData: 'À propos de ces données',
     },
     oil: {
-      intro: 'Le brut Brent est la référence de prix d\'environ deux tiers du pétrole échangé dans le monde. Le chiffre ci-dessous est exprimé en dollars américains par baril et actualisé selon un calendrier quotidien.',
+      intro: 'Le brut Brent est la référence de prix d\'environ deux tiers du pétrole échangé dans le monde. Le chiffre ci-dessous est exprimé en dollars américains par baril et actualisé en temps réel pendant les heures de négociation.',
       sections: [
         { h: 'Qu\'est-ce que le brut Brent ?', p: 'Le Brent est un mélange de pétrole brut léger et à faible teneur en soufre issu de gisements de la mer du Nord, entre le Royaume-Uni et la Norvège. Sa faible teneur en soufre et sa relative facilité de raffinage en ont fait la qualité de référence pour la fixation du prix de la plupart du pétrole échangé internationalement. Lorsque les médias évoquent « le prix du pétrole », ils citent généralement le Brent.' },
         { h: 'Pourquoi le Brent est-il la référence mondiale', p: 'Contrairement aux qualités enclavées, le Brent peut être chargé directement sur des pétroliers en mer, ce qui facilite son commerce et son expédition partout dans le monde. Cette souplesse logistique, associée à un marché à terme profond sur la bourse ICE, en a fait l\'ancre de prix du pétrole vendu de l\'Europe, de l\'Afrique et du Moyen-Orient vers l\'Asie.' },
@@ -420,7 +420,7 @@ export const CONTENT = {
         { h: 'Ce qui fait bouger le prix', p: 'Les décisions de production de l\'OPEP et des autres grands producteurs, les événements géopolitiques dans les régions productrices, l\'évolution de la demande mondiale, les saisons de maintenance des raffineries et les fluctuations du dollar influencent la cotation. Le pétrole étant libellé en dollars, le seul mouvement des devises peut modifier le chiffre.' },
       ],
       faq: [
-        { q: 'À quelle fréquence le prix du Brent est-il actualisé ?', a: 'Les prix sont collectés selon un calendrier quotidien pendant les heures de négociation et mis en cache pour une diffusion rapide. Les marchés ferment le week-end : la valeur de la dernière séance est donc affichée jusqu\'à la reprise des échanges.' },
+        { q: 'À quelle fréquence le prix du Brent est-il actualisé ?', a: 'Les prix sont actualisés en temps réel pendant les heures de négociation et mis brièvement en cache pour une diffusion rapide. Les marchés ferment le week-end : la valeur de la dernière séance est donc affichée jusqu\'à la reprise des échanges.' },
         { q: 'S\'agit-il du cours officiel de compensation ?', a: 'Non. Il s\'agit d\'un prix de référence de marché issu de fournisseurs publics de données, et non d\'une compensation officielle de bourse. Il convient pour suivre les tendances générales, pas pour compenser ni trader.' },
         { q: 'Pourquoi le prix ne change-t-il pas le week-end ?', a: 'Les marchés pétroliers mondiaux ferment le week-end. Les chiffres affichés samedi et dimanche sont le dernier prix de la séance précédente.' },
       ],
@@ -449,7 +449,7 @@ export const CONTENT = {
       ],
       faq: [
         { q: 'S\'agit-il des prix exacts à la pompe ?', a: 'Ce sont des prix de détail maximaux indicatifs par province. Certaines stations peuvent offrir des remises ou des ajustements : le prix réellement payé peut donc être légèrement inférieur.' },
-        { q: 'À quelle fréquence le prix change-t-il ?', a: 'L\'orientation est révisée environ tous les dix jours ouvrés, ou plus tôt si le brut international évolue brutalement. Cette page est actualisée selon un calendrier quotidien.' },
+        { q: 'À quelle fréquence le prix change-t-il ?', a: 'L\'orientation est révisée environ tous les dix jours ouvrés, ou plus tôt si le brut international évolue brutalement. Cette page suit le cycle officiel de révision.' },
         { q: 'Pourquoi ma ville diffère-t-elle du chiffre provincial ?', a: 'Certaines provinces publient un plafond provincial unique tandis que d\'autres différencient par ville ou par région. Consultez l\'entrée la plus proche de votre lieu.' },
       ],
     },
@@ -507,7 +507,7 @@ export const CONTENT = {
       aboutThisData: 'Über diese Daten',
     },
     oil: {
-      intro: 'Brent-Rohöl ist die Preisreferenz für rund zwei Drittel des international gehandelten Öls. Der Wert unten wird in US-Dollar pro Barrel angegeben und nach einem täglichen Zeitplan aktualisiert.',
+      intro: 'Brent-Rohöl ist die Preisreferenz für rund zwei Drittel des international gehandelten Öls. Der Wert unten wird in US-Dollar pro Barrel angegeben und während der Handelszeiten in Echtzeit aktualisiert.',
       sections: [
         { h: 'Was ist Brent-Rohöl?', p: 'Brent ist eine leichte, schwefelarme Rohölmischung aus Ölfeldern in der Nordsee zwischen dem Vereinigten Königreich und Norwegen. Wegen ihres geringen Schwefelgehalts und der vergleichsweise einfachen Raffination wurde sie zur Referenzsorte, an der sich der größte Teil des international gehandelten Rohöls orientiert. Wenn in den Nachrichten vom „Ölpreis" die Rede ist, ist meist Brent gemeint.' },
         { h: 'Warum Brent die globale Referenz ist', p: 'Anders als Binnensorten kann Brent direkt auf See auf Tanker verladen werden, was Handel und Verschiffung an jeden Ort erleichtert. Diese logistische Flexibilität hat es zusammen mit einem tiefen Terminmarkt an der Börse ICE zum Preisananker für Rohöl gemacht, das von Europa, Afrika und dem Nahen Osten nach Asien verkauft wird.' },
@@ -515,7 +515,7 @@ export const CONTENT = {
         { h: 'Was den Preis bewegt', p: 'Produktionsentscheidungen der OPEC und anderer großer Förderländer, geopolitische Ereignisse in den Förderregionen, Änderungen der weltweiten Nachfrage, Wartungszeiten der Raffinerien und Schwankungen des US-Dollar beeinflussen die Notierung. Da Öl in Dollar bepreist wird, kann allein eine Währungsbewegung die Zahl verändern.' },
       ],
       faq: [
-        { q: 'Wie oft wird der Brent-Preis aktualisiert?', a: 'Die Preise werden während der Handelszeiten nach einem täglichen Zeitplan erhoben und für eine schnelle Auslieferung zwischengespeichert. Die Märkte sind am Wochenende geschlossen; daher wird bis zur Wiederaufnahme des Handels der Wert des letzten Handelstags angezeigt.' },
+        { q: 'Wie oft wird der Brent-Preis aktualisiert?', a: 'Die Preise werden während der Handelszeiten in Echtzeit aktualisiert und für eine schnelle Auslieferung kurz zwischengespeichert. Die Märkte sind am Wochenende geschlossen; daher wird bis zur Wiederaufnahme des Handels der Wert des letzten Handelstags angezeigt.' },
         { q: 'Ist das der offizielle Abrechnungspreis?', a: 'Nein. Es handelt sich um einen Marktreferenzpreis öffentlicher Datenanbieter, nicht um einen offiziellen Börsenabrechnungspreis. Er eignet sich, um allgemeine Trends zu verfolgen, nicht für Abrechnung oder Handel.' },
         { q: 'Warum ändert sich der Preis am Wochenende nicht?', a: 'Die globalen Ölmärkte sind am Wochenende geschlossen. Die Werte für Samstag und Sonntag sind der letzte Preis der vorherigen Handelssitzung.' },
       ],
@@ -544,7 +544,7 @@ export const CONTENT = {
       ],
       faq: [
         { q: 'Sind das die genauen Preise an der Zapfsäule?', a: 'Es sind provinziale Höchst-Einzelhandelspreise als Orientierung. Einzelne Tankstellen können Rabatte oder Anpassungen anbieten, sodass der tatsächlich gezahlte Preis etwas niedriger ausfallen kann.' },
-        { q: 'Wie oft ändert sich der Preis?', a: 'Die Orientierung wird etwa alle zehn Werktage geprüft, bei heftigen Bewegungen des internationalen Rohöls früher. Diese Seite wird nach einem täglichen Zeitplan aktualisiert.' },
+        { q: 'Wie oft ändert sich der Preis?', a: 'Die Orientierung wird etwa alle zehn Werktage geprüft, bei heftigen Bewegungen des internationalen Rohöls früher. Diese Seite folgt dem offiziellen Anpassungszyklus.' },
         { q: 'Warum weicht meine Stadt vom Provinzwert ab?', a: 'Manche Provinzen veröffentlichen eine einzige provinzweite Obergrenze, andere differenzieren nach Stadt oder Region. Wählen Sie den Eintrag, der Ihrem Standort am nächsten liegt.' },
       ],
     },
@@ -581,7 +581,7 @@ export const CONTENT = {
       items: [
         { q: 'Ist PriceScope kostenlos?', a: 'Ja. Alle Seiten sind kostenlos und erfordern weder Registrierung noch Abonnement.' },
         { q: 'Woher stammen die Daten?', a: 'Jede Seite nennt ihre eigenen Quellen. Brent- und WTI-Rohöl sind die internationalen bzw. US-Referenzpreise für Rohöl. Internationales Gold (XAU/USD) ist der Preis des offenen Spotmarkts, von mehreren unabhängigen Anbietern. Chinas Einzelhandels-Kraftstoffpreise sind provinziale Höchstpreise. Referenzwechselkurse sind Mittelkurse. Alle Werte sind indikative Referenzwerte, keine Börsenabrechnungspreise.' },
-        { q: 'Wie oft werden die Daten aktualisiert?', a: 'Internationales Gold wird während der Handelszeiten in Echtzeit in Ihrem Browser aktualisiert. Brent und WTI werden während der Handelszeiten stündlich erhoben. Chinas Kraftstoffpreise folgen dem offiziellen Überprüfungszyklus von etwa zehn Werktagen. Wechselkurse werden täglich aktualisiert. Die Weltmärkte sind am Wochenende geschlossen, daher zeigen die Wochenendwerte die letzte Sitzung bis zur Wiedereröffnung.' },
+        { q: 'Wie oft werden die Daten aktualisiert?', a: 'Internationales Gold wird während der Handelszeiten in Echtzeit in Ihrem Browser aktualisiert. Brent und WTI werden während der Handelszeiten in Echtzeit aktualisiert. Chinas Kraftstoffpreise folgen dem offiziellen Überprüfungszyklus von etwa zehn Werktagen. Wechselkurse werden täglich aktualisiert. Die Weltmärkte sind am Wochenende geschlossen, daher zeigen die Wochenendwerte die letzte Sitzung bis zur Wiedereröffnung.' },
         { q: 'Sind das offizielle Preise?', a: 'Nein. Alle Werte sind Referenzpreise für allgemeine Informationszwecke. Es sind keine Börsenabrechnungspreise und sie dürfen nicht für Handel, Abrechnung oder Buchhaltung verwendet werden.' },
         { q: 'Kann ich mich für Anlageentscheidungen darauf verlassen?', a: 'Nein. Die Daten dienen ausschließlich der allgemeinen Information und stellen keine Anlageberatung dar. Bestätigen Sie Werte vor einer Entscheidung stets bei einer zugelassenen Fachkraft oder einer offiziellen Quelle.' },
         { q: 'Speichern Sie meine persönlichen Daten?', a: 'Die Website erfordert keine Registrierung. Alle Details zu Cookies und Analysen finden Sie in der Datenschutzerklärung.' },
@@ -610,7 +610,7 @@ export const CONTENT = {
         { h: 'O que move o preço', p: 'Decisões de produção da OPEP e de outros grandes produtores, eventos geopolíticos nas regiões produtoras, mudanças na demanda global, temporadas de manutenção de refinarias e oscilações do dólar influenciam a cotação. Como o petróleo é precificado em dólares, o movimento cambial por si só pode alterar o número.' },
       ],
       faq: [
-        { q: 'Com que frequência o preço do Brent é atualizado?', a: 'Os preços são coletados em cronograma diário durante o horário de negociação e armazenados em cache para entrega rápida. Os mercados fecham nos fins de semana, portanto o valor da sessão mais recente é exibido até a retomada das negociações.' },
+        { q: 'Com que frequência o preço do Brent é atualizado?', a: 'Os preços são atualizados em tempo real durante o pregão e guardados em cache por pouco tempo para entrega rápida. Os mercados fecham nos fins de semana, portanto o valor da sessão mais recente é exibido até a retomada das negociações.' },
         { q: 'Este é o preço oficial de liquidação?', a: 'Não. É um preço de referência de mercado de fornecedores públicos de dados, não uma liquidação oficial de bolsa. Serve para acompanhar tendências gerais, não para liquidar ou negociar.' },
         { q: 'Por que o preço não muda nos fins de semana?', a: 'Os mercados globais de petróleo fecham no fim de semana. Os valores de sábado e domingo são o último preço da sessão anterior.' },
       ],
@@ -639,7 +639,7 @@ export const CONTENT = {
       ],
       faq: [
         { q: 'Estes são os preços exatos na bomba?', a: 'São preços máximos de varejo de orientação por província. Postos individuais podem oferecer descontos ou ajustes, de modo que o preço efetivamente pago pode ser um pouco menor.' },
-        { q: 'Com que frequência o preço muda?', a: 'A orientação é revisada a cada dez dias úteis aproximadamente, ou antes se o petróleo internacional oscilar de forma brusca. Esta página é atualizada em cronograma diário.' },
+        { q: 'Com que frequência o preço muda?', a: 'A orientação é revisada a cada dez dias úteis aproximadamente, ou antes se o petróleo internacional oscilar de forma brusca. Esta página segue o ciclo oficial de revisão.' },
         { q: 'Por que minha cidade difere do valor da província?', a: 'Algumas províncias publicam um único teto provincial, enquanto outras diferenciam por cidade ou região. Consulte a entrada mais próxima da sua localização.' },
       ],
     },
@@ -668,7 +668,7 @@ export const CONTENT = {
       faq: [
         { q: 'O WTI é o preço que os motoristas americanos pagam?', a: 'É a principal referência do petróleo nos EUA, mas o preço na bomba também depende dos custos de refino, da distribuição, dos impostos e da oferta regional. O WTI indica quanto custa o petróleo bruto, não o combustível pronto.' },
         { q: 'Por que o WTI costuma ser mais barato que o Brent?', a: 'Com frequência é, mas nem sempre. O WTI é cotado em um nó interior, não em um porto, o que o torna mais sensível a gargalos de oleodutos e aos estoques domésticos. Uma diferença ampla geralmente reflete uma restrição logística, não uma diferença de qualidade.' },
-        { q: 'Com que frequência o preço do WTI é atualizado?', a: 'O dado é coletado enquanto os mercados operam e armazenado em cache para entrega rápida. Os mercados fecham nos fins de semana, de modo que o nível da última sessão é exibido até a retomada das negociações.' },
+        { q: 'Com que frequência o preço do WTI é atualizado?', a: 'O dado é atualizado em tempo real enquanto os mercados operam e guardado em cache por pouco tempo para entrega rápida. Os mercados fecham nos fins de semana, de modo que o nível da última sessão é exibido até a retomada das negociações.' },
       ],
     },
     faqPage: {
@@ -676,7 +676,7 @@ export const CONTENT = {
       items: [
         { q: 'O PriceScope é gratuito?', a: 'Sim. Todas as páginas são gratuitas e não exigem cadastro nem assinatura.' },
         { q: 'De onde vêm os dados?', a: 'Cada página indica suas próprias fontes. O petróleo Brent e o WTI são os preços de referência internacional e dos EUA. O ouro internacional (XAU/USD) é o preço do mercado spot aberto, obtido de vários fornecedores independentes. Os combustíveis no varejo da China são preços máximos de varejo por província. As taxas de câmbio de referência são taxas médias de mercado. Todos os valores são referências indicativas, não preços de liquidação de bolsa.' },
-        { q: 'Com que frequência os dados são atualizados?', a: 'O ouro internacional é atualizado em tempo real no seu navegador enquanto o mercado está aberto. Brent e WTI são coletados de hora em hora durante o horário de negociação. Os combustíveis da China seguem o ciclo oficial de revisão de cerca de dez dias úteis. As taxas de câmbio são atualizadas diariamente. Como os mercados fecham nos fins de semana, os valores refletem a última sessão até a reabertura.' },
+        { q: 'Com que frequência os dados são atualizados?', a: 'O ouro internacional é atualizado em tempo real no seu navegador enquanto o mercado está aberto. Brent e WTI são atualizados em tempo real durante o pregão. Os combustíveis da China seguem o ciclo oficial de revisão de cerca de dez dias úteis. As taxas de câmbio são atualizadas diariamente. Como os mercados fecham nos fins de semana, os valores refletem a última sessão até a reabertura.' },
         { q: 'Estes são preços oficiais?', a: 'Não. Todos os valores são preços de referência para fins informativos gerais. Não são preços de liquidação de bolsa e não devem ser usados para negociar, liquidar ou contabilizar.' },
         { q: 'Posso me basear neles para decisões de investimento?', a: 'Não. Os dados são fornecidos apenas para fins informativos gerais e não constituem aconselhamento de investimento. Sempre confirme os valores com um profissional licenciado ou uma fonte oficial antes de agir.' },
         { q: 'Vocês armazenam meus dados pessoais?', a: 'O site não exige cadastro. Leia a política de privacidade para detalhes completos sobre cookies e análise.' },

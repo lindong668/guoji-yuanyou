@@ -5,6 +5,8 @@
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
 import { getMarket, getFx, fetchGoldLive } from './data.js';
+import { getOilLive, probeAll as probeOil, OIL_PROVIDERS } from './oilLive.js';
+import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
@@ -55,6 +57,11 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const seg = url.pathname.split('/').filter(Boolean);
+
+    // ★ Vercel 适配：canonical / hreflang / 301 全部按本次请求的域名生成，
+    //   否则会全部指向线上正式站 you.piccalc.com。
+    //   同一部署下 origin 恒定，无并发竞态。
+    SITE.domain = url.origin;
 
     // load AdSense / GA4 / GSC ids from Worker vars
     configure(env);
@@ -210,8 +217,102 @@ Sitemap: ${SITE.domain}/sitemap.xml
      * 前端实时链路全挂时调用。密钥只在服务端出现，前端页面源码里没有。
      * 同源（/api/...），因此没有 CORS 问题。 */
     if (url.pathname === '/api/gold-live') {
-      const r = await fetchGoldLive();
+      const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
+      const r = await getGoldLive(order);
+      // 字段契约保持与旧版一致（前端读 priceUsdPerOz / live），
+      // 额外带出 provider / stale / tried，便于排查到底走的哪条链路。
+      return Response.json({
+        priceUsdPerOz: r.usdOz || 0,
+        live: !!r.usdOz && !r.stale,
+        provider: r.provider,
+        providerLabel: r.providerLabel,
+        stale: !!r.stale,
+        note: r.note || '',
+        tried: r.tried || [],
+      }, { headers: { 'cache-control': 'no-store' } });
+    }
+
+    /* ★ Vercel 测试版：原油实时价接口
+     * 服务端逐个尝试 OIL_PROVIDERS，拿到就停。
+     * 同源调用，无 CORS 问题；结果不缓存，保证每次都是新的。 */
+    if (url.pathname === '/api/oil-live') {
+      const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
+      const r = await getOilLive(order);
       return Response.json(r, { headers: { 'cache-control': 'no-store' } });
+    }
+
+    /* ★ Vercel 测试版：数据源探针
+     * 在 Vercel 的服务器（出口干净）上逐个实测所有候选源，
+     * 用实测结果决定生产用哪个源。 */
+    if (url.pathname === '/probe') {
+      /* 原油与黄金【并行】探测，一次打开看全部。 */
+      const [ro, rg] = await Promise.all([probeOil(), probeGold()]);
+
+      const oilRows = ro.results.map(r => r.ok
+        ? `<tr style="background:${r.stale ? '#fff8e6' : '#e8f7ee'}">
+             <td><b>${r.id}</b></td><td>${r.stale ? '⚠️ 可用(旧值)' : '✅ 可用'}</td><td>${r.ms}ms</td>
+             <td>布伦特 ${r.brent || '—'} / WTI ${r.wti || '—'}</td>
+             <td style="color:#666">${r.note || ''}</td></tr>`
+        : `<tr style="background:#fdeaea">
+             <td><b>${r.id}</b></td><td>❌ 失败</td><td>${r.ms}ms</td>
+             <td>—</td><td style="color:#a00">${r.error || ''}</td></tr>`
+      ).join('');
+
+      const goldRows = rg.results.map(r => r.ok
+        ? `<tr style="background:${r.stale ? '#fff8e6' : '#e8f7ee'}">
+             <td><b>${r.id}</b></td><td>${r.stale ? '⚠️ 可用(旧值)' : '✅ 可用'}</td><td>${r.ms}ms</td>
+             <td>${r.usdOz || '—'} USD/oz</td>
+             <td style="color:#666">${r.note || ''}</td></tr>`
+        : `<tr style="background:#fdeaea">
+             <td><b>${r.id}</b></td><td>❌ 失败</td><td>${r.ms}ms</td>
+             <td>—</td><td style="color:#a00">${r.error || ''}</td></tr>`
+      ).join('');
+
+      const html = `<!doctype html><html lang="zh"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>数据源实测探针（原油 + 黄金）</title>
+<style>
+body{font-family:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+     max-width:980px;margin:0 auto;padding:24px;line-height:1.6}
+h1{font-size:22px} h2{font-size:17px;margin-top:26px}
+.meta{color:#666;font-size:13px;margin-bottom:16px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin-top:8px}
+th,td{border:1px solid #ddd;padding:8px 10px;text-align:left}
+th{background:#f5f5f5}
+code{background:#f3f3f3;padding:2px 6px;border-radius:4px}
+.warn{background:#fff8e6;border-left:3px solid #e0a800;padding:10px 14px;font-size:14px;margin-top:16px}
+</style></head><body>
+<h1>数据源实测探针</h1>
+<div class="meta">探测时间：${ro.at} ｜ 由部署平台服务器发起（出口干净）</div>
+
+<h2>一、原油（布伦特 / WTI）— 可用 ${ro.okCount} / ${ro.total}</h2>
+<table>
+<tr><th>源</th><th>状态</th><th>耗时</th><th>样例价</th><th>说明 / 错误</th></tr>
+${oilRows}
+</table>
+
+<h2>二、国际黄金（XAU/USD）— 可用 ${rg.okCount} / ${rg.total}</h2>
+<table>
+<tr><th>源</th><th>状态</th><th>耗时</th><th>样例价</th><th>说明 / 错误</th></tr>
+${goldRows}
+</table>
+
+<div class="warn">
+<b>怎么看结果</b>：<code>⚠️ 可用(旧值)</code> 表示该源能连通，但返回的是它缓存/沿用的上一次价格
+（不是此刻的真实价）。这类源适合兜底，<b>不适合当主源</b> —— 之前线上那个 101.53 就是这么来的。
+</div>
+
+<p style="margin-top:20px;font-size:14px">
+确定用哪个源之后：
+<code>/api/oil-live?src=源ID</code>、
+<code>/api/gold-live?src=源ID</code> 可指定顺序验证，多个用逗号分隔。
+</p>
+<p style="font-size:14px;color:#666">
+不传 src 时按默认顺序：原油 ${OIL_PROVIDERS.map(p => p.id).join(' → ')}；
+黄金 ${GOLD_PROVIDERS.map(p => p.id).join(' → ')}。
+</p>
+</body></html>`;
+      return new Response(html, { headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
     }
 
     // ---------- language-scoped routes ----------

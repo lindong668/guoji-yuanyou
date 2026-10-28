@@ -3,6 +3,24 @@ account_id = 'd49e51b1279804c22035a33a9c1cb06e'
 main = "src/index.js"
 compatibility_date = "2025-04-01"   # ★ A16：assets 需要较新的兼容日期
 
+# ===================================================================
+# ★ 本次更新（由 Netlify 测试版 O 版回迁）
+# -------------------------------------------------------------------
+# 业务代码 src/ 与 Netlify 测试站【完全一致】，零改动复制。
+# 新增两个文件：src/oilLive.js（原油 8 源）、src/goldLive.js（黄金 7 源）。
+#
+# 回迁无需改任何业务代码的原因：
+#   代码是零依赖纯 Web API（fetch / Request / Response / AbortController），
+#   CF 与 Netlify 都原生支持。唯一区别是入口形态 —— 而 src/index.js
+#   本来就是 Worker 格式（export default { fetch }），所以直接当入口即可。
+#
+# ★ 关于 3 号密钥 SITE3_KEY：
+#   当前走【内置默认值】（与 data.js 里 SOURCE_ACCESS_KEY 同样的处理方式），
+#   开箱即用、不需要额外配置。
+#   ⚠️ 若日后要把密钥挪到 secret，需要改 oilLive.js / goldLive.js 两处
+#      让它从 env 读取（CF 上没有 process.env，需改函数签名传参）。
+# ===================================================================
+
 # ---- Custom domain: must use /* so ALL paths reach the Worker ----
 routes = [
   { pattern = "you.piccalc.com/*", zone_name = "piccalc.com" }
@@ -37,6 +55,9 @@ AD_SLOT_ARTICLE= ""
 AD_SLOT_LEGAL  = ""
 GA4_ID         = ""   # G-ABCDEF1234
 GSC_VERIFY     = ""   # google-site-verification=...
+# 3 号后端密钥：留空则使用代码内置默认值（当前行为）。填了也不会自动生效，
+# 需配合改 oilLive.js / goldLive.js 从 env 读取才生效。
+SITE3_KEY      = ""
 
 [observability]
 enabled = true
@@ -52,8 +73,8 @@ head_sampling_rate = 1      # 100% 采样，不漏
 # 根因：CF 的预览构建跑的是 `npx wrangler preview`，
 #       该命令要求配置里存在 [previews.vars] 块，缺失即报：
 #       "Your Wrangler configuration is missing a `previews` block"
-# 修法：把与 [vars] 一一对应的 12 个变量写入预览块（同样留空占位）。
-# 已用脚本比对：两处变量名、数量完全一致（12/12），无缺漏。
+# 修法：把与 [vars] 一一对应的变量写入预览块（同样留空占位）。
+# 已用脚本比对：两处变量名、数量完全一致（13/13，含本次新增 SITE3_KEY），无缺漏。
 [previews.vars]
 ADSENSE_CLIENT = ""
 AD_SLOT_HOME   = ""
@@ -67,3 +88,4 @@ AD_SLOT_ARTICLE= ""
 AD_SLOT_LEGAL  = ""
 GA4_ID         = ""
 GSC_VERIFY     = ""
+SITE3_KEY      = ""

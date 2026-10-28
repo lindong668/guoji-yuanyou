@@ -112,17 +112,47 @@ const GOLD_LIVE_JS = `
     var cnyVal=parseFloat(elRate.getAttribute('data-cny-rate'));
     elRate.textContent='1 USD = '+(isNaN(cnyVal)?'\u2014':fxnum(cnyVal))+' '+cnyCode+' \u00b7 1 '+uo+' = 31.1034768 '+ug;
   }
+  /* ★ 只返回时段值（"0s" / "5m" / "2h"），不带"前更新"后缀。
+   *   后缀由 setAgo 统一补 —— 否则会叠加成「0s前更新前更新」。 */
   function agoTxt(){
     if(!lastOk) return '';
     var s=Math.round((Date.now()-lastOk)/1000);
-    var t = s<60 ? (s+'s') : (s<3600 ? Math.round(s/60)+'m' : Math.round(s/3600)+'h');
-    return T.ago.replace('{n}',t);
+    return s<60 ? (s+'s') : (s<3600 ? Math.round(s/60)+'m' : Math.round(s/3600)+'h');
+  }
+  /* ★ 秒数单独 span + 等宽：避免 4s→14s 时卡片被顶宽抖动。
+   *   各语言 {n} 位置不同：中文「{n}前更新」在前，英文「Updated {n} ago」在中间。
+   *   统一按 {n} 拆成前后两段，秒数只占中间那个 span —— 既贴紧又不撑宽。 */
+  var _A=(T.ago||'{n}').split('{n}');
+  var AGOPRE=_A[0]||'', AGOTAIL=_A[1]||'';
+  /* ★ 整段文字必须包进一个 .live-txt：
+   *   .live-dot 是 flex 容器且设了 gap:5px，而 flex 会把【每个文本节点】
+   *   都当成独立 item —— 拆成三段就会插两段 5px 空隙，
+   *   「实时 · 」「4s」「前更新」被拉得很开（黄金页原来是一整段，所以贴得紧）。
+   *   包成整体后，gap 只作用在圆点与文字之间，文字内部按正常 inline 流紧贴。 */
+  /* ★ 幂等更新：秒数每秒都要重画一次。若每次都 textContent='' 把整棵子树推倒重建，
+   *   浏览器翻译插件（它把文本节点包进自己的元素，并监听变化重新翻译）就会被反复打断，
+   *   表现为徽标「一下子大、一下子小」地闪。
+   *   现在：结构只建一次，之后只改那一个秒数 span 的文字，且值没变就不写。
+   *   ★ 秒数 span 标 notranslate —— 数字本就无需翻译，交给插件反而会抖。 */
+  function setAgo(el,ago){
+    var sp=el.querySelector('.ago');
+    if(!sp||!el.querySelector('.live-txt')){
+      el.textContent='';
+      var box=document.createElement('span'); box.className='live-txt';
+      box.appendChild(document.createTextNode(T.live+' · '+AGOPRE));
+      sp=document.createElement('span');
+      sp.className='ago notranslate'; sp.setAttribute('translate','no');
+      box.appendChild(sp);
+      if(AGOTAIL) box.appendChild(document.createTextNode(AGOTAIL));
+      el.appendChild(box);
+    }
+    if(sp.textContent!==ago) sp.textContent=ago;
   }
   function markLive(){
     dead=false; fails=0; lastOk=Date.now();
     card1.classList.remove('is-stale'); card2.classList.remove('is-stale');
     elStatus.classList.remove('is-lost');
-    elStatus.textContent=T.live+' \u00b7 '+agoTxt();
+    setAgo(elStatus,agoTxt());
     if(elNote) elNote.hidden=true;
   }
   function markLost(){
@@ -171,9 +201,20 @@ const GOLD_LIVE_JS = `
     {n:'biquote',u:'https://biquote.io/api/XAUUSD',
      p:function(j){var b=+j.bid,a=+j.ask;return (b&&a)?(b+a)/2:(+j.mid||0);}},
     {n:'xaus',u:'https://xaus.com/api/v1/spot?currency=CNY&unit=gram&compact=1',
-     p:function(j){return +j.spot_usd_oz||0;}},
+     p:function(j){
+       /* xaus 自带 data_state：stale/unavailable 表示它给的是【上一次观测值】
+          而不是此刻真实价。直接采用就会出现"数字在跳、底下却是旧值"，
+          所以这类返回一律当作不可用，交给后面的源。 */
+       var st=j&&j.data_state;
+       if(st&&st!=='fresh') throw new Error('xaus:'+st);
+       return +j.spot_usd_oz||0;}},
     {n:'gold-api',u:'https://api.gold-api.com/price/XAU',
-     p:function(j){return +j.price||0;}}
+     p:function(j){return +j.price||0;}},
+    {n:'xaus-usd',u:'https://xaus.com/api/v1/spot?currency=USD&unit=oz&compact=1',
+     p:function(j){
+       var st=j&&j.data_state;
+       if(st&&st!=='fresh') throw new Error('xaus-usd:'+st);
+       return +(j.spot_usd_oz||j.price||j.spot)||0;}}
   ];
   var TIMEOUT=2500;   // 前端时间金贵，每个源最多等 2.5 秒，不让用户干等
 
@@ -238,7 +279,8 @@ const GOLD_LIVE_JS = `
     paint();
   });
 
-  setInterval(function(){ if(!dead&&lastOk) elStatus.textContent=T.live+' \u00b7 '+agoTxt(); },5000);
+  /* ★ 秒数 1 秒一跳：纯前端计时（用 lastOk 时间戳算差值），不产生任何网络请求 */
+  setInterval(function(){ if(!dead&&lastOk) setAgo(elStatus,agoTxt()); },1000);
   setInterval(function(){ if(!document.hidden) cycle(); },30000);   /* 30 秒一轮，别太频繁 */
 
   paint();
@@ -591,22 +633,22 @@ export function renderHome(lang, m, fx, tz) {
   <p class="sub">${esc(marketNote(lang, tz))}</p>
   <div class="grid">
     <a class="card oil" href="/${lang}/oil/">
-      <h3><span class="swatch o"></span>${esc(L.secOil)}</h3>
-      <div class="big">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
+      <h3><span class="swatch o"></span>${esc(L.secOil)}<span id="home-oil-chip" class="live-dot" hidden></span></h3>
+      <div class="big" id="home-oil-price">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card oil" href="/${lang}/wti/">
-      <h3><span class="swatch w"></span>${esc(L.nav.wti)}</h3>
-      <div class="big">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
+      <h3><span class="swatch w"></span>${esc(L.nav.wti)}<span id="home-wti-chip" class="live-dot" hidden></span></h3>
+      <div class="big" id="home-wti-price">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
       <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
-      <h3><span class="swatch"></span>${esc(L.secGold)}<span class="live-chip">● ${esc(L.goldLiveTag)}</span></h3>
-      <div class="big">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
+      <h3><span class="swatch"></span>${esc(L.secGold)}<span id="home-gold-chip" class="live-dot" hidden></span></h3>
+      <div class="big" id="home-gold-price">${goldUsd != null ? '$' + fmt(goldUsd) : '—'}</div>
       <div class="unit">${esc(L.goldUsd)}</div>
       <div class="meta"><span id="home-gold-gram" data-ug="${esc(L.goldUnitGram || 'gram')}"${goldUsd != null ? ' data-usdoz="' + goldUsd + '"' : ''}>${goldUsd != null ? '$' + fmt(goldUsd / TROY_OZ) + ' / ' + esc(L.goldUnitGram || 'gram') : ''}</span>
         <span class="go">${esc(L.viewAll)} →</span></div>
@@ -626,9 +668,13 @@ export function renderHome(lang, m, fx, tz) {
         <span class="go">${esc(L.viewAll)} →</span></div>
     </a>
   </div>
-  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.goldSrcShort || '')}</p>
+  <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcOverview || L.goldSrcShort || '')}</p>
+  ${L.netHint ? `<p class="src-note soft">${esc(L.netHint)}</p>` : ''}
+  ${L.srcDisclaimer ? `<p class="src-note soft">${esc(L.srcDisclaimer)}</p>` : ''}
   ${adSlot('home')}
 <script type="application/json" id="ps-home-fx">${JSON.stringify((fx && fx.rates) || {}).replace(/</g, '\\u003c')}</script>
+${liveT(lang)}
+<script>${HOME_LIVE_JS}</script>
 </div></section>`;
 
   const fp = contentFor(lang, 'faqPage');
@@ -650,6 +696,242 @@ export function renderHome(lang, m, fx, tz) {
 // ------------------------------------------------------------
 // CRUDE OIL
 // ------------------------------------------------------------
+/* ★ 首页三卡实时脚本
+ * 与黄金页同构：首屏用服务端值（爬虫能读到真数），浏览器再定时刷新覆盖成实时价。
+ *   · 原油 → /api/oil-live（一次同时拿布伦特 + WTI）
+ *   · 黄金 → 浏览器直连三个源（与黄金页同一套，已验证在用户侧可用）
+ * 徽标统一显示「实时 · Ns 前」，每 5 秒走一次秒数；休市显示「休市中」。 */
+const HOME_LIVE_JS = `
+(function(){
+  var OZ=31.1034768;
+  var T={live:'Live',lost:'Connection lost',closed:'Market closed',ago:'Updated {n} ago'};
+  var tEl=document.getElementById('ps-live-t');
+  if(tEl){ try{ T=JSON.parse(tEl.textContent)||T; }catch(e){} }
+
+  var items=[];
+  function mk(chipId,elId,gramId){
+    var el=document.getElementById(elId);
+    if(!el) return null;
+    var it={el:el,chip:document.getElementById(chipId),
+            gram:gramId?document.getElementById(gramId):null,
+            lastOk:0,state:'init'};
+    items.push(it); return it;
+  }
+  var oil=mk('home-oil-chip','home-oil-price');
+  var wti=mk('home-wti-chip','home-wti-price');
+  var gold=mk('home-gold-chip','home-gold-price','home-gold-gram');
+  if(!items.length) return;
+
+  function fm(v){ try{ return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }catch(e){ return '$'+v; } }
+  function agoTxt(ms){
+    var s=Math.round((Date.now()-ms)/1000);
+    return s<60?(s+'s'):(s<3600?Math.round(s/60)+'m':Math.round(s/3600)+'h');
+  }
+  /* ★ 秒数单独 span + 等宽：避免 4s→14s 时卡片被顶宽抖动。
+   *   各语言 {n} 位置不同：中文「{n}前更新」在前，英文「Updated {n} ago」在中间。
+   *   统一按 {n} 拆成前后两段，秒数只占中间那个 span —— 既贴紧又不撑宽。 */
+  var _A=(T.ago||'{n}').split('{n}');
+  var AGOPRE=_A[0]||'', AGOTAIL=_A[1]||'';
+  /* ★ 整段文字必须包进一个 .live-txt：
+   *   .live-dot 是 flex 容器且设了 gap:5px，而 flex 会把【每个文本节点】
+   *   都当成独立 item —— 拆成三段就会插两段 5px 空隙，
+   *   「实时 · 」「4s」「前更新」被拉得很开（黄金页原来是一整段，所以贴得紧）。
+   *   包成整体后，gap 只作用在圆点与文字之间，文字内部按正常 inline 流紧贴。 */
+  /* ★ 幂等更新：秒数每秒都要重画一次。若每次都 textContent='' 把整棵子树推倒重建，
+   *   浏览器翻译插件（它把文本节点包进自己的元素，并监听变化重新翻译）就会被反复打断，
+   *   表现为徽标「一下子大、一下子小」地闪。
+   *   现在：结构只建一次，之后只改那一个秒数 span 的文字，且值没变就不写。
+   *   ★ 秒数 span 标 notranslate —— 数字本就无需翻译，交给插件反而会抖。 */
+  function setAgo(el,ago){
+    var sp=el.querySelector('.ago');
+    if(!sp||!el.querySelector('.live-txt')){
+      el.textContent='';
+      var box=document.createElement('span'); box.className='live-txt';
+      box.appendChild(document.createTextNode(T.live+' · '+AGOPRE));
+      sp=document.createElement('span');
+      sp.className='ago notranslate'; sp.setAttribute('translate','no');
+      box.appendChild(sp);
+      if(AGOTAIL) box.appendChild(document.createTextNode(AGOTAIL));
+      el.appendChild(box);
+    }
+    if(sp.textContent!==ago) sp.textContent=ago;
+  }
+  function paint(it){
+    if(!it||!it.chip) return;
+    it.chip.hidden=false;
+    if(it.state==='lost'){ it.chip.classList.add('is-lost'); it.chip.textContent=T.lost; return; }
+    if(it.state==='closed'){ it.chip.classList.add('is-lost'); it.chip.textContent=T.closed; return; }
+    it.chip.classList.remove('is-lost');
+    if(it.lastOk) setAgo(it.chip,agoTxt(it.lastOk));
+    else it.chip.textContent=T.live;
+  }
+
+  function pullOil(){
+    fetch('/api/oil-live',{cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){
+        var now=Date.now();
+        var b=+j.brent||0, w=+j.wti||0;
+        if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now; oil.state='live'; paint(oil); }
+        if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now; wti.state='live'; paint(wti); }
+      })
+      .catch(function(){
+        if(oil){ oil.state='lost'; paint(oil); }
+        if(wti){ wti.state='lost'; paint(wti); }
+      });
+  }
+
+  var GSRC=[
+    {u:'https://biquote.io/api/XAUUSD',p:function(j){var b=+j.bid,a=+j.ask;return (b&&a)?(b+a)/2:(+j.mid||0);}},
+    {u:'https://xaus.com/api/v1/spot?currency=CNY&unit=gram&compact=1',
+     p:function(j){var st=j&&j.data_state; if(st&&st!=='fresh') throw new Error('xaus:'+st);
+                   return +j.spot_usd_oz||0;}},
+    {u:'https://api.gold-api.com/price/XAU',p:function(j){return +j.price||0;}},
+    {u:'https://xaus.com/api/v1/spot?currency=USD&unit=oz&compact=1',
+     p:function(j){var st=j&&j.data_state; if(st&&st!=='fresh') throw new Error('xaus-usd:'+st);
+                   return +(j.spot_usd_oz||j.price||j.spot)||0;}}
+  ];
+  function one(s){
+    return new Promise(function(res,rej){
+      var done=false;
+      var t=setTimeout(function(){ if(!done){done=true;rej(new Error('timeout'));} },2500);
+      fetch(s.u,{cache:'no-store',headers:{Accept:'application/json'}})
+        .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+        .then(function(j){ var v=s.p(j); if(!v) throw new Error('bad'); if(!done){done=true;clearTimeout(t);res(v);} })
+        .catch(function(e){ if(!done){done=true;clearTimeout(t);rej(e);} });
+    });
+  }
+  function pullGold(){
+    if(!gold) return;
+    var i=0;
+    (function step(){
+      if(i>=GSRC.length){ gold.state='lost'; paint(gold); return; }
+      one(GSRC[i]).then(function(v){
+        gold.el.textContent=fm(v);
+        if(gold.gram){
+          var ug=gold.gram.getAttribute('data-ug')||'gram';
+          gold.gram.textContent=fm(v/OZ)+' / '+ug;
+        }
+        gold.lastOk=Date.now(); gold.state='live'; paint(gold);
+      },function(){ i++; step(); });
+    })();
+  }
+
+  /* 黄金休市判断（纽约时间），与黄金页同一套规则 */
+  function goldState(){
+    try{
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',hour12:false});
+      var o={}; f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
+      var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
+      var hh=parseInt(o.hour,10);
+      if(wd===6) return 'closed';
+      if(wd===0) return hh>=18?'open':'closed';
+      if(wd===5) return hh<17?'open':'closed';
+      if(hh===17) return 'closed';
+      return 'open';
+    }catch(e){ return 'open'; }
+  }
+
+  function cycle(){
+    pullOil();
+    if(gold){
+      if(goldState()==='open') pullGold();
+      else { gold.state='closed'; paint(gold); }
+    }
+  }
+  cycle();
+  setInterval(cycle,15000);
+  /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
+  setInterval(function(){ items.forEach(paint); },1000);
+})();`;
+
+/* 实时徽标的多语言文案：直接复用黄金页那套，七语言齐全 */
+function liveT(lang){
+  const L = t(lang);
+  return '<script type="application/json" id="ps-live-t">'
+    + JSON.stringify({live:L.goldLiveTag, lost:L.goldConnLost,
+                      closed:L.goldClosedTag || 'Market closed', ago:L.goldUpdatedAgo})
+        .replace(/</g, '\\u003c')
+    + '</script>';
+}
+
+/* ★ Vercel 测试版：原油 / WTI 实时刷新脚本
+ * 逻辑与黄金 GOLD_LIVE_JS 同构：页面先渲染服务端值（保证首屏有数），
+ * 再由浏览器定时拉 /api/oil-live 覆盖成实时价。
+ * kind = 'wti' 时取 WTI 字段，否则取布伦特。 */
+function oilLiveJs(kind) {
+  return `
+(function(){
+  var el=document.getElementById('oil-live-price');
+  var chip=document.getElementById('oil-live-chip');
+  if(!el) return;
+  var KIND='${kind}';
+  var T={live:'Live',lost:'Connection lost',ago:'Updated {n} ago'};
+  var tEl=document.getElementById('ps-live-t');
+  if(tEl){ try{ T=JSON.parse(tEl.textContent)||T; }catch(e){} }
+  var lastOk=0,state='init';
+  function fm(v){ try{ return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }catch(e){ return '$'+v; } }
+  function agoTxt(){
+    var s=Math.round((Date.now()-lastOk)/1000);
+    return s<60?(s+'s'):(s<3600?Math.round(s/60)+'m':Math.round(s/3600)+'h');
+  }
+  /* ★ 秒数单独 span + 等宽：避免 4s→14s 时卡片被顶宽抖动。
+   *   各语言 {n} 位置不同：中文「{n}前更新」在前，英文「Updated {n} ago」在中间。
+   *   统一按 {n} 拆成前后两段，秒数只占中间那个 span —— 既贴紧又不撑宽。 */
+  var _A=(T.ago||'{n}').split('{n}');
+  var AGOPRE=_A[0]||'', AGOTAIL=_A[1]||'';
+  /* ★ 整段文字必须包进一个 .live-txt：
+   *   .live-dot 是 flex 容器且设了 gap:5px，而 flex 会把【每个文本节点】
+   *   都当成独立 item —— 拆成三段就会插两段 5px 空隙，
+   *   「实时 · 」「4s」「前更新」被拉得很开（黄金页原来是一整段，所以贴得紧）。
+   *   包成整体后，gap 只作用在圆点与文字之间，文字内部按正常 inline 流紧贴。 */
+  /* ★ 幂等更新：秒数每秒都要重画一次。若每次都 textContent='' 把整棵子树推倒重建，
+   *   浏览器翻译插件（它把文本节点包进自己的元素，并监听变化重新翻译）就会被反复打断，
+   *   表现为徽标「一下子大、一下子小」地闪。
+   *   现在：结构只建一次，之后只改那一个秒数 span 的文字，且值没变就不写。
+   *   ★ 秒数 span 标 notranslate —— 数字本就无需翻译，交给插件反而会抖。 */
+  function setAgo(el,ago){
+    var sp=el.querySelector('.ago');
+    if(!sp||!el.querySelector('.live-txt')){
+      el.textContent='';
+      var box=document.createElement('span'); box.className='live-txt';
+      box.appendChild(document.createTextNode(T.live+' · '+AGOPRE));
+      sp=document.createElement('span');
+      sp.className='ago notranslate'; sp.setAttribute('translate','no');
+      box.appendChild(sp);
+      if(AGOTAIL) box.appendChild(document.createTextNode(AGOTAIL));
+      el.appendChild(box);
+    }
+    if(sp.textContent!==ago) sp.textContent=ago;
+  }
+  function paint(){
+    if(!chip) return;
+    chip.hidden=false;
+    if(state==='lost'){ chip.classList.add('is-lost'); chip.textContent=T.lost; return; }
+    chip.classList.remove('is-lost');
+    if(lastOk) setAgo(chip,agoTxt());
+    else chip.textContent=T.live;
+  }
+  function pull(){
+    return fetch('/api/oil-live',{cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){
+        var v=(KIND==='wti')?(j.wti||0):(j.brent||0);
+        if(!v) return;
+        el.textContent=fm(v);
+        lastOk=Date.now(); state='live';
+        /* 源名称不再占徽标（徽标统一显示「实时 · Ns 前」），改为悬停可见 */
+        if(chip&&j.providerLabel) chip.title=j.providerLabel;
+        paint();
+      })
+      .catch(function(){ state='lost'; paint(); });
+  }
+  pull(); setInterval(pull,15000);
+  /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
+  setInterval(paint,1000);
+})();`;
+}
+
 export function renderOil(lang, m, tz) {
   const L = t(lang);
   const p = m?.oil?.price;
@@ -659,18 +941,22 @@ export function renderOil(lang, m, tz) {
   <div class="grid">
     <div class="card oil">
       <h3><span class="swatch o"></span>${esc(L.price)}</h3>
-      <div class="big">${p != null ? '$' + fmt(p) : '—'}</div>
+      <div class="big" id="oil-live-price">${p != null ? '$' + fmt(p) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span></div>
+      <div class="meta"><span id="oil-live-chip" class="live-dot" hidden></span></div>
     </div>
   </div>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcOil || '')}</p>
+  ${L.netHint ? `<p class="src-note soft">${esc(L.netHint)}</p>` : ''}
+  ${L.srcDisclaimer ? `<p class="src-note soft">${esc(L.srcDisclaimer)}</p>` : ''}
   ${adSlot('oil')}
 </div></section>
 ${explainer(lang, 'oil')}
 ${faqBlock(lang, 'oil')}
 ${relatedBlock(lang, 'oil')}
-${sourceBlock(lang, 'Oil')}`;
+${sourceBlock(lang, 'Oil')}
+${liveT(lang)}
+<script>${oilLiveJs('brent')}</script>`;
   return page({ lang, title: L.oilMetaTitle, desc: L.oilMetaDesc, path: '/oil/', active: '/oil/', body });
 }
 
@@ -692,9 +978,9 @@ export function renderWti(lang, m, tz) {
   <div class="grid">
     <div class="card oil">
       <h3><span class="swatch w"></span>${esc(L.price)}</h3>
-      <div class="big">${p != null ? '$' + fmt(p) : '—'}</div>
+      <div class="big" id="oil-live-price">${p != null ? '$' + fmt(p) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span></div>
+      <div class="meta"><span id="oil-live-chip" class="live-dot" hidden></span></div>
     </div>
     ${spread != null ? `<div class="card oil">
       <h3><span class="swatch o"></span>${esc(L.wtiSpread)}</h3>
@@ -704,12 +990,16 @@ export function renderWti(lang, m, tz) {
     </div>` : ''}
   </div>
   <p class="src-note"><strong>${esc(L.dataSource)}：</strong>${esc(L.srcWti || '')}</p>
+  ${L.netHint ? `<p class="src-note soft">${esc(L.netHint)}</p>` : ''}
+  ${L.srcDisclaimer ? `<p class="src-note soft">${esc(L.srcDisclaimer)}</p>` : ''}
   ${adSlot('wti')}
 </div></section>
 ${explainer(lang, 'wti')}
 ${faqBlock(lang, 'wti')}
 ${relatedBlock(lang, 'wti')}
-${sourceBlock(lang, 'Wti')}`;
+${sourceBlock(lang, 'Wti')}
+${liveT(lang)}
+<script>${oilLiveJs('wti')}</script>`;
   return page({ lang, title: L.wtiMetaTitle, desc: L.wtiMetaDesc, path: '/wti/', active: '/wti/', body });
 }
 
@@ -972,6 +1262,7 @@ export function renderAbout(lang) {
   const body = `<section class="blk"><div class="wrap prose">
   <h2 class="h2"><span class="ico">ℹ️</span>${esc(L.aboutTitle)}</h2>
   <p class="lead">${esc(L.aboutIntro)}</p>
+  <p class="operator">${esc(L.aboutOperator)}</p>
   ${secs}
   <h2>${esc(L.contactEmailLabel)}</h2>
   <a class="mailto" href="mailto:${SITE.contactEmail}">\u2709\ufe0f ${SITE.contactEmail}</a>

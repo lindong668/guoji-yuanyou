@@ -1,0 +1,153 @@
+/* ===================================================================
+ * CF Worker 版测试 —— 直接以【真实 Worker 形态】调用
+ *   worker.fetch(request, env, ctx)
+ * 不经过任何 HTTP 服务器、不经过 Netlify 适配层，
+ * 因此测到的就是 CF 生产环境会跑的那条路径。
+ *
+ * ★ 沙盒对外网全封（连 er-api 都 403），上游一律 mock。
+ *   本测试验的是「Worker 入口 + 路由 + 结构」，不是真实网络。
+ *   真实源能不能用，以部署后 /probe 的结果为准。
+ * =================================================================== */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import worker from './src/index.js';
+
+const ROOT = path.dirname(fileURLToPath(import.meta.url));
+let pass = 0, fail = 0;
+const chk = (n, c) => { if (c) pass++; else { fail++; console.log('  NG  ' + n); } };
+
+/* CF 原生提供 caches.default；Node 里没有，补一个空实现。
+ * （Netlify 版也是这么做的，CF 生产环境不会用到这层 polyfill） */
+if (typeof globalThis.caches === 'undefined') {
+  globalThis.caches = { default: {
+    async match(){ return null; }, async put(){}, async delete(){ return true; } } };
+}
+
+const REAL = globalThis.fetch;
+const FX = { base:'USD', rates:{ CNY:6.681042, EUR:0.893935, JPY:157.437384 }, date:'2026-10-28' };
+const UP = {
+  '油': { price:101.53, '格式化后':'$101.53', updatedLocal:'2026-10-28 08:30' },
+  wti:  { price:99.91,  formatted:'$99.91',  updatedLocal:'2026-10-28 08:30' },
+  '金子': { priceUsdPerOz:4046.6, priceCnyPerGram:869.21, updatedAt:new Date().toISOString() },
+  cn_oil: { list:[{ '省':'北京', p92:8.66, p95:9.22, p98:10.10, p0:8.30 },
+                  { '省':'上海', p92:8.62, p95:9.17, p98:10.05, p0:8.26 }],
+            updatedAt:new Date().toISOString() },
+};
+let BLOCK = false;
+globalThis.fetch = async (u, o) => {
+  const s = (u && u.url) ? u.url : String(u);
+  if (BLOCK && !s.includes('ss.wwok.eu.cc')) return new Response('blocked', { status:403 });
+  if (s.includes('ss.wwok.eu.cc')) return new Response(JSON.stringify(UP),
+    { status:200, headers:{'content-type':'application/json'} });
+  if (s.includes('er-api') || s.includes('frankfurter'))
+    return new Response(JSON.stringify({ ...FX, result:'success', rates:FX.rates }),
+      { status:200, headers:{'content-type':'application/json'} });
+  if (BLOCK) return new Response('blocked', { status:403 });
+  return new Response('{}', { status:200, headers:{'content-type':'application/json'} });
+};
+
+async function get(p, hdrs = {}) {
+  const req = new Request('https://you.piccalc.com' + p, { headers: hdrs });
+  const res = await worker.fetch(req, {}, { waitUntil(){}, passThroughOnException(){} });
+  const body = await res.text();
+  return { status: res.status, body, ct: res.headers.get('content-type') || '' };
+}
+
+console.log('==== 一、Worker 入口形态（CF 专属）====');
+chk('导出 default.fetch（标准 Worker 形态）', typeof worker.fetch === 'function');
+{
+  const r = await get('/zh/');
+  chk('直接 fetch 可渲染首页（无需适配层）', r.status === 200 && r.body.includes('<html'));
+  chk('首页 canonical 指向 you.piccalc.com', r.body.includes('you.piccalc.com'));
+}
+
+console.log('==== 二、核心路由（七语 × 关键页）====');
+for (const lg of ['zh','en','ja','es','fr','de','pt']) {
+  for (const [n, p] of [['首页','/'],['布伦特','/oil/'],['WTI','/wti/'],
+                        ['黄金','/gold/'],['国内油价','/china-fuel/'],['汇率','/currency/']]) {
+    const r = await get('/' + lg + p);
+    chk(lg + ' ' + n, r.status === 200 && r.ct.includes('text/html'));
+  }
+}
+
+console.log('==== 三、国内油价仍靠 3 号（本次重点确认）====');
+{
+  const r = await get('/zh/china-fuel/');
+  chk('国内油价页渲染成功', r.status === 200);
+  chk('页面含省份数据（说明 3 号 /data 解析成功）', r.body.includes('北京'));
+  chk('页面含 92# 价格', /8\.6[0-9]/.test(r.body));
+  chk('data.js 仍以 X-Access-Key 读 3 号 /data',
+      fs.readFileSync(ROOT + '/src/data.js','utf8').includes("'X-Access-Key': SOURCE_ACCESS_KEY"));
+}
+
+console.log('==== 四、汇率不靠 3 号（独立公开源）====');
+{
+  const d = fs.readFileSync(ROOT + '/src/data.js','utf8');
+  chk('汇率主源是 er-api', d.includes('open.er-api.com'));
+  chk('汇率备源是 frankfurter', d.includes('frankfurter'));
+  chk('汇率逻辑不引用 SOURCE_WORKER', !/getFx[\s\S]{0,400}SOURCE_WORKER/.test(d));
+  const r = await get('/zh/currency/');
+  chk('汇率页渲染成功', r.status === 200);
+}
+
+console.log('==== 五、实时链路（本次回迁核心）====');
+{
+  for (const p of ['/api/oil-live','/api/gold-live']) {
+    const r = await get(p);
+    chk(p + ' 接口可达', r.status === 200);
+    let j = null; try { j = JSON.parse(r.body); } catch(e){}
+    chk(p + ' 返回合法 JSON', !!j);
+    if (p.includes('oil')) chk('oil-live 含布伦特字段', j && (j.brent != null || j.oil != null || Array.isArray(j.providers)));
+    else chk('gold-live 保留 priceUsdPerOz 字段契约', j && 'priceUsdPerOz' in j);
+  }
+}
+
+console.log('==== 六、探针 /probe（15 源）====');
+{
+  BLOCK = true;
+  const r = await get('/probe');
+  chk('/probe 可达', r.status === 200);
+  for (const id of ['biquote','yahoo','yahoo2','site3','stooq','oilwatch','opademo','cpapi'])
+    chk('原油源 ' + id + ' 出现在探针', r.body.includes('>' + id + '<'));
+  for (const id of ['site3live','biquote','xaus','goldapi','site3data','yahoogold','stooqgold'])
+    chk('黄金源 ' + id + ' 出现在探针', r.body.includes('>' + id + '<'));
+  chk('3 号被接入（原油）', r.body.includes('site3'));
+  chk('3 号被接入（黄金）', r.body.includes('site3live') && r.body.includes('site3data'));
+  BLOCK = false;
+}
+
+console.log('==== 七、v0 回归（前面各版成果不能丢）====');
+{
+  const r = await get('/zh/');
+  chk('页脚含运营者署名', r.body.includes('独立开发者'));
+  chk('免责用"数据"口径', !r.body.includes('以上价格') && r.body.includes('以上数据'));
+  chk('首页三卡都有实时徽标节点',
+      r.body.includes('home-oil-chip') && r.body.includes('home-wti-chip') && r.body.includes('home-gold-chip'));
+  const css = fs.readFileSync(ROOT + '/src/ui.js','utf8');
+  chk('徽标不可压缩（长语言不被挤掉）', /\.live-dot\{[^}]*flex:0 0 auto/.test(css));
+  chk('标题行允许换行', /\.card h3\{[^}]*flex-wrap:wrap/.test(css));
+  const pj = fs.readFileSync(ROOT + '/src/pages.js','utf8');
+  chk('setAgo 幂等（不推倒重建）', /el\.querySelector\('\.ago'\)/.test(pj));
+  chk('秒数标 notranslate', /ago notranslate/.test(pj));
+}
+
+console.log('==== 八、CF 专属配置====');
+{
+  const w = fs.readFileSync(ROOT + '/wrangler.toml','utf8');
+  chk('worker 名 guoji-yuanyou', w.includes("name = 'guoji-yuanyou'"));
+  chk('入口 src/index.js', w.includes('main = "src/index.js"'));
+  chk('路由 you.piccalc.com/*', w.includes('you.piccalc.com/*'));
+  chk('静态资源目录 ./public', w.includes('directory = "./public"'));
+  const lines = w.split('\n');
+  const grab = (k) => { let cur=null,out=[]; for(const l of lines){ const s=l.trim();
+    if(s==='['+k+']'){cur=1;continue;} if(s.startsWith('[')&&s.endsWith(']')){cur=null;continue;}
+    if(cur&&s.includes('=')&&!s.startsWith('#')) out.push(s.split('=')[0].trim()); } return out; };
+  chk('vars 与 previews.vars 完全一致', JSON.stringify(grab('vars'))===JSON.stringify(grab('previews.vars')));
+  for (const f of ['favicon.ico','favicon-16x16.png','favicon-32x32.png','apple-touch-icon.png',
+                   'icon-128.png','og-image.png','og-v2.png','BingSiteAuth.xml'])
+    chk('静态文件 ' + f + ' 已放入 public/', fs.existsSync(ROOT + '/public/' + f));
+}
+console.log('');
+console.log('  通过 ' + pass + ' 项，失败 ' + fail + ' 项');
+process.exit(fail ? 1 : 0);

@@ -204,7 +204,11 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
   background:radial-gradient(420px 130px at 92% -12%,var(--c,rgba(255,255,255,.08)),transparent 70%)}
 .card>*{position:relative;z-index:1}
-.card h3{margin:0 0 4px;font-size:.98rem;font-weight:650;display:flex;align-items:center;gap:9px}
+.card h3{margin:0 0 4px;font-size:.98rem;font-weight:650;display:flex;align-items:center;gap:9px;
+  /* ★ 法语/西语/德语标题比中文长很多：图标+长标题+徽标一行放不下时，
+   *   旧行为是把徽标压扁（内容被裁掉、看起来"绿字不见了"）。
+   *   现在允许换行，并且长单词也能断开 —— 布伦特/WTI 原本就会换行所以没暴露问题。 */
+  flex-wrap:wrap;overflow-wrap:break-word;min-width:0}
 .card .big{font-size:2.05rem;font-weight:800;letter-spacing:-.02em;margin:8px 0 2px;color:#fff}
 .card .unit{font-size:.8rem;color:var(--dim)}
 .card .meta{margin-top:12px;font-size:.76rem;color:var(--dim);
@@ -218,9 +222,28 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 /* 断线时：数字变灰 + 降透明度。不隐藏、不编造 —— 用户一眼看得出"这不是最新的"。 */
 .card.is-stale .big{opacity:.42;filter:grayscale(1)}
 .card.is-stale{border-color:rgba(255,255,255,.05)}
-.live-dot{display:inline-flex;align-items:center;gap:6px;color:var(--ok);font-weight:600}
-.live-dot::before{content:"";width:7px;height:7px;border-radius:50%;
+/* ★ 徽标原来是 .98rem（跟着 h3 继承），在卡片标题里显得过大。
+ *   统一缩到 .7rem，与旧的 live-chip 小角标一个量级。 */
+.live-dot{display:inline-flex;align-items:center;gap:5px;color:var(--ok);font-weight:600;
+  font-size:.7rem;line-height:1;vertical-align:middle;white-space:nowrap;
+  /* ★ 关键：作为 flex item 时默认可收缩，空间不足会被压扁导致文字被裁掉。
+   *   设为不可收缩后，放不下就整块换行到下一行，完整可见。 */
+  flex:0 0 auto}
+.live-dot::before{content:"";width:6px;height:6px;flex:0 0 auto;border-radius:50%;
   background:var(--ok);animation:psPulse 2s ease-in-out infinite}
+/* ★ 秒数只需等宽，不再预留宽度：
+ *   之前给 .ago 设了 min-width（先 3.2ch 后 2.4ch），"4s" 只占 2ch，
+ *   剩下的是空白 —— 把后面的「前更新」推远了。
+ *   现在靠 .live-txt 整段包裹 + tabular-nums 就够了：
+ *     · tabular-nums 让 0-9 等宽（1 不会比 8 窄，数字跳动时不左右晃）
+ *     · 不再留白，秒数与后缀紧贴，跟黄金页原来的观感一致 */
+.live-dot .live-txt{display:inline-block;white-space:nowrap}
+.live-dot .ago{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1;
+  /* ★ inline-block：让秒数成为一个独立的、宽度可预期的盒子。
+   *   配合 tabular-nums（0-9 等宽），"4s"→"14s" 只差约半个字符，肉眼几乎无感。 */
+  display:inline-block}
+/* 徽标落在卡片底部 meta 里时（黄金页 / 原油页统一位置），与右侧更新时间留点间距 */
+.card .meta .live-dot{margin-inline-end:8px}
 .live-dot.is-lost{color:var(--dim);font-weight:500}
 .live-dot.is-lost::before{background:var(--dim);animation:none}
 @keyframes psPulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -240,6 +263,8 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .src-note{margin:16px 0 0;font-size:.82rem;color:var(--dim);line-height:1.75;
   border-left:2px solid var(--gold);padding-left:12px}
 .src-note strong{color:var(--muted);font-weight:600}
+/* 次要说明：网络波动提示 / 免责声明 —— 比来源行更浅一号，避免喧宾夺主 */
+.src-note.soft{color:var(--dim);opacity:.85;font-size:.8rem}
 .prose-p.src-own{color:var(--txt);border-left:2px solid var(--gold);padding-left:12px}
 /* ---- article cards & blog chrome ---- */
 .artgrid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
@@ -302,6 +327,7 @@ td.pv{color:#fff;font-weight:600}
 .prose h2{font-size:1.16rem;margin:30px 0 10px;font-weight:700}
 .prose p{color:var(--muted);margin:0 0 14px;font-size:.95rem}
 .prose .lead{font-size:1.04rem;color:#c9d4ee}
+.prose .operator{font-size:.9rem;color:#8fa3c8;margin:-.35rem 0 1.4rem;padding-left:.7rem;border-left:2px solid #2f3f63}
 /* 隐私政策正文外链（Google 广告设置 / aboutads.info / youronlinechoices.eu） */
 .pl{color:var(--gold2);text-decoration:underline;text-underline-offset:2px;
   text-decoration-color:rgba(255,215,102,.45)}
@@ -333,14 +359,18 @@ details.faq p{padding:14px 18px 17px;margin:0;color:var(--muted);font-size:.93re
 
 /* ---------- footer ---------- */
 footer{margin-top:46px;background:var(--bg2);border-top:1px solid var(--line);padding:44px 0 26px}
-.fgrid{display:grid;gap:28px;grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.fgrid{display:grid;gap:28px 32px;grid-template-columns:1.6fr 1fr 1fr;align-items:start}
+.fbrand .tagline{font-size:.84rem;color:var(--muted);margin-top:10px;line-height:1.65}
 footer h4{font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);margin:0 0 12px}
 footer ul{list-style:none;margin:0;padding:0}
 footer li{margin-bottom:8px}
 footer a{color:var(--muted);font-size:.89rem}
 footer a:hover{color:var(--gold2)}
-.fbot{margin-top:34px;padding-top:20px;border-top:1px solid var(--line);
-  font-size:.8rem;color:var(--dim);display:flex;flex-wrap:wrap;gap:12px;justify-content:space-between}
+footer .op{font-size:.84rem;color:var(--muted);margin:6px 0 0;opacity:.95}
+.fbot{margin-top:30px;padding-top:20px;border-top:1px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.fbot p{margin:0;max-width:min(82ch,100%);text-wrap:pretty}
+.fbot .copy{font-size:.8rem;color:var(--dim)}
 .disc{font-size:.78rem;color:var(--dim);margin-top:10px;line-height:1.6}
 /* ★ v3 新增：页脚广告披露（FTC / 欧盟合规建议项） */
 .ad-note{font-size:.8rem;color:var(--dim);margin-top:12px;padding:9px 12px;
@@ -364,6 +394,18 @@ footer a:hover{color:var(--gold2)}
   .navtoggle{display:block}
   .logo span{font-size:1rem}
   .hero{padding:40px 0 34px}
+  /* 页脚：手机端全部居中，一列排开 */
+  .fgrid{grid-template-columns:1fr;gap:24px;text-align:center}
+  .fbrand .logo{justify-content:center}
+  .fcol ul{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 16px}
+  .fcol li{margin-bottom:0}
+  .fbrand .tagline,.fbot p{margin-left:auto;margin-right:auto}
+}
+/* 861–1040px：三列挤在一行会压窄品牌列，让品牌列独占整行 */
+@media(min-width:861px) and (max-width:1040px){
+  .fgrid{grid-template-columns:1fr 1fr}
+  .fbrand{grid-column:1 / -1}
+  .fbrand .tagline{max-width:60ch}
 }
 .adslot{margin:22px 0;text-align:center;min-height:90px}
 .adslot ins.adsbygoogle{display:block;min-height:90px}
@@ -537,29 +579,26 @@ export function footer(lang, year) {
   const link = (p, label) => `<li><a href="/${lang}${p}">${esc(label)}</a></li>`;
   return `<footer><div class="wrap">
   <div class="fgrid">
-    <div>
+    <div class="fbrand">
       <a class="logo" href="/${lang}/"><img class="mark" src="/icon-128.png" alt="${SITE.brand}" width="30" height="30"><span>${SITE.brand}</span></a>
-      <p class="disc">${esc(L.tagline)}</p>
+      <p class="tagline">${esc(L.tagline)}</p>
+      <p class="op">${esc(L.aboutOperator)}</p>
     </div>
-    <div><h4>${esc(L.footerQuick)}</h4><ul>
+    <div class="fcol"><h4>${esc(L.footerQuick)}</h4><ul>
       ${link('/oil/', L.nav.oil)}${link('/wti/', L.nav.wti)}
       ${link('/gold/', L.nav.gold)}${link('/china-fuel/', L.nav.cn)}${link('/currency/', L.nav.fx)}
     </ul></div>
-    <div><h4>${esc(L.footerCompany)}</h4><ul>
+    <div class="fcol"><h4>${esc(L.footerCompany)}</h4><ul>
       ${link('/faq/', faqLabel(lang))}
       ${link('/about/', L.nav.about)}${link('/contact/', L.nav.contact)}
-    </ul></div>
-    <div><h4>${esc(L.footerLegal)}</h4><ul>
-      ${link('/privacy/', L.nav.privacy)}${link('/about/', L.nav.about)}
-      ${link('/contact/', L.nav.contact)}
+      ${link('/privacy/', L.nav.privacy)}
     </ul></div>
   </div>
   <div class="fbot">
-    <span>© ${year} ${SITE.brand}. ${esc(L.footerRights)}</span>
-    <span>${esc(L.tagline)}</span>
+    <p class="copy">© ${year} ${SITE.brand}. ${esc(L.footerRights)}</p>
+    <p class="ad-note">${esc(L.footerAdDisclosure)}</p>
+    <p class="disc">${esc(L.footerDisclaimer)}</p>
   </div>
-  <p class="ad-note">${esc(L.footerAdDisclosure)}</p>
-  <p class="disc">${esc(L.footerDisclaimer)}</p>
 </div></footer>`;
 }
 

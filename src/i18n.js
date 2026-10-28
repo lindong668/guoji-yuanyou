@@ -5,9 +5,17 @@
 
 export const LANGS = ['en', 'zh', 'ja', 'es', 'fr', 'de', 'pt'];
 export const DEFAULT_LANG = 'en';
+/* ★ Vercel 适配：domain 改成可写的 getter/setter。
+ * Cloudflare 版写死 you.piccalc.com，搬到 Vercel 后域名变成
+ * xxx.vercel.app，canonical / hreflang / 301 跳转若不跟着改，
+ * 会把访客和爬虫全部指向线上正式站。
+ * 入口每请求把 SITE.domain 设为本次请求的 origin 即可。
+ * 同一部署下所有请求 origin 相同，故不存在并发竞态。 */
+let _domain = 'https://you.piccalc.com';
 export const SITE = {
   brand: 'PriceScope',
-  domain: 'https://you.piccalc.com',
+  get domain() { return _domain; },
+  set domain(v) { if (v) _domain = v; },
   contactEmail: 'juju089@qq.com',
 };
 
@@ -26,9 +34,9 @@ export const T = {
 
     nav: { overview: 'Overview', oil: 'Brent Crude', gold: 'Gold', cn: 'China Fuel', fx: 'Currency', wti: 'WTI Crude', about: 'About', privacy: 'Privacy', contact: 'Contact' },
 
-    heroBadge: 'Live gold · Hourly crude · Daily FX',
+    heroBadge: 'Live gold · Live crude · Daily FX',
     heroTitle: 'Global Brent Crude Oil, Gold & Currency Prices in One Place',
-    heroSub: 'Brent crude updates hourly while markets are open; gold and China retail fuel prices update daily — plus a free currency converter. Data is served from a global edge network for visitors worldwide.',
+    heroSub: 'Gold, Brent and WTI update in real time while markets are open; China retail fuel prices follow the official revision cycle — plus a free currency converter. Data is served from a global edge network for visitors worldwide.',
     heroCta: "See Today's Prices",
 
     secOverview: 'Market Overview',
@@ -45,10 +53,13 @@ export const T = {
     thProvince: 'Province / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regions covered',
     weekendNote: 'Markets are closed on weekends — the most recent trading day figures are shown.',
-    prevCloseNote: 'Brent updates hourly during trading hours; international gold updates in real time on its page; China fuel prices are revised roughly every 10 working days.',
+    prevCloseNote: 'Gold, Brent and WTI update in real time during trading hours; China fuel prices are revised roughly every 10 working days.',
     goldSrcShort: 'International spot gold (XAU/USD) — open market price, updated in real time.',
-    srcOil: 'Brent crude (Brent) — international oil market benchmark price, collected hourly during trading hours.',
-    srcWti: 'WTI crude — US oil benchmark price, collected hourly during trading hours.',
+    srcOil: 'Brent crude — the international oil market benchmark price, updated in real time during trading hours.',
+    srcOverview: 'Brent and WTI crude — international and US oil market benchmarks, updated in real time during trading hours; international spot gold (XAU/USD) — open market price, updated in real time; China retail fuel — provincial maximum retail guidance prices, revised roughly every 10 working days; reference FX rates — mid-market rates refreshed daily.',
+    netHint: 'Quotes travel over the network in real time. If your connection stutters, the figures may pause briefly and then resume on their own — please wait a moment, no need to reload. If it stays stuck, use “Contact” at the bottom of the page and we will look into it right away.',
+    srcDisclaimer: 'All data are for reference only and do not constitute investment advice.',
+    srcWti: 'WTI crude — the US oil benchmark price, updated in real time during trading hours.',
     srcGold: 'International spot gold (XAU/USD) — open market price from multiple independent providers, updated in real time in your browser.',
     srcCn: 'China retail fuel prices — provincial maximum retail guidance prices, revised roughly every 10 working days.',
     srcFx: 'Reference exchange rates — mid-market rates, refreshed daily.',
@@ -58,11 +69,11 @@ export const T = {
     fxAmount: 'Amount', fxFrom: 'From', fxTo: 'To', fxResult: 'Result', fxBtn: 'Convert', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Rates updated', fxNote: 'Mid-market reference rates, refreshed daily. For indication only — not for settlement.', fxPopular: 'Popular conversions',
 
     oilTitle: 'Brent Crude Oil Price',
-    oilMetaTitle: 'Brent Crude Oil Price Today — Hourly Updated Benchmark Rate | PriceScope',
-    oilMetaDesc: 'Daily updated Brent crude oil price per barrel, refreshed once every day. Brent is the leading global oil benchmark used by markets worldwide.',
+    oilMetaTitle: 'Brent Crude Oil Price Today — Live Benchmark Rate | PriceScope',
+    oilMetaDesc: 'Live Brent crude oil price per barrel, updated in real time while markets are open. Brent is the leading global oil benchmark used by markets worldwide.',
     wtiTitle: 'WTI Crude Oil Price',
     wtiMetaTitle: 'WTI Crude Oil Price Today — US Benchmark, Hourly Updated | PriceScope',
-    wtiMetaDesc: 'Daily updated WTI crude oil price per barrel. WTI is the main US oil benchmark and the other half of the global oil price picture alongside Brent.',
+    wtiMetaDesc: 'Live WTI crude oil price per barrel, updated in real time while markets are open. WTI is the main US oil benchmark and the other half of the global oil price picture alongside Brent.',
     wtiSpread: 'Brent–WTI spread', wtiSpreadUnit: 'USD / barrel', wtiSpreadHint: 'Brent minus WTI — a read on how freely oil moves',
     goldTitle: 'International Gold Price',
     goldMetaTitle: 'Gold Price Today — Live USD/oz & Your Currency per Gram | PriceScope',
@@ -92,6 +103,7 @@ export const T = {
     aboutTitle: 'About PriceScope',
     aboutMetaDesc: 'PriceScope provides free, fast and globally accessible market price data for Brent crude oil, gold, China retail fuel and world currencies.',
     aboutIntro: 'PriceScope is an independent price information website built for a worldwide audience. Our goal is simple: make essential market prices easy to read, in your own language, on any device.',
+    aboutOperator: 'PriceScope is maintained by an independent developer.',
     aboutSections: [
       { h: 'Our Mission', p: 'Energy, precious metal and currency prices move constantly and affect everyday decisions everywhere. Yet most price sources are slow, region-locked, or buried in advertising. PriceScope presents the numbers cleanly, loads instantly from a global edge network, and speaks your language — currently seven of them.' },
       { h: 'What We Track', p: 'We focus on four core datasets: the Brent crude oil benchmark price per barrel, the international gold price expressed both in US dollars per troy ounce and Chinese yuan per gram, China retail fuel ceiling prices for 92#, 95#, 98# gasoline and 0# diesel across all provinces, and reference exchange rates between major world currencies.' },
@@ -122,9 +134,9 @@ export const T = {
 
     nav: { overview: '总览', oil: '布伦特原油', gold: '国际黄金', cn: '国内油价', fx: '汇率换算', wti: 'WTI 原油', about: '关于本站', privacy: '隐私政策', contact: '联系我们' },
 
-    heroBadge: '黄金实时 · 原油每小时 · 汇率每日',
+    heroBadge: '黄金实时 · 原油实时 · 汇率每日',
     heroTitle: '全球布伦特原油、黄金与汇率，一站掌握',
-    heroSub: '国际黄金在页面内实时更新，布伦特与 WTI 原油在交易时段每小时更新，中国成品油价格跟随官方调整周期，并内置免费汇率换算工具。数据依托全球边缘网络为各地访客快速加载。',
+    heroSub: '国际黄金、布伦特与 WTI 原油均在交易时段实时更新，中国成品油价格跟随官方调整周期，并内置免费汇率换算工具。数据依托全球边缘网络为各地访客快速加载。',
     heroCta: '查看当日价格',
 
     secOverview: '行情总览',
@@ -141,10 +153,13 @@ export const T = {
     thProvince: '省份 / 地区', th92: '92#', th95: '95#', th98: '98#', th0: '0# 柴油',
     provincesCount: '个地区',
     weekendNote: '周末市场休市，显示最近一个交易日数据。',
-    prevCloseNote: '布伦特原油在交易时段每小时更新，国际黄金在页面内实时更新，国内成品油价格约每 10 个工作日调整一次。',
+    prevCloseNote: '国际黄金、布伦特与 WTI 原油在交易时段实时更新，国内成品油价格约每 10 个工作日调整一次。',
     goldSrcShort: '国际现货黄金（XAU/USD）—— 公开市场报价，实时更新。',
-    srcOil: '布伦特原油（Brent）—— 国际原油市场基准报价，交易时段每小时采集。',
-    srcWti: 'WTI 原油 —— 美国原油基准报价，交易时段每小时采集。',
+    srcOil: '布伦特原油（Brent）—— 国际原油市场基准报价，交易时段实时更新。',
+    srcOverview: '布伦特原油与 WTI 原油 —— 国际与美国原油市场基准报价，交易时段实时更新；国际现货黄金（XAU/USD）—— 公开市场报价，实时更新；国内成品油 —— 各省最高零售指导价，约每 10 个工作日调整一次；参考汇率 —— 中间市场汇率，每日刷新。',
+    netHint: '行情数据经由网络实时传输，如遇网络波动，数字可能短暂停顿后自动恢复，请耐心等待，无需手动刷新页面。若长时间仍无变化，可通过页面底部「联系我们」告诉我们，我们会尽快排查修复。',
+    srcDisclaimer: '以上数据仅供参考，不构成投资建议。',
+    srcWti: 'WTI 原油 —— 美国原油基准报价，交易时段实时更新。',
     srcGold: '国际现货黄金（XAU/USD）—— 来自多个独立数据源的公开市场报价，在你的浏览器中实时更新。',
     srcCn: '国内成品油价格 —— 各省最高零售指导价，约每 10 个工作日调整一次。',
     srcFx: '参考汇率 —— 中间市场汇率，每日刷新。',
@@ -154,11 +169,11 @@ export const T = {
     fxAmount: '金额', fxFrom: '源货币', fxTo: '目标货币', fxResult: '换算结果', fxBtn: '换算', fxRate: '1 {from} = {rate} {to}', fxUpdated: '汇率更新', fxNote: '中间市场参考汇率，每日刷新。仅供参考，不作为结算依据。', fxPopular: '常用换算',
 
     oilTitle: '布伦特原油价格',
-    oilMetaTitle: '今日布伦特原油价格 — 交易时段每小时更新 | PriceScope',
-    oilMetaDesc: '布伦特原油每桶价格，交易时段每小时更新。布伦特原油是全球市场最通用的原油基准报价。',
+    oilMetaTitle: '今日布伦特原油价格 — 交易时段实时更新 | PriceScope',
+    oilMetaDesc: '布伦特原油每桶价格，交易时段实时更新。布伦特原油是全球市场最通用的原油基准报价。',
     wtiTitle: 'WTI 原油价格',
     wtiMetaTitle: '今日 WTI 原油价格 — 美国原油基准报价查询 | PriceScope',
-    wtiMetaDesc: 'WTI 原油每桶价格，交易时段每小时更新。WTI 是美国原油的定价基准，与布伦特并列为全球最受关注的两大油价指标。',
+    wtiMetaDesc: 'WTI 原油每桶价格，交易时段实时更新。WTI 是美国原油的定价基准，与布伦特并列为全球最受关注的两大油价指标。',
     wtiSpread: '布伦特-WTI 价差', wtiSpreadUnit: '美元 / 桶', wtiSpreadHint: '布伦特减去 WTI，反映原油流通是否顺畅',
     goldTitle: '国际黄金价格',
     goldMetaTitle: '今日国际金价 — 实时美元/盎司，并可换算为你所在币种的每克价格 | PriceScope',
@@ -188,6 +203,7 @@ export const T = {
     aboutTitle: '关于 PriceScope',
     aboutMetaDesc: 'PriceScope 为全球用户提供免费、快速、易访问的布伦特原油、黄金、国内成品油与货币汇率价格数据。',
     aboutIntro: 'PriceScope 是一个面向全球受众的独立价格信息网站。我们的目标很单纯：让重要的市场价格变得易读、以您的母语呈现，并适配任何设备。',
+    aboutOperator: 'PriceScope 由独立开发者维护。',
     aboutSections: [
       { h: '我们的使命', p: '能源、贵金属与货币价格时刻波动，影响着各地人们的日常决策。然而多数价格来源要么迟缓、要么有地区限制、要么被广告淹没。PriceScope 以清爽的方式呈现数字，从全球边缘网络即时加载，并支持您的语言——目前已支持七种。' },
       { h: '我们追踪的数据', p: '我们聚焦四类核心数据：布伦特原油基准价格（每桶）、国际黄金价格（同时以美元/金衡盎司与人民币/克表示）、中国各省份 92#、95#、98# 汽油与 0# 柴油的零售最高限价，以及全球主要货币之间的参考汇率。' },
@@ -218,9 +234,9 @@ export const T = {
 
     nav: { overview: '概要', oil: 'ブレント原油', gold: '金', cn: '中国燃料', fx: '為替', wti: 'WTI原油', about: '当サイトについて', privacy: 'プライバシー', contact: 'お問い合わせ' },
 
-    heroBadge: '毎日更新の市場データ',
+    heroBadge: '金リアルタイム · 原油リアルタイム · 為替毎日',
     heroTitle: '世界のブレント原油・金・為替をひとつに',
-    heroSub: 'ブレント原油は取引時間中に毎時更新、金と中国燃料価格は毎日更新、無料の通貨換算ツールも搭載。グローバルエッジネットワークから高速配信されます。',
+    heroSub: '金・ブレント原油・WTI原油は取引時間中にリアルタイムで更新、中国の燃料価格は公式の改定サイクルに追随、無料の通貨換算ツールも搭載。グローバルエッジネットワークから高速配信されます。',
     heroCta: '本日の価格を見る',
 
     secOverview: 'マーケット概要',
@@ -237,10 +253,13 @@ export const T = {
     thProvince: '省・地域', th92: '92#', th95: '95#', th98: '98#', th0: '0# 軽油',
     provincesCount: '地域',
     weekendNote: '週末は市場が休場のため、直近の営業日の数値を表示しています。',
-    prevCloseNote: 'ブレント原油は取引時間中に1時間ごと、国際金価格はページ上でリアルタイムに更新、中国の燃料価格は概ね10営業日ごとに改定されます。',
+    prevCloseNote: '国際金価格・ブレント原油・WTI原油は取引時間中にリアルタイムで更新、中国の燃料価格は概ね10営業日ごとに改定されます。',
     goldSrcShort: '国際スポット金（XAU/USD）—— 公開市場価格をリアルタイムで更新。',
-    srcOil: 'ブレント原油（Brent）—— 国際原油市場の指標価格。取引時間中に1時間ごとに収集。',
-    srcWti: 'WTI原油 —— 米国の原油指標価格。取引時間中に1時間ごとに収集。',
+    srcOil: 'ブレント原油（Brent）—— 国際原油市場の指標価格。取引時間中にリアルタイムで更新。',
+    srcOverview: 'ブレント原油・WTI原油 —— 国際および米国の原油市場指標価格（取引時間中にリアルタイム更新）；国際スポット金（XAU/USD）—— 公開市場価格（リアルタイム更新）；中国燃料価格 —— 省別小売最高指導価格（概ね10営業日ごと改定）；参考為替レート —— 中間市場レート（毎日更新）。',
+    netHint: '相場データはネットワーク経由でリアルタイム配信されます。通信状況により一時的に停止する場合がありますが、自動的に再開しますのでそのままお待ちください（再読み込みは不要です）。長時間変化しない場合は、ページ下部の「お問い合わせ」よりご連絡ください。早急に確認いたします。',
+    srcDisclaimer: '掲載データは参考値であり、投資助言ではありません。',
+    srcWti: 'WTI原油 —— 米国の原油指標価格。取引時間中にリアルタイムで更新。',
     srcGold: '国際スポット金（XAU/USD）—— 複数の独立した情報源による公開市場価格。ブラウザ上でリアルタイムに更新。',
     srcCn: '中国の小売燃料価格 —— 省別の小売最高指導価格。概ね10営業日ごとに改定。',
     srcFx: '参考レート —— 仲値（ミッドマーケット）レート。毎日更新。',
@@ -250,11 +269,11 @@ export const T = {
     fxAmount: '金額', fxFrom: '換算元', fxTo: '換算先', fxResult: '結果', fxBtn: '換算', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'レート更新', fxNote: '日次更新のミッドマーケット参考レートです。参考用途のみで、決済には使用できません。', fxPopular: 'よく使われる換算',
 
     oilTitle: 'ブレント原油価格',
-    oilMetaTitle: '本日のブレント原油価格 — 国際ベンチマーク | PriceScope',
-    oilMetaDesc: 'ブレント原油の1バレルあたり価格を自動更新で表示。世界の市場で最も参照される原油ベンチマークです。',
+    oilMetaTitle: '本日のブレント原油価格 — 取引時間中リアルタイム更新 | PriceScope',
+    oilMetaDesc: 'ブレント原油の1バレルあたり価格を、取引時間中はリアルタイムで表示。世界の市場で最も参照される原油ベンチマークです。',
     wtiTitle: 'WTI原油価格',
     wtiMetaTitle: '本日のWTI原油価格 — 米国の原油指標 | PriceScope',
-    wtiMetaDesc: 'WTI原油の1バレルあたり価格を自動更新で表示。WTIは米国原油の指標であり、ブレントと並ぶ世界二大原油価格の一つです。',
+    wtiMetaDesc: 'WTI原油の1バレルあたり価格を、取引時間中はリアルタイムで表示。WTIは米国原油の指標であり、ブレントと並ぶ世界二大原油価格の一つです。',
     wtiSpread: 'ブレント-WTI価格差', wtiSpreadUnit: '米ドル / バレル', wtiSpreadHint: 'ブレントからWTIを引いた差。原油の流通の円滑さを示す',
     goldTitle: '国際金価格',
     goldMetaTitle: '本日の金価格 — リアルタイムUSD/オンス と お好み通貨のグラム価格 | PriceScope',
@@ -284,6 +303,7 @@ export const T = {
     aboutTitle: 'PriceScope について',
     aboutMetaDesc: 'PriceScope はブレント原油・金・中国燃料・世界通貨の市場価格データを、無料・高速・世界中からアクセス可能な形で提供します。',
     aboutIntro: 'PriceScope は世界中の利用者に向けた独立系価格情報サイトです。目的はシンプルです。重要な市場価格を、どのデバイスでも、お客様の言語で、読みやすく届けることです。',
+    aboutOperator: 'PriceScope は独立した開発者が運営しています。',
     aboutSections: [
       { h: '私たちの使命', p: 'エネルギー、貴金属、通貨の価格は常に変動し、世界中の人々の日々の判断に影響します。しかし多くの価格情報源は遅い、地域制限がある、あるいは広告まみれです。PriceScope は数字をすっきり表示し、グローバルエッジネットワークから瞬時に読み込み、お客様の言語に対応します（現在7言語）。' },
       { h: '対象データ', p: '私たちは4つの中核データに注力しています。ブレント原油ベンチマーク価格（1バレルあたり）、国際金価格（USD/トロイオンスとCNY/グラムの両方）、中国全地域の92#・95#・98#ガソリンおよび0#軽油の小売最高価格、そして主要通貨間の参考為替レートです。' },
@@ -314,9 +334,9 @@ export const T = {
 
     nav: { overview: 'Resumen', oil: 'Petróleo Brent', gold: 'Oro', cn: 'Combustible China', fx: 'Divisas', wti: 'Crudo WTI', about: 'Quiénes somos', privacy: 'Privacidad', contact: 'Contacto' },
 
-    heroBadge: 'Datos de mercado actualizados a diario',
+    heroBadge: 'Oro en vivo · Crudo en vivo · Divisas diarias',
     heroTitle: 'Petróleo Brent, oro y divisas mundiales en un solo lugar',
-    heroSub: 'El crudo Brent se actualiza cada hora mientras los mercados están abiertos; el oro y el combustible en China, a diario, además de un conversor de divisas gratuito. Los datos se distribuyen desde la red perimetral global.',
+    heroSub: 'El oro, el Brent y el WTI se actualizan en tiempo real mientras los mercados están abiertos; el combustible en China sigue el ciclo oficial de revisión, además de un conversor de divisas gratuito. Los datos se distribuyen desde la red perimetral global.',
     heroCta: 'Ver los precios de hoy',
 
     secOverview: 'Resumen del mercado',
@@ -333,10 +353,13 @@ export const T = {
     thProvince: 'Provincia / Región', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diésel',
     provincesCount: 'regiones',
     weekendNote: 'Los mercados cierran el fin de semana: se muestran los datos del último día hábil.',
-    prevCloseNote: 'El Brent se actualiza cada hora en horario de negociación; el oro internacional se actualiza en tiempo real en su página; los combustibles de China se revisan aproximadamente cada 10 días hábiles.',
+    prevCloseNote: 'El oro, el Brent y el WTI se actualizan en tiempo real en horario de negociación; los combustibles de China se revisan aproximadamente cada 10 días hábiles.',
     goldSrcShort: 'Oro spot internacional (XAU/USD) — precio de mercado abierto, actualizado en tiempo real.',
-    srcOil: 'Crudo Brent — precio de referencia del mercado internacional de petróleo, recopilado cada hora durante el horario de negociación.',
-    srcWti: 'Crudo WTI — precio de referencia del petróleo estadounidense, recopilado cada hora durante el horario de negociación.',
+    srcOil: 'Crudo Brent — precio de referencia del mercado internacional de petróleo, actualizado en tiempo real durante el horario de negociación.',
+    srcOverview: 'Brent y WTI — referencias de los mercados internacional y estadounidense de petróleo, actualizadas en tiempo real durante el horario de negociación; oro spot internacional (XAU/USD) — precio de mercado abierto, en tiempo real; combustible en China — precios máximos provinciales de venta al público, revisados aproximadamente cada 10 días hábiles; tipos de cambio de referencia — tasas medias de mercado actualizadas a diario.',
+    netHint: 'Las cotizaciones se transmiten por la red en tiempo real. Si la conexión falla, las cifras pueden detenerse un momento y reanudarse por sí solas: espere, no hace falta recargar. Si sigue sin cambiar, escríbanos desde «Contacto» al pie de la página y lo revisaremos de inmediato.',
+    srcDisclaimer: 'Todos los datos son solo de referencia y no constituyen asesoramiento de inversión.',
+    srcWti: 'Crudo WTI — precio de referencia del petróleo estadounidense, actualizado en tiempo real durante el horario de negociación.',
     srcGold: 'Oro spot internacional (XAU/USD) — precio de mercado abierto de varios proveedores independientes, actualizado en tiempo real en tu navegador.',
     srcCn: 'Combustibles minoristas de China — precios máximos de venta al público por provincia, revisados aproximadamente cada 10 días hábiles.',
     srcFx: 'Tipos de cambio de referencia — tipos medios de mercado, actualizados a diario.',
@@ -346,11 +369,11 @@ export const T = {
     fxAmount: 'Importe', fxFrom: 'De', fxTo: 'A', fxResult: 'Resultado', fxBtn: 'Convertir', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Actualizado', fxNote: 'Tipos de referencia de mercado medio, renovados diariamente. Solo informativo, no válido para liquidación.', fxPopular: 'Conversiones frecuentes',
 
     oilTitle: 'Precio del petróleo crudo Brent',
-    oilMetaTitle: 'Precio del crudo Brent hoy — cotización internacional actualizada a diario | PriceScope',
-    oilMetaDesc: 'Precio del crudo Brent por barril con actualización automática. El Brent es la referencia global utilizada por los mercados.',
+    oilMetaTitle: 'Precio del crudo Brent hoy — cotización internacional en vivo | PriceScope',
+    oilMetaDesc: 'Precio del crudo Brent por barril, actualizado en tiempo real durante el horario de negociación. El Brent es la referencia global utilizada por los mercados.',
     wtiTitle: 'Precio del petróleo WTI',
     wtiMetaTitle: 'Precio del crudo WTI hoy — referencia estadounidense, actualización diaria | PriceScope',
-    wtiMetaDesc: 'Precio del crudo WTI por barril con actualización diaria. El WTI es la referencia del petróleo estadounidense y, junto con el Brent, uno de los dos grandes indicadores mundiales.',
+    wtiMetaDesc: 'Precio del crudo WTI por barril, actualizado en tiempo real durante el horario de negociación. El WTI es la referencia del petróleo estadounidense y, junto con el Brent, uno de los dos grandes indicadores mundiales.',
     wtiSpread: 'Diferencial Brent-WTI', wtiSpreadUnit: 'USD / barril', wtiSpreadHint: 'Brent menos WTI: indica con qué libertad circula el petróleo',
     goldTitle: 'Precio internacional del oro',
     goldMetaTitle: 'Precio del oro hoy — USD/onza en vivo y por gramo en tu moneda | PriceScope',
@@ -380,6 +403,7 @@ export const T = {
     aboutTitle: 'Sobre PriceScope',
     aboutMetaDesc: 'PriceScope ofrece datos de precios del crudo Brent, oro, combustible en China y divisas: gratis, rápidos y accesibles mundialmente.',
     aboutIntro: 'PriceScope es un sitio independiente de información de precios para una audiencia global. Nuestro objetivo es simple: que los precios esenciales sean fáciles de leer, en tu idioma y en cualquier dispositivo.',
+    aboutOperator: 'PriceScope es mantenido por un desarrollador independiente.',
     aboutSections: [
       { h: 'Nuestra misión', p: 'Los precios de la energía, los metales preciosos y las divisas cambian constantemente y afectan decisiones cotidianas en todo el mundo. Sin embargo, la mayoría de las fuentes son lentas, tienen bloqueo regional o están saturadas de publicidad. PriceScope presenta las cifras con claridad, carga al instante desde una red perimetral global y habla tu idioma: actualmente siete.' },
       { h: 'Qué seguimos', p: 'Nos centramos en cuatro conjuntos de datos: el precio de referencia del crudo Brent por barril, el oro internacional expresado en dólares por onza troy y yuanes por gramo, los precios máximos minoristas de gasolina 92#, 95#, 98# y diésel 0# en todas las provincias chinas, y los tipos de cambio de referencia entre las principales divisas.' },
@@ -410,9 +434,9 @@ export const T = {
 
     nav: { overview: 'Aperçu', oil: 'Pétrole Brent', gold: 'Or', cn: 'Carburant Chine', fx: 'Devises', wti: 'Brut WTI', about: 'À propos', privacy: 'Confidentialité', contact: 'Contact' },
 
-    heroBadge: 'Données de marché mises à jour chaque jour',
+    heroBadge: 'Or en direct · Brut en direct · Devises quotidiennes',
     heroTitle: 'Pétrole Brent, or et devises mondiaux en un seul endroit',
-    heroSub: 'Le brut Brent est actualisé toutes les heures pendant les heures de négociation ; l\'or et les carburants en Chine, chaque jour, plus un convertisseur de devises gratuit. Les données sont diffusées depuis un réseau périphérique mondial.',
+    heroSub: 'L\'or, le Brent et le WTI sont actualisés en temps réel pendant les heures de négociation ; les carburants chinois suivent le cycle officiel de révision, plus un convertisseur de devises gratuit. Les données sont diffusées depuis un réseau périphérique mondial.',
     heroCta: 'Voir les prix du jour',
 
     secOverview: 'Aperçu du marché',
@@ -429,10 +453,13 @@ export const T = {
     thProvince: 'Province / Région', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'régions',
     weekendNote: 'Marchés fermés le week-end : les chiffres du dernier jour de cotation sont affichés.',
-    prevCloseNote: 'Le Brent est actualisé toutes les heures pendant les heures de négociation ; l\'or international est actualisé en temps réel sur sa page ; les carburants chinois sont révisés environ tous les 10 jours ouvrés.',
+    prevCloseNote: 'L\'or, le Brent et le WTI sont actualisés en temps réel pendant les heures de négociation ; les carburants chinois sont révisés environ tous les 10 jours ouvrés.',
     goldSrcShort: 'Or spot international (XAU/USD) — prix de marché ouvert, actualisé en temps réel.',
-    srcOil: 'Brut Brent — prix de référence du marché pétrolier international, collecté chaque heure pendant les heures de négociation.',
-    srcWti: 'Brut WTI — prix de référence du pétrole américain, collecté chaque heure pendant les heures de négociation.',
+    srcOil: 'Brut Brent — prix de référence du marché international du pétrole, actualisé en temps réel pendant les heures de négociation.',
+    srcOverview: 'Brent et WTI — références des marchés pétroliers international et américain, actualisées en temps réel pendant les heures de négociation ; or spot international (XAU/USD) — prix de marché ouvert, en temps réel ; carburants chinois — prix de détail maximaux provinciaux, révisés environ tous les 10 jours ouvrés ; taux de change de référence — taux moyens du marché actualisés chaque jour.',
+    netHint: 'Les cotations transitent par le réseau en temps réel. En cas d’instabilité de la connexion, les chiffres peuvent s’arrêter un instant puis reprendre d’eux-mêmes : patientez, inutile de recharger. Si rien ne change pendant longtemps, utilisez « Contact » en bas de page et nous examinerons le problème rapidement.',
+    srcDisclaimer: 'Toutes les données sont données à titre indicatif et ne constituent pas un conseil en investissement.',
+    srcWti: 'Brut WTI — prix de référence du pétrole américain, actualisé en temps réel pendant les heures de négociation.',
     srcGold: 'Or spot international (XAU/USD) — prix de marché ouvert issu de plusieurs fournisseurs indépendants, actualisé en temps réel dans votre navigateur.',
     srcCn: 'Carburants de détail en Chine — prix plafonds de vente au détail par province, révisés environ tous les 10 jours ouvrés.',
     srcFx: 'Taux de change de référence — taux moyens de marché, actualisés chaque jour.',
@@ -442,11 +469,11 @@ export const T = {
     fxAmount: 'Montant', fxFrom: 'De', fxTo: 'Vers', fxResult: 'Résultat', fxBtn: 'Convertir', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Mise à jour', fxNote: 'Taux de référence de marché moyen, actualisés chaque jour. Indicatif uniquement, non valable pour un règlement.', fxPopular: 'Conversions courantes',
 
     oilTitle: 'Prix du pétrole brut Brent',
-    oilMetaTitle: 'Prix du brut Brent aujourd\'hui — cours international actualisé chaque heure | PriceScope',
-    oilMetaDesc: 'Prix du brut Brent au baril avec mise à jour automatique. Le Brent est la référence mondiale utilisée par les marchés.',
+    oilMetaTitle: 'Prix du brut Brent aujourd\'hui — cours international en direct | PriceScope',
+    oilMetaDesc: 'Prix du brut Brent au baril, actualisé en temps réel pendant les heures de négociation. Le Brent est la référence mondiale utilisée par les marchés.',
     wtiTitle: 'Prix du pétrole WTI',
     wtiMetaTitle: 'Prix du brut WTI aujourd\'hui — référence américaine, mise à jour quotidienne | PriceScope',
-    wtiMetaDesc: 'Prix du brut WTI au baril avec mise à jour quotidienne. Le WTI est la référence américaine et, avec le Brent, l\'un des deux grands indicateurs mondiaux.',
+    wtiMetaDesc: 'Prix du brut WTI au baril, actualisé en temps réel pendant les heures de négociation. Le WTI est la référence américaine et, avec le Brent, l’un des deux grands indicateurs mondiaux.',
     wtiSpread: 'Écart Brent-WTI', wtiSpreadUnit: 'USD / baril', wtiSpreadHint: 'Brent moins WTI : indique la fluidité de circulation du pétrole',
     goldTitle: 'Prix international de l\'or',
     goldMetaTitle: 'Prix de l\'or aujourd\'hui — USD/once en direct et par gramme dans votre devise | PriceScope',
@@ -476,6 +503,7 @@ export const T = {
     aboutTitle: 'À propos de PriceScope',
     aboutMetaDesc: 'PriceScope fournit gratuitement des données de prix sur le brut Brent, l\'or, les carburants chinois et les devises, de façon rapide et mondiale.',
     aboutIntro: 'PriceScope est un site indépendant d\'information sur les prix, destiné à un public mondial. Notre objectif est simple : rendre les prix essentiels lisibles, dans votre langue, sur tout appareil.',
+    aboutOperator: 'PriceScope est géré par un développeur indépendant.',
     aboutSections: [
       { h: 'Notre mission', p: 'Les prix de l\'énergie, des métaux précieux et des devises évoluent constamment et influencent les décisions quotidiennes partout. Pourtant, la plupart des sources sont lentes, limitées géographiquement ou noyées sous la publicité. PriceScope présente les chiffres clairement, charge instantanément depuis un réseau périphérique mondial et parle votre langue — actuellement sept.' },
       { h: 'Ce que nous suivons', p: 'Quatre jeux de données : le prix de référence du brut Brent au baril, l\'or international exprimé en dollars par once troy et en yuans par gramme, les plafonds de détail chinois pour l\'essence 92#, 95#, 98# et le diesel 0# dans toutes les provinces, et les taux de change de référence entre grandes devises.' },
@@ -506,9 +534,9 @@ export const T = {
 
     nav: { overview: 'Überblick', oil: 'Brent-Rohöl', gold: 'Gold', cn: 'Kraftstoff China', fx: 'Währungen', wti: 'WTI-Rohöl', about: 'Über uns', privacy: 'Datenschutz', contact: 'Kontakt' },
 
-    heroBadge: 'Täglich aktualisierte Marktdaten',
+    heroBadge: 'Gold live · Rohöl live · Devisen täglich',
     heroTitle: 'Brent-Öl, Gold und Währungen weltweit an einem Ort',
-    heroSub: 'Brent-Rohöl wird während der Handelszeiten stündlich aktualisiert, Gold und chinesische Kraftstoffe täglich – plus ein kostenloser Währungsrechner. Die Daten werden weltweit über ein Edge-Netzwerk ausgeliefert.',
+    heroSub: 'Gold, Brent und WTI werden während der Handelszeiten in Echtzeit aktualisiert, chinesische Kraftstoffpreise folgen dem offiziellen Anpassungszyklus – plus ein kostenloser Währungsrechner. Die Daten werden weltweit über ein Edge-Netzwerk ausgeliefert.',
     heroCta: 'Preise des Tages ansehen',
 
     secOverview: 'Marktüberblick',
@@ -525,10 +553,13 @@ export const T = {
     thProvince: 'Provinz / Region', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'Regionen',
     weekendNote: 'Märkte sind am Wochenende geschlossen – es werden die Werte des letzten Handelstags angezeigt.',
-    prevCloseNote: 'Brent wird während der Handelszeiten stündlich aktualisiert, internationales Gold in Echtzeit auf seiner Seite, chinesische Kraftstoffpreise etwa alle 10 Werktage.',
+    prevCloseNote: 'Gold, Brent und WTI werden während der Handelszeiten in Echtzeit aktualisiert, chinesische Kraftstoffpreise etwa alle 10 Werktage.',
     goldSrcShort: 'Internationales Spot-Gold (XAU/USD) — offener Marktpreis, in Echtzeit aktualisiert.',
-    srcOil: 'Brent-Rohöl — Referenzpreis des internationalen Ölmarkts, während der Handelszeiten stündlich erhoben.',
-    srcWti: 'WTI-Rohöl — US-Referenzpreis für Rohöl, während der Handelszeiten stündlich erhoben.',
+    srcOil: 'Brent-Rohöl — Referenzpreis des internationalen Ölmarkts, während der Handelszeiten in Echtzeit aktualisiert.',
+    srcOverview: 'Brent und WTI — Referenzpreise des internationalen und des US-Ölmarkts, während der Handelszeiten in Echtzeit aktualisiert; internationales Spot-Gold (XAU/USD) — offener Marktpreis, in Echtzeit; chinesische Kraftstoffpreise — provinziale Höchstpreise, etwa alle 10 Werktage angepasst; Referenzwechselkurse — Mittelkurse, täglich aktualisiert.',
+    netHint: 'Die Kurse werden in Echtzeit über das Netzwerk übertragen. Bei Verbindungsproblemen können die Zahlen kurz stehen bleiben und dann von selbst weitermachen – bitte warten, neu laden ist nicht nötig. Bleibt alles über längere Zeit unverändert, nutzen Sie „Kontakt“ am Seitenende; wir prüfen das umgehend.',
+    srcDisclaimer: 'Alle Daten dienen nur als Referenz und stellen keine Anlageberatung dar.',
+    srcWti: 'WTI-Rohöl — US-Referenzpreis für Rohöl, während der Handelszeiten in Echtzeit aktualisiert.',
     srcGold: 'Internationales Spot-Gold (XAU/USD) — offener Marktpreis mehrerer unabhängiger Anbieter, in Echtzeit in Ihrem Browser aktualisiert.',
     srcCn: 'Chinas Einzelhandelspreise für Kraftstoffe — provinziale Höchstpreise, etwa alle 10 Werktage überprüft.',
     srcFx: 'Referenzwechselkurse — Mittelkurse, täglich aktualisiert.',
@@ -538,11 +569,11 @@ export const T = {
     fxAmount: 'Betrag', fxFrom: 'Von', fxTo: 'Nach', fxResult: 'Ergebnis', fxBtn: 'Umrechnen', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Aktualisiert', fxNote: 'Referenzkurse (Mittelkurs), täglich erneuert. Nur zur Orientierung, nicht für Abrechnungen.', fxPopular: 'Häufige Umrechnungen',
 
     oilTitle: 'Brent-Rohölpreis',
-    oilMetaTitle: 'Brent-Ölpreis heute — internationaler Rohölkurs, stündlich aktualisiert | PriceScope',
-    oilMetaDesc: 'Brent-Rohölpreis pro Barrel mit automatischer Aktualisierung. Brent ist die weltweite Referenznotierung der Märkte.',
+    oilMetaTitle: 'Brent-Ölpreis heute — internationaler Rohölkurs in Echtzeit | PriceScope',
+    oilMetaDesc: 'Brent-Rohölpreis pro Barrel, während der Handelszeiten in Echtzeit aktualisiert. Brent ist die weltweite Referenznotierung der Märkte.',
     wtiTitle: 'WTI-Rohölpreis',
-    wtiMetaTitle: 'WTI-Ölpreis heute — US-Referenzsorte, stündlich aktualisiert | PriceScope',
-    wtiMetaDesc: 'WTI-Rohölpreis pro Barrel mit täglicher Aktualisierung. WTI ist die US-Referenzsorte und neben Brent einer der beiden wichtigsten Ölpreisindikatoren der Welt.',
+    wtiMetaTitle: 'WTI-Ölpreis heute — US-Referenzsorte, in Echtzeit aktualisiert | PriceScope',
+    wtiMetaDesc: 'WTI-Rohölpreis pro Barrel, während der Handelszeiten in Echtzeit aktualisiert. WTI ist die US-Referenzsorte und neben Brent einer der beiden wichtigsten Ölpreisindikatoren der Welt.',
     wtiSpread: 'Brent-WTI-Spread', wtiSpreadUnit: 'USD / Barrel', wtiSpreadHint: 'Brent minus WTI — zeigt, wie frei Öl zirkulieren kann',
     goldTitle: 'Internationaler Goldpreis',
     goldMetaTitle: 'Goldpreis heute — USD/Unze live & Preis pro Gramm in Ihrer Währung | PriceScope',
@@ -572,6 +603,7 @@ export const T = {
     aboutTitle: 'Über PriceScope',
     aboutMetaDesc: 'PriceScope bietet kostenlose, schnelle und weltweit zugängliche Preisdaten für Brent-Rohöl, Gold, chinesische Kraftstoffe und Währungen.',
     aboutIntro: 'PriceScope ist eine unabhängige Preis-Informationsseite für ein weltweites Publikum. Unser Ziel ist einfach: wesentliche Marktpreise leicht lesbar zu machen – in Ihrer Sprache und auf jedem Gerät.',
+    aboutOperator: 'PriceScope wird von einem unabhängigen Entwickler betrieben.',
     aboutSections: [
       { h: 'Unsere Mission', p: 'Energie-, Edelmetall- und Währungspreise bewegen sich ständig und beeinflussen tägliche Entscheidungen überall. Dennoch sind viele Quellen langsam, regional gesperrt oder werblich überladen. PriceScope zeigt Zahlen klar, lädt sofort aus einem globalen Edge-Netzwerk und spricht Ihre Sprache – derzeit sieben.' },
       { h: 'Was wir verfolgen', p: 'Vier Kerndatensätze: der Brent-Rohöl-Referenzpreis pro Barrel, der Goldpreis in US-Dollar pro Feinunze und Renminbi pro Gramm, die chinesischen Einzelhandelshöchstpreise für Benzin 92#, 95#, 98# und Diesel 0# in allen Provinzen sowie Referenzwechselkurse zwischen wichtigen Währungen.' },
@@ -602,9 +634,9 @@ export const T = {
 
     nav: { overview: 'Visão geral', oil: 'Petróleo Brent', gold: 'Ouro', cn: 'Combustível China', fx: 'Moedas', wti: 'Petróleo WTI', about: 'Sobre', privacy: 'Privacidade', contact: 'Contato' },
 
-    heroBadge: 'Dados de mercado atualizados diariamente',
+    heroBadge: 'Ouro ao vivo · Petróleo ao vivo · Câmbio diário',
     heroTitle: 'Petróleo Brent, ouro e câmbio mundiais em um só lugar',
-    heroSub: 'O petróleo Brent é atualizado de hora em hora durante o pregão; ouro e combustível na China, diariamente, além de um conversor de moedas gratuito. Os dados são entregues por uma rede de borda global.',
+    heroSub: 'Ouro, Brent e WTI são atualizados em tempo real durante o pregão; o combustível na China segue o ciclo oficial de revisão, além de um conversor de moedas gratuito. Os dados são entregues por uma rede de borda global.',
     heroCta: 'Ver os preços de hoje',
 
     secOverview: 'Visão geral do mercado',
@@ -621,10 +653,13 @@ export const T = {
     thProvince: 'Província / Região', th92: '92#', th95: '95#', th98: '98#', th0: '0# Diesel',
     provincesCount: 'regiões',
     weekendNote: 'Mercados fecham no fim de semana — são exibidos os dados do último dia útil.',
-    prevCloseNote: 'O Brent é atualizado de hora em hora durante o pregão; o ouro internacional é atualizado em tempo real na sua página; os combustíveis da China são revisados aproximadamente a cada 10 dias úteis.',
+    prevCloseNote: 'Ouro, Brent e WTI são atualizados em tempo real durante o pregão; os combustíveis da China são revisados aproximadamente a cada 10 dias úteis.',
     goldSrcShort: 'Ouro spot internacional (XAU/USD) — preço de mercado aberto, atualizado em tempo real.',
-    srcOil: 'Petróleo Brent — preço de referência do mercado internacional de petróleo, coletado de hora em hora durante o horário de negociação.',
-    srcWti: 'Petróleo WTI — preço de referência do petróleo dos EUA, coletado de hora em hora durante o horário de negociação.',
+    srcOil: 'Petróleo Brent — preço de referência do mercado internacional de petróleo, atualizado em tempo real durante o pregão.',
+    srcOverview: 'Brent e WTI — referências dos mercados internacional e americano de petróleo, atualizadas em tempo real durante o pregão; ouro spot internacional (XAU/USD) — preço de mercado aberto, em tempo real; combustível na China — preços máximos provinciais de varejo, revisados aproximadamente a cada 10 dias úteis; taxas de câmbio de referência — taxas médias de mercado atualizadas diariamente.',
+    netHint: 'As cotações são transmitidas pela rede em tempo real. Se a conexão oscilar, os números podem parar por um instante e voltar sozinhos: aguarde, não é necessário recarregar. Se nada mudar por muito tempo, use «Contato» no rodapé da página e verificaremos imediatamente.',
+    srcDisclaimer: 'Todos os dados são apenas de referência e não constituem aconselhamento de investimento.',
+    srcWti: 'Petróleo WTI — preço de referência do petróleo dos EUA, atualizado em tempo real durante o pregão.',
     srcGold: 'Ouro spot internacional (XAU/USD) — preço de mercado aberto de vários fornecedores independentes, atualizado em tempo real no seu navegador.',
     srcCn: 'Combustíveis de varejo da China — preços máximos de varejo por província, revisados aproximadamente a cada 10 dias úteis.',
     srcFx: 'Taxas de câmbio de referência — taxas médias de mercado, atualizadas diariamente.',
@@ -634,11 +669,11 @@ export const T = {
     fxAmount: 'Valor', fxFrom: 'De', fxTo: 'Para', fxResult: 'Resultado', fxBtn: 'Converter', fxRate: '1 {from} = {rate} {to}', fxUpdated: 'Atualizado', fxNote: 'Taxas de referência de mercado médio, renovadas diariamente. Apenas indicativo, não serve para liquidação.', fxPopular: 'Conversões frequentes',
 
     oilTitle: 'Preço do petróleo bruto Brent',
-    oilMetaTitle: 'Preço do petróleo Brent hoje — cotação internacional atualizada diariamente | PriceScope',
-    oilMetaDesc: 'Preço do petróleo bruto Brent por barril com atualização automática. O Brent é a referência global usada pelos mercados.',
+    oilMetaTitle: 'Preço do petróleo Brent hoje — cotação internacional ao vivo | PriceScope',
+    oilMetaDesc: 'Preço do petróleo Brent por barril, atualizado em tempo real durante o pregão. O Brent é a referência global usada pelos mercados.',
     wtiTitle: 'Preço do petróleo WTI',
     wtiMetaTitle: 'Preço do petróleo WTI hoje — referência americana, atualização diária | PriceScope',
-    wtiMetaDesc: 'Preço do petróleo WTI por barril com atualização diária. O WTI é a referência do petróleo americano e, junto com o Brent, um dos dois grandes indicadores mundiais.',
+    wtiMetaDesc: 'Preço do petróleo WTI por barril, atualizado em tempo real durante o pregão. O WTI é a referência do petróleo americano e, junto com o Brent, um dos dois grandes indicadores mundiais.',
     wtiSpread: 'Diferencial Brent-WTI', wtiSpreadUnit: 'USD / barril', wtiSpreadHint: 'Brent menos WTI: indica com que liberdade o petróleo circula',
     goldTitle: 'Preço internacional do ouro',
     goldMetaTitle: 'Preço do ouro hoje — USD/onça ao vivo e por grama na sua moeda | PriceScope',
@@ -668,6 +703,7 @@ export const T = {
     aboutTitle: 'Sobre o PriceScope',
     aboutMetaDesc: 'O PriceScope oferece dados de preços do petróleo Brent, ouro, combustível na China e moedas de forma gratuita, rápida e acessível mundialmente.',
     aboutIntro: 'O PriceScope é um site independente de informações de preços para um público global. Nosso objetivo é simples: tornar os preços essenciais fáceis de ler, no seu idioma e em qualquer dispositivo.',
+    aboutOperator: 'PriceScope é mantido por um desenvolvedor independente.',
     aboutSections: [
       { h: 'Nossa missão', p: 'Os preços de energia, metais preciosos e moedas mudam constantemente e afetam decisões diárias em todo o mundo. Ainda assim, a maioria das fontes é lenta, com bloqueio regional ou saturada de anúncios. O PriceScope apresenta os números com clareza, carrega instantaneamente de uma rede de borda global e fala o seu idioma — atualmente sete.' },
       { h: 'O que acompanhamos', p: 'Quatro conjuntos de dados principais: o preço de referência do petróleo bruto Brent por barril, o ouro internacional em dólares por onça troy e em yuan por grama, os tetos de varejo chineses para gasolina 92#, 95#, 98# e diesel 0# em todas as províncias, e as taxas de câmbio de referência entre as principais moedas.' },
