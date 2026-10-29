@@ -130,6 +130,9 @@ const BEAT_CORE = `
       /* 从未成功过：已失败够久就如实报断线，不能拿 SSR 旧数字假装实时 */
       var f=(o&&o.f)||0;
       if(f && (now-f)>DEAD) return {s:'lost',ago:Math.floor((now-f)/1000),t:f};
+      /* ★ 全新会话（手机首次打开）本来会一律显示"实时"，服务端已确认的休市
+       *   就被无视了 —— 这正是"电脑休市、手机却显示实时"的根因。 */
+      if(srvClosed(k)) return {s:'closed',ago:0,t:now};
       return {s:'live',ago:0,t:now};
     }
     var ago=Math.floor((now-o.t)/1000);
@@ -280,7 +283,7 @@ const GOLD_LIVE_JS = `
     var st=bState('gold');
     lastOk=st.t||0;
     /* 首次抓取还没回来：先显示 SSR 那个数，状态按实时（不吓人） */
-    if(!booted){ markLive(); return; }
+    if(!booted){ if(st.s==='closed') markClosed(); else markLive(); return; }
     if(st.s==='hold') return;            /* 刚切回前台，保持上一帧，不闪断线 */
     if(st.s==='lost') markLost();
     else if(st.s==='closed') markClosed();
@@ -1002,7 +1005,7 @@ function oilLiveJs(kind) {
     var st=bState(KEY);
     lastOk=st.t||0;
     chip.hidden=false;
-    if(!booted){ chip.classList.remove('is-lost'); setAgo(chip,agoTxt(lastOk)); return; }
+    if(!booted){ if(st.s==='closed'){ chip.classList.add('is-lost'); if(chip.textContent!==T.closed) chip.textContent=T.closed; return; } chip.classList.remove('is-lost'); setAgo(chip,agoTxt(lastOk)); return; }
     if(st.s==='hold'){ /* 切回前台：保持上一帧 */ }
     else if(st.s==='lost'){ chip.classList.add('is-lost');
       if(chip.textContent!==T.lost) chip.textContent=T.lost; return; }
