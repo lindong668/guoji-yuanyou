@@ -68,7 +68,9 @@ setNow('2026-10-29T08:30:00+08:00');
   await new Promise(r=>setTimeout(r,350));
   await poll(h,4,60000);   // 冻结 4 分钟 > 2 分钟
   console.log('       布伦特 '+h.d.window.document.getElementById('home-oil-price').textContent+'  徽标 ['+chipOf(h)+']');
-  ok('冻结够久且排程休市 → 显示休市中', chipOf(h).indexOf('休市')>=0);
+  /* ★★★★★ 新行为：冻结再久，只要【没跑满多源探测】就不能判休市。
+   *   （休市判定已移交 probetest：8源×3次×3轮 = 72 次无变动才判） */
+  ok('★★★★★ 冻结 4 分钟但未跑满探测 → 【不】显示休市中', chipOf(h).indexOf('休市')<0);
 }
 
 /* ---------- 场景3：★ 用户拍板的方案 —— 停了就休市，动了立刻开市 ---------- */
@@ -79,7 +81,7 @@ setNow('2026-10-29T20:00:00+08:00');   // 伦敦 12:00 → 排程【开市】
   await new Promise(r=>setTimeout(r,350));
   await poll(h,4,60000);   // 冻结 4 分钟 > 2 分钟
   console.log('       布伦特 '+h.d.window.document.getElementById('home-oil-price').textContent+'  徽标 ['+chipOf(h)+']');
-  ok('★ 连续 2 分钟没动 → 显示休市中（按用户方案，不看排程）', chipOf(h).indexOf('休市')>=0);
+  ok('★★★★★ 连续 2 分钟没动 → 【不】直接判休市（要先探测）', chipOf(h).indexOf('休市')<0);
 }
 
 /* ---------- 场景5：★ 休市之后一有变动，立刻翻回实时 ---------- */
@@ -92,9 +94,12 @@ setNow('2026-10-29T20:00:00+08:00');
   await new Promise(r=>setTimeout(r,350));
   await poll(h,3,60000);   // 3 分钟不动 → 休市
   const before=chipOf(h);
-  await poll(h,2,60000);   // 第5轮变动
+  /* ⚠️ 只推进【一轮】：再推进一轮又会因"冻结 1 分钟"而翻回探测态，
+   *   那样测到的就不是"刚变动那一刻"了 */
+  await poll(h,1,60000);   // 第5轮变动
   console.log('       冻结中 ['+before+'] → 变动后 ['+chipOf(h)+']');
-  ok('★ 冻结 2 分钟后进入休市', before.indexOf('休市')>=0);
+  ok('★★★★★ 冻结后先进入"重新连接中"而不是直接休市',
+     before.indexOf('休市')<0 && (before.indexOf('重试')>=0||before.indexOf('连接')>=0));
   ok('★★ 一有变动立刻翻回实时（无需等待）', chipOf(h).indexOf('实时')>=0);
 }
 

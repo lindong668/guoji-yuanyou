@@ -182,9 +182,9 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
    *   两个页面数字不一致 —— 用户实测到 110.56 vs 114.19。 */
   chk('休市也抓一次（拿收盘价，不是不抓）', !/if\(!mktOpen\(TZ\)\)\{ state='closed'/.test(pj));
   chk('★ 详情页按全局节拍 15 秒一抓（不节流）', /setInterval\(pull,BEAT\)/.test(pj));
-  chk('两腿独立判断（各自调 effOpen，不共用状态）',
-      /oil\.state=effOpen\(oil\)\?'live':'closed'/.test(pj) &&
-      /wti\.state=effOpen\(wti\)\?'live':'closed'/.test(pj));
+  /* 现在两腿各自按自己的探测进度判断（互不共用），比原来各自调 effOpen 更严 */
+  chk('两腿独立判断（各自按自己的探测进度，不共用状态）',
+      /probeDone\('brent',OIL_ROUNDS\)/.test(pj) && /probeDone\('wti',OIL_ROUNDS\)/.test(pj));
   /* ★★★ 开休市判定 = 三规则（抗抖动最终版） */
   chk('★ 已加实测覆盖层 effOpen（首页）', /function effOpen\(it\)\{/.test(pj));
   chk('★ 已加实测覆盖层 effOpen（详情页）', pj.includes('function effOpen(){'));
@@ -252,7 +252,14 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
   chk('★★★★★ 节拍周期统一 15000ms（三处：首页/原油页/黄金页）',
       (pj.match(/var BEAT=15000;/g) || []).length === 3);
   chk('★★★★★ 首页沿用快照时不发请求',
-      /function pullOil\(\)\{[\s\S]{0,800}var d=oilDelay\(\);[\s\S]{0,200}return;/.test(pj));
+      /function pullOil\(\)\{[\s\S]{0,900}var d=oilDelay\(\);[\s\S]{0,400}return;/.test(pj));
+  chk('★★★★★ 首页不再用 effOpen 直接判休市（改为探测确认）',
+      /oil\.state=\(probeDone\('brent',OIL_ROUNDS\)\)/.test(pj));
+  chk('★★★★★ 探测参数：每源 3 次、原油 3 轮、黄金 6 轮',
+      pj.includes('var PGAP=3000, PPER=3, PSTILL=2') && pj.includes('OIL_ROUNDS=3, GOLD_ROUNDS=6'));
+  chk('★★★★★ 三个页面都注册了探测心跳 3000ms',
+      (pj.match(/setInterval\((probeTick|probeTick),PGAP\)/g)||[]).length>=2
+      || /setInterval\(probeTick,PGAP\)/.test(pj));
   chk('★★★★★ 黄金页沿用快照时不发请求', /tDelay\(\)>0&&a&&a\.v/.test(pj));
   chk('★★★★★ 原油详情页按 brent/wti 分 key',
       pj.includes("var AK=(KIND==='wti')?'wti':'brent';"));

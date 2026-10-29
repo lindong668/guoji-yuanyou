@@ -195,6 +195,54 @@ const GOLD_LIVE_JS = `
     if(elNote) elNote.hidden=false;
   }
 
+  /* ================================================================
+   * ★★★★★ 多源多轮探测（黄金源少 → 轮数加倍）
+   *   黄金只有 4 个前端源，比原油少一半，所以要求更严格：
+   *   4 源 × 3 次 × 6 轮 = 72 次都无变动，才敢判休市。
+   *   与首页共用 ps_probe_gold —— 从首页点进来 / 刷新都不从头再来。
+   * ================================================================ */
+  var PGAP=3000, PPER=3, PSTILL=2, GOLD_ROUNDS=6;
+  function pKey(){ return 'ps_probe_gold'; }
+  function pGet(){
+    try{ var o=JSON.parse(sessionStorage.getItem(pKey())||'null');
+         return (o&&typeof o.r==='number')?o:{r:0,i:0,k:0}; }catch(e){ return {r:0,i:0,k:0}; }
+  }
+  function pSet(o){ try{ sessionStorage.setItem(pKey(),JSON.stringify(o)); }catch(e){} }
+  function pClear(){ try{ sessionStorage.removeItem(pKey()); }catch(e){} }
+  function needProbe(){ return !!(lastMoveAt&&(Date.now()-lastMoveAt)>PSTILL*BEAT); }
+  /* 探测中：显示「重新连接中」，【不是】休市中 */
+  function markProbing(){
+    if(pGet().r>=GOLD_ROUNDS){ markClosed(); return; }
+    dead=false;
+    card1.classList.remove('is-stale'); card2.classList.remove('is-stale');
+    elStatus.classList.add('is-lost');
+    elStatus.textContent=T.lost;
+    if(elNote) elNote.hidden=true;
+  }
+  function probeAdvance(failed){
+    var st=pGet();
+    if(failed) st.k=0; else st.k++;
+    if(failed||st.k>=PPER){ st.k=0; st.i++; if(st.i>=SOURCES.length){ st.i=0; st.r++; } }
+    pSet(st);
+    if(st.r>=GOLD_ROUNDS) markClosed(); else markProbing();
+  }
+  function probeOnce(){
+    var st=pGet();
+    var s=SOURCES[st.i%SOURCES.length];
+    one(s).then(function(v){
+      /* ★★ 任一源返回新值 → 【立刻开市】 */
+      if(v&&lastVal!=null&&Math.abs(v-lastVal)>1e-9){
+        pClear(); tSet(v); usdOz=v; paint(); markLive(); return;
+      }
+      probeAdvance(false);
+    },function(){ probeAdvance(true); });
+  }
+  function probeTick(){
+    if(!needProbe()) return;
+    if(pGet().r>=GOLD_ROUNDS){ markClosed(); return; }
+    probeOnce();
+  }
+
   /* 三个源按序尝试。biquote 是券商 MT5 链路（实时、独立），
      xaus 与 gold-api 是指示性现货价 —— 实测三者偏差 < 0.04%。 */
   var SOURCES=[
@@ -282,9 +330,16 @@ const GOLD_LIVE_JS = `
       return o;
     }catch(e){ return null; }
   }
+  var lastVal=null, lastMoveAt=0;
+  function noteV(v){
+    if(!v) return;
+    if(lastVal==null){ lastVal=v; lastMoveAt=Date.now(); return; }
+    if(Math.abs(v-lastVal)>1e-9){ lastVal=v; lastMoveAt=Date.now(); pClear(); }
+  }
   function tSet(v){
+    noteV(v);
     try{ sessionStorage.setItem('ps_tick_gold',
-      JSON.stringify({v:v,t:Date.now(),mv:Date.now()})); }catch(e){}
+      JSON.stringify({v:v,t:Date.now(),mv:lastMoveAt||Date.now()})); }catch(e){}
   }
   function tDelay(){
     var o=tGet();
@@ -294,7 +349,11 @@ const GOLD_LIVE_JS = `
   }
   function pass(cb){
     var a=tGet();
-    if(tDelay()>0&&a&&a.v){ usdOz=a.v; busy=false; paint(); cb(true); return; }
+    if(tDelay()>0&&a&&a.v){
+      usdOz=a.v; busy=false;
+      if(lastVal==null){ lastVal=a.v; lastMoveAt=a.mv||a.t; }   /* ★ 恢复，探测才能连续 */
+      paint(); cb(true); return;
+    }
     askBackend(function(ok){
       if(ok){ busy=false; tSet(usdOz); cb(true); return; }
       passDirect(cb);
@@ -304,10 +363,12 @@ const GOLD_LIVE_JS = `
   var busy=false;
   function cycle(){
     if(busy) return;
-    if(goldState()!=='open'){ markClosed(); return; }          /* 上一轮还没跑完（慢网络下可能超过 10 秒），不叠加 */
+    /* ★ 不再用排程直接判休市（排程与券商源对不上，会误判）。
+     *   一律正常拉；是否休市交给【多源多轮探测】认定。 */
     busy=true;
     pass(function(ok){
-      if(ok){ markLive(); return; }
+      /* 拿到值但价格冻结 → 不再显示"实时"，转为探测中的"重新连接中" */
+      if(ok){ if(needProbe()) markProbing(); else markLive(); return; }
       setTimeout(function(){
         pass(function(ok2){
           busy=false;
@@ -359,12 +420,9 @@ const GOLD_LIVE_JS = `
     if(goldState()==='open') markLive(); else markClosed();
   }
   cycle();                      /* ★ 首次一次（首屏要有数）；有快照时会自动沿用 */
-  /* 每分钟核对一次开休市状态：休市结束（或进入结算）能自动切换显示 */
-  setInterval(function(){
-    var st=goldState();
-    if(st!=='open'){ markClosed(); }
-    else if(!dead&&lastOk){ markLive(); }
-  },60000);
+  /* ★ 原来是"每分钟按排程核对"，排程不可靠会误判休市。
+   *   改成探测心跳：3 秒一跳，只在价格冻结时才真的去问源。 */
+  setInterval(probeTick,PGAP);
 })();
 `;
 
@@ -982,6 +1040,10 @@ const HOME_LIVE_JS = `
      *   加"值没变就不写"的判断后，休市状态下 DOM 完全不动。 */
     if(it.state==='lost'){ it.chip.classList.add('is-lost');
       if(it.chip.textContent!==T.lost) it.chip.textContent=T.lost; return; }
+    /* ★ 探测中：还没确认休市，显示「重新连接中」（复用七语已有的"连接中断，正在重试"）。
+     *   绝不能在只观察了一两个源、甚至只观察了一个源的情况下就显示"休市中"。 */
+    if(it.state==='probing'){ it.chip.classList.add('is-lost');
+      if(it.chip.textContent!==T.lost) it.chip.textContent=T.lost; return; }
     if(it.state==='closed'){ it.chip.classList.add('is-lost');
       if(it.chip.textContent!==T.closed) it.chip.textContent=T.closed; return; }
     it.chip.classList.remove('is-lost');
@@ -1004,7 +1066,12 @@ const HOME_LIVE_JS = `
     /* ★ 还没到节拍 → 沿用快照，【不抓】。
      *   关键：这里【不更新 t】，所以导航不会把刷新时间推迟 —— 修掉 bug1。 */
     var d=oilDelay();
-    if(d>0&&applyTick(oil,'brent')&&applyTick(wti,'wti')) return;
+    /* ★ 无论本次是否沿用，都先恢复快照里的 lastVal / lastMoveAt。
+     *   原来只在"沿用"时才恢复，于是新页面真抓前 lastVal 恒为 null →
+     *   ① 探测进度被误清（首次拿值被当成"变动"）
+     *   ② 探测时判断不了"有没有变动"，新价来了也认不出来（场景2 实测到） */
+    var okB=applyTick(oil,'brent'), okW=applyTick(wti,'wti');
+    if(d>0&&okB&&okW) return;
     fetch('/api/oil-live',{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
@@ -1016,10 +1083,20 @@ const HOME_LIVE_JS = `
          *   之前休市时首页照写实时值、详情页因不抓而留服务端值，
          *   两个页面显示不同数字（实测 110.56 vs 114.19）。
          *   现在两边都取 /api/oil-live 同一个值 → 必然一致。 */
-        if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now; noteVal(oil,b);
-                    oil.state=effOpen(oil)?'live':'closed'; oil.fetched=true; paint(oil); }
-        if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now; noteVal(wti,w);
-                    wti.state=effOpen(wti)?'live':'closed'; wti.fetched=true; paint(wti); }
+        /* ⚠️ 首次拿到值时 lastVal 还是 null，不能当成"变动"去清探测进度 ——
+         *   否则一刷新（新页面首次抓取）就会把上一页辛苦攒的探测轮次清零，
+         *   探测永远走不完（用户实测：刷新一下又从头开始）。 */
+        /* ★★ 不再用 effOpen()（2 分钟）直接判休市 —— 那等于"只观察一个源
+         *   两分钟没动"就下结论，正是用户批评的做法。
+         *   现在：冻结 → 探测中（重新连接中）；跑满 3 轮 → 才判休市。 */
+        if(b&&oil){ if(oil.lastVal!=null&&b!==oil.lastVal) pClear('brent');
+                    oil.el.textContent=fm(b); oil.lastOk=now; noteVal(oil,b);
+                    oil.state=(probeDone('brent',OIL_ROUNDS))?'closed':(needProbe(oil)?'probing':'live');
+                    oil.fetched=true; paint(oil); }
+        if(w&&wti){ if(wti.lastVal!=null&&w!==wti.lastVal) pClear('wti');
+                    wti.el.textContent=fm(w); wti.lastOk=now; noteVal(wti,w);
+                    wti.state=(probeDone('wti',OIL_ROUNDS))?'closed':(needProbe(wti)?'probing':'live');
+                    wti.fetched=true; paint(wti); }
       })
       .catch(function(){
         if(oil){ oil.state='lost'; paint(oil); }
@@ -1068,6 +1145,8 @@ const HOME_LIVE_JS = `
     });
   }
   function setGoldVal(v){
+    if(gold.lastVal!=null&&Math.abs(v-gold.lastVal)>1e-9) pClear('gold');
+    noteVal(gold,v);
     gold.el.textContent=fm(v);
     if(gold.gram){
       var ug=gold.gram.getAttribute('data-ug')||'gram';
@@ -1095,8 +1174,9 @@ const HOME_LIVE_JS = `
    *   市场在动 → 首页/详情页来回点就看到不同数字。 */
   function pullGold(){
     if(!gold) return;
-    /* ★ 同原油：没到节拍就沿用快照、不抓，且【不更新 t】 */
-    if(tDelay('gold')>0&&applyTick(gold,'gold')) return;
+    /* ★ 同原油：先恢复 lastVal/lastMoveAt，没到节拍就沿用、不抓 */
+    var okG=applyTick(gold,'gold');
+    if(tDelay('gold')>0&&okG) return;
     fetch('/api/gold-live',{cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -1124,6 +1204,96 @@ const HOME_LIVE_JS = `
    *   · 距下次节拍还有余量 → 排 setTimeout 等着，到点再拉；
    *   · 已过点 → 立刻拉一次，然后按 15 秒循环。
    *   这样首页→详情页→首页 全程共用同一个节拍，不会因导航而多拉。 */
+  /* ================================================================
+   * ★★★★★ 多源多轮探测 —— 休市判定必须慎之又慎（用户硬性要求 ≥99.9%）
+   * ----------------------------------------------------------------
+   * 之前的错：只在【一个源】上观察"2 分钟没变动"就判休市。
+   *   但券商 CFD 源本身可能沿用旧值、也可能接口不稳定，
+   *   「单源静默」根本不等于「市场休市」—— 于是出现
+   *   「明明开盘中却显示休市中，刷新一下又好了」，用户看了会怕。
+   *
+   * 现在的规则：
+   *   ① 抓到新数据                  → 【立刻开市】（有变动就是开市）
+   *   ② 价格冻结 ≥2 个节拍(30s)     → 进入【探测】，显示「重新连接中」
+   *   ③ 探测：逐个源轮询，每源连续 3 次，走完一圈算 1 轮
+   *        原油 8 源 → 至少 3 轮（8×3×3 = 72 次）
+   *        黄金源少 → 至少 6 轮（4×3×6 = 72 次）
+   *   ④ 【所有源 × 所有轮】都没变动 → 才判休市
+   *      任一源返回新值 → 立刻开市并清零进度
+   *
+   * ★ 进度存 sessionStorage：刷新 / 导航【不会】从头再来。
+   *   否则用户一刷新探测就重置、永远走不完（用户实测到的现象）。
+   * ================================================================ */
+  var PGAP=3000, PPER=3, PSTILL=2;
+  var OIL_SRCS=['biquote','yahoo','yahoo2','site3','stooq','oilwatch','opademo','cpapi'];
+  var OIL_ROUNDS=3, GOLD_ROUNDS=6;
+  function pKey(k){ return 'ps_probe_'+k; }
+  function pGet(k){
+    try{ var o=JSON.parse(sessionStorage.getItem(pKey(k))||'null');
+         return (o&&typeof o.r==='number')?o:{r:0,i:0,k:0}; }catch(e){ return {r:0,i:0,k:0}; }
+  }
+  function pSet(k,o){ try{ sessionStorage.setItem(pKey(k),JSON.stringify(o)); }catch(e){} }
+  function pClear(k){ try{ sessionStorage.removeItem(pKey(k)); }catch(e){} }
+  function probeDone(k,rounds){ return pGet(k).r>=rounds; }
+  /* 该不该探测：lastMoveAt 距今已超过 PSTILL 个节拍（30 秒） */
+  function needProbe(it){ return !!(it&&it.lastMoveAt&&(Date.now()-it.lastMoveAt)>PSTILL*BEAT); }
+  /* 一次探测结果：v 与当前不同 → 立刻开市；否则推进计数 */
+  function probeResult(k,it,v,rounds,len,onNew){
+    if(!it) return;
+    if(v&&it.lastVal!=null&&Math.abs(v-it.lastVal)>1e-9){
+      pClear(k); noteVal(it,v); if(onNew) onNew(v);
+      it.state='live'; paint(it); return;
+    }
+    var st=pGet(k); st.k++;
+    if(st.k>=PPER){ st.k=0; st.i++; if(st.i>=len){ st.i=0; st.r++; } }
+    pSet(k,st);
+    it.state=(st.r>=rounds)?'closed':'probing'; paint(it);
+  }
+  /* 源失败：不算"没变动"的证据，但也推进（避免卡死在一个坏源上） */
+  function probeFail(k,it,len,rounds){
+    if(!it) return;
+    var st=pGet(k); st.k=0; st.i++;
+    if(st.i>=len){ st.i=0; st.r++; }
+    pSet(k,st);
+    it.state=(st.r>=rounds)?'closed':'probing'; paint(it);
+  }
+  function probeOilOnce(){
+    var st=pGet('brent');
+    var src=OIL_SRCS[st.i%OIL_SRCS.length];
+    fetch('/api/oil-live?src='+src,{cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){
+        var b=+j.brent||0, w=+j.wti||0;
+        probeResult('brent',oil,b,OIL_ROUNDS,OIL_SRCS.length,function(v){
+          tSet('brent',v,Date.now()); oil.el.textContent=fm(v); oil.lastOk=Date.now(); });
+        probeResult('wti',wti,w,OIL_ROUNDS,OIL_SRCS.length,function(v){
+          tSet('wti',v,Date.now()); wti.el.textContent=fm(v); wti.lastOk=Date.now(); });
+      })
+      .catch(function(){
+        probeFail('brent',oil,OIL_SRCS.length,OIL_ROUNDS);
+        probeFail('wti',wti,OIL_SRCS.length,OIL_ROUNDS);
+      });
+  }
+  function probeGoldOnce(){
+    var st=pGet('gold');
+    var s=GSRC[st.i%GSRC.length];
+    one(s).then(function(v){
+      probeResult('gold',gold,v,GOLD_ROUNDS,GSRC.length,function(nv){
+        tSet('gold',nv,Date.now()); setGoldVal(nv); });
+    },function(){ probeFail('gold',gold,GSRC.length,GOLD_ROUNDS); });
+  }
+  /* 探测心跳：3 秒一跳，只在"冻结 + 未判定完"时真的发请求 */
+  function probeTick(){
+    var nB=(oil&&needProbe(oil)&&!probeDone('brent',OIL_ROUNDS));
+    var nW=(wti&&needProbe(wti)&&!probeDone('wti',OIL_ROUNDS));
+    if(nB||nW) probeOilOnce();
+    if(gold){
+      if(!needProbe(gold)) pClear('gold');
+      else if(!probeDone('gold',GOLD_ROUNDS)) probeGoldOnce();
+      else { gold.state='closed'; paint(gold); }
+    }
+  }
+
   function cycle(){
     /* ★★ 死循环 bug（本轮修复）：
      *   旧逻辑是"判定休市 → 就停止轮询，5 分钟才复查一次"。
@@ -1133,11 +1303,9 @@ const HOME_LIVE_JS = `
      *   CF 不像 Netlify 有部署额度限制，请求成本可忽略；
      *   而且只有持续抓着，才能真的看见价格动没动。 */
     pullOil();
-    if(gold){
-      /* 黄金与 WTI 同为纽约时段，直接复用 mktOpen，去掉重复的 goldState */
-      if(mktOpen(gold.tz)) pullGold();
-      else { gold.state='closed'; paint(gold); }
-    }
+    /* ★ 黄金不再用排程判断开休市（排程与券商源对不上，会误判），
+     *   一律正常拉；是否休市交给【多源多轮探测】来认定。 */
+    if(gold) pullGold();
   }
   /* ★ 首次：有快照就沿用（不抓、且【不更新 t】），没有才真抓一次（首屏要有数） */
   cycle();
@@ -1156,6 +1324,8 @@ const HOME_LIVE_JS = `
   }
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(function(){ items.forEach(paint); },1000);
+  /* ★ 探测心跳：3 秒一跳，只在该探测时才发请求 */
+  setInterval(probeTick,PGAP);
 })();`;
 
 /* 实时徽标的多语言文案：直接复用黄金页那套，七语言齐全 */
@@ -1311,7 +1481,7 @@ function oilLiveJs(kind) {
     if(d>0&&a&&a.v){
       el.textContent=fm(a.v);
       lastVal=a.v; lastMoveAt=a.mv||a.t; lastOk=a.t;
-      state=effOpen()?'live':'closed';
+      state=(pGet().r>=ROUNDS)?'closed':(needProbe()?'probing':'live');
       paint();
       return;
     }
@@ -1324,7 +1494,9 @@ function oilLiveJs(kind) {
         if(!v) return;
         tSet(v);                      /* ★ 只在真抓到时更新 t */
         el.textContent=fm(v);
-        lastOk=Date.now(); noteVal(v); state=effOpen()?'live':'closed';
+        lastOk=Date.now(); noteVal(v);
+        /* ★ 与首页一致：冻结 → 探测中（重新连接中）；跑满 3 轮 → 才判休市 */
+        state=(pGet().r>=ROUNDS)?'closed':(needProbe()?'probing':'live');
         /* 源名称不再占徽标（徽标统一显示「实时 · Ns 前」），改为悬停可见 */
         if(chip&&j.providerLabel) chip.title=j.providerLabel;
         paint();
@@ -1341,6 +1513,8 @@ function oilLiveJs(kind) {
   }
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(paint,1000);
+  /* ★ 探测心跳：3 秒一跳，只在需要探测时才发请求 */
+  setInterval(probeTick,PGAP);
 })();`;
 }
 

@@ -194,8 +194,15 @@ console.log('\n  ---- 休市定格一致性（总览 vs 详情页）----');
   const hc2 = home.d.window.document.getElementById('home-oil-chip');
   const dc2 = detail.d.window.document.getElementById('oil-live-chip');
   console.log('     冻结 2 分钟后 → 总览徽标 ['+hc2.textContent+']  详情徽标 ['+dc2.textContent+']');
-  ok('★ 价格连续 2 分钟不动 → 总览显示休市中', hc2.textContent.indexOf('休市') >= 0);
-  ok('★ 价格连续 2 分钟不动 → 详情显示休市中', dc2.textContent.indexOf('休市') >= 0);
+  /* ★★★★★ 新行为（用户要求）：只冻结 2 分钟【绝不能】判休市。
+   *   必须跑满 8源×3次×3轮 的多源探测才能下结论，
+   *   期间显示"重新连接中"。这两个断言就是防止退回"草率判休市"。 */
+  ok('★★★★★ 只冻结 2 分钟 → 总览【不】显示休市中（应先重新连接中）',
+     hc2.textContent.indexOf('休市') < 0);
+  ok('★★★★★ 只冻结 2 分钟 → 详情【不】显示休市中（应先重新连接中）',
+     dc2.textContent.indexOf('休市') < 0);
+  ok('★★★★★ 冻结 2 分钟时显示的是"重新连接中"',
+     (hc2.textContent.indexOf('重试')>=0 || hc2.textContent.indexOf('连接')>=0));
 
   // 休市后反复走秒/轮询，数字必须保持定格不动
   for(let i=0;i<30;i++){
