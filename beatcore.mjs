@@ -148,6 +148,27 @@ console.log('\n测试4  ★ 价格长期冻结 → 才判休市（不会几十�
   ok('★★★★★ 冻结但链路通 → 保持实时', chip(h.d,'home-oil-chip').indexOf('实时')>=0);
 }
 
+console.log('\n测试4b ★ 休市门槛边界（15 分钟，不是几十秒就下结论）');
+{
+  const sh=mkstore();
+  const h=await boot(renderHome('zh',M,FX,'Asia/Shanghai'),sh,110.78,4030.00);
+  await step(60000,[h]);                       /* 累计冻结 1 分钟 */
+  ok('★ 冻结 1 分钟 → 不判休市', chip(h.d,'home-oil-chip').indexOf('休市')<0);
+  await step(300000,[h]);                      /* 累计 6 分钟 */
+  ok('★ 冻结 6 分钟 → 仍不判休市（15 分钟门槛）',
+     chip(h.d,'home-oil-chip').indexOf('休市')<0);
+  await step(480000,[h]);                      /* 累计 14 分钟 */
+  console.log('   冻结 14 分钟 ['+chip(h.d,'home-oil-chip')+']');
+  ok('★★★★★ 冻结 14 分钟 → 仍【不】判休市（差一点点也不行）',
+     chip(h.d,'home-oil-chip').indexOf('休市')<0);
+  await step(180000,[h]);                      /* 累计 17 分钟 > 15 */
+  console.log('   冻结 17 分钟 ['+chip(h.d,'home-oil-chip')+']');
+  ok('★★★★★ 冻结超 15 分钟 → 判休市中',
+     chip(h.d,'home-oil-chip').indexOf('休市')>=0);
+  /* 开市必须立刻翻回：给一个新价 */
+  await step(16000,[h]);
+}
+
 console.log('\n测试5  ★ 疯狂导航不产生额外请求（刷新只由 15 秒触发）');
 {
   const sh=mkstore();
