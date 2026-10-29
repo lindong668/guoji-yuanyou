@@ -27,13 +27,25 @@ const build=(valFn)=>{
           json:async()=>({ok:true,brent:valFn(),wti:103.04,provider:'biquote'})}
        : {ok:true,status:200,headers:{get:()=>'application/json'},json:async()=>({spot_usd_oz:4000,data_state:'fresh'})};
      w.setInterval=(fn,ms)=>{ (ms&&ms<5000?ticks:slow).push(fn); return 1; };
-     w.setTimeout=(fn)=>1;
+     /* ★ 现在节拍走 setTimeout 排队（BEAT 未到时延迟启动），
+      *   若像以前那样把 setTimeout 丢弃，节拍回调永远不执行 →
+      *   setInterval 根本注册不上 → 后续推进全是空的（场景5 就是这么红的）。 */
+     w.setTimeout=(fn,ms)=>{ (ms&&ms<5000?ticks:slow).push(fn); return 1; };
    }});
   return {d,ticks,slow};
 };
 const chipOf=(h)=>h.d.window.document.getElementById('home-oil-chip').textContent;
+/* ★ 每次只触发【最新注册的】那一个节拍回调。
+ *   若用 forEach 全触发：setTimeout 排队的那个执行后又会注册 setInterval，
+ *   于是 slow 里累积两份，一轮 poll 跑两次 cycle → 消耗掉两轮价格序列，
+ *   场景5 的 seq 会被提前走到"变动"那一格（实测 before 就变成了实时）。 */
 const poll=async(h,n=1,stepMs=60000)=>{
-  for(let i=0;i<n;i++){ NOW+=stepMs; h.slow.forEach(f=>{try{f()}catch(e){}}); await new Promise(r=>setTimeout(r,15)); }
+  for(let i=0;i<n;i++){
+    NOW+=stepMs;
+    const f=h.slow[h.slow.length-1];
+    if(f){ try{ f(); }catch(e){} }
+    await new Promise(r=>setTimeout(r,15));
+  }
 };
 
 /* ---------- 场景1：排程休市（伦敦00:30），但价格一直在动 ---------- */

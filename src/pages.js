@@ -339,13 +339,36 @@ const GOLD_LIVE_JS = `
 
   /* ★ 秒数 1 秒一跳：纯前端计时（用 lastOk 时间戳算差值），不产生任何网络请求 */
   setInterval(function(){ if(!dead&&lastOk) setAgo(elStatus,agoTxt()); },1000);
-  setInterval(function(){ if(!document.hidden) cycle(); },30000);   /* 30 秒一轮，别太频繁 */
+  /* ★★★★ 全局节拍：与首页/原油页共用 'ps_beat'，统一 15 秒
+   *   原来这里是 30 秒一轮，且与首页各自计时 —— 三个页面三个节拍，
+   *   来回导航必然出现"这边刚刷、那边还没刷"的错位。现在统一。 */
+  var BEAT=15000;
+  function beatDelay(){
+    try{
+      var raw=sessionStorage.getItem('ps_beat');
+      if(!raw) return 0;
+      var t=+raw||0;
+      if(!t) return 0;
+      var d=t+BEAT-Date.now();
+      return d>0?d:0;
+    }catch(e){ return 0; }
+  }
+  function beatMark(){
+    try{ sessionStorage.setItem('ps_beat',String(Date.now())); }catch(e){}
+  }
+  var _bd=beatDelay();
+  if(_bd<=0){ setInterval(function(){ if(!document.hidden){ cycle(); beatMark(); } },BEAT); }
+  else setTimeout(function(){
+    if(!document.hidden){ cycle(); beatMark(); }
+    setInterval(function(){ if(!document.hidden){ cycle(); beatMark(); } },BEAT);
+  },_bd);
 
   paint();
   if(usdOz!=null){
     if(goldState()==='open') markLive(); else markClosed();
   }
-  cycle();
+  cycle();                      /* ★ 首次一次（首屏要有数） */
+  beatMark();
   /* 每分钟核对一次开休市状态：休市结束（或进入结算）能自动切换显示 */
   setInterval(function(){
     var st=goldState();
@@ -967,11 +990,16 @@ const HOME_LIVE_JS = `
 
   /* 一次请求同时拿布伦特 + WTI，但【各自独立判断开休市】：
    *   某一腿休市时，即使拿到数字也只是沿用值 → 不写、显示"休市中"。 */
+  /* ★ 锚点只对【首次加载】生效：刚从别的页面过来时沿用旧值、不抓。
+   *   之后由全局节拍驱动，【每到节拍一定真抓】—— 否则锚点与节拍同周期会互相阻塞，
+   *   边界处"节拍说该刷了、锚点说还不用刷"，结果永远不刷新（已实测到这个坑）。 */
+  var firstOil=true;
   function pullOil(){
-    /* ★ 锚点命中 → 直接沿用上次的值，本轮【不发请求】。
-     *   用户几秒内来回导航时看到的数字完全不动。 */
-    var aB=aGet('brent'), aW=aGet('wti');
-    if(oil&&wti&&aB&&aW&&applyAnchor(oil,aB)&&applyAnchor(wti,aW)) return;
+    if(firstOil){
+      firstOil=false;
+      var aB=aGet('brent'), aW=aGet('wti');
+      if(oil&&wti&&aB&&aW&&applyAnchor(oil,aB)&&applyAnchor(wti,aW)) return;
+    }
     fetch('/api/oil-live',{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
@@ -1060,11 +1088,15 @@ const HOME_LIVE_JS = `
   /* ★★ 与原油统一：优先走后端接口（与 SSR 同一份 15 秒缓存），失败才直连。
    *   原来这里【直接连外部源、完全不受缓存约束】，于是每次导航都现抓一次，
    *   市场在动 → 首页/详情页来回点就看到不同数字。 */
+  var firstGold=true;
   function pullGold(){
     if(!gold) return;
-    /* ★ 同原油：锚点命中就直接沿用，不重抓 */
-    var a=aGet('gold');
-    if(a&&applyAnchor(gold,a)) return;
+    /* ★ 同原油：锚点只对首次加载生效，之后按节拍真抓 */
+    if(firstGold){
+      firstGold=false;
+      var a=aGet('gold');
+      if(a&&applyAnchor(gold,a)) return;
+    }
     fetch('/api/gold-live',{cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){
@@ -1080,6 +1112,40 @@ const HOME_LIVE_JS = `
    *   为什么不能"休市就不抓"：那样首页会用 /api/oil-live 的值、
    *   详情页会留服务端值（3号），两个页面显示不同数字 —— 用户实测到 110.56 vs 114.19。
    *   统一成"两边都取同一个接口"，一致性才有保证。 */
+  /* ★★★★ 全局节拍（用户拍板的方案）：不管在哪个页面，【严格 15 秒】才刷一次
+   * ------------------------------------------------------------------
+   * 之前的错：每个页面一加载就立刻拉一次，于是"进去拉一次、出来又拉一次"，
+   *   用户来回点就看到数字来回变 —— 这才是最初"跳价"的真正根因。
+   *   绕了一大圈（SSR 同源 → 源粘滞 → KV），其实答案就这么简单：
+   *   【刷新不该由"打开页面"触发，而该由"15 秒到了"触发】。
+   *
+   * 做法：把"上次刷新时刻 t"存在 sessionStorage（跨页面共享）。
+   *   下次刷新点 = t + 15 秒，【与在哪个页面无关】。
+   *   · 距下次节拍还有余量 → 排 setTimeout 等着，到点再拉；
+   *   · 已过点 → 立刻拉一次，然后按 15 秒循环。
+   *   这样首页→详情页→首页 全程共用同一个节拍，不会因导航而多拉。 */
+  var BEAT=15000;
+  function beatDelay(){
+    try{
+      var raw=sessionStorage.getItem('ps_beat');
+      if(!raw) return 0;
+      var t=+raw||0;
+      if(!t) return 0;
+      var d=t+BEAT-Date.now();
+      return d>0?d:0;
+    }catch(e){ return 0; }
+  }
+  function beatMark(){
+    try{ sessionStorage.setItem('ps_beat',String(Date.now())); }catch(e){}
+  }
+  function startBeat(fn){
+    var d=beatDelay();
+    /* ★ d<=0 时【不要再立刻 fn()】：外面已经调过一次 cycle() 了，
+     *   这里再调会导致首屏连抓两次（实测 i 直接从 0 跳到 2），
+     *   既浪费请求，也让测试的价格序列被提前消耗。 */
+    if(d<=0){ setInterval(function(){ fn(); beatMark(); },BEAT); }
+    else setTimeout(function(){ fn(); beatMark(); setInterval(function(){ fn(); beatMark(); },BEAT); },d);
+  }
   function cycle(){
     /* ★★ 死循环 bug（本轮修复）：
      *   旧逻辑是"判定休市 → 就停止轮询，5 分钟才复查一次"。
@@ -1095,8 +1161,9 @@ const HOME_LIVE_JS = `
       else { gold.state='closed'; paint(gold); }
     }
   }
-  cycle();
-  setInterval(cycle,15000);
+  cycle();                      /* ★ 首次仍需一次（首屏要有数），之后交给节拍 */
+  beatMark();
+  startBeat(cycle);             /* ★ 之后严格按全局 15 秒节拍，不因导航而刷新 */
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(function(){ items.forEach(paint); },1000);
 })();`;
@@ -1244,15 +1311,19 @@ function oilLiveJs(kind) {
     try{ sessionStorage.setItem('ps_anchor_'+AK,
       JSON.stringify({v:v,t:Date.now(),mv:lastMoveAt||Date.now()})); }catch(e){}
   }
+  var firstPull=true;
   function pull(){
-    /* ★ 锚点命中 → 沿用，本轮不抓 */
-    var a=aGet();
-    if(a&&a.v){
-      el.textContent=fm(a.v);
-      lastVal=a.v; lastMoveAt=a.mv||a.t; lastOk=a.t;
-      state=effOpen()?'live':'closed';
-      paint();
-      return;
+    /* ★ 锚点只对首次加载生效，之后按全局节拍真抓 */
+    if(firstPull){
+      firstPull=false;
+      var a=aGet();
+      if(a&&a.v){
+        el.textContent=fm(a.v);
+        lastVal=a.v; lastMoveAt=a.mv||a.t; lastOk=a.t;
+        state=effOpen()?'live':'closed';
+        paint();
+        return;
+      }
     }
     /* ★ 与首页同一套规则：休市也抓（拿收盘价），之后不再轮询。
      *   两边都取 /api/oil-live，保证总览页与详情页数字一致。 */
@@ -1270,9 +1341,28 @@ function oilLiveJs(kind) {
       })
       .catch(function(){ state='lost'; paint(); });
   }
-  pull();
-  /* ★ 同样去掉节流：无条件 15 秒一抓，否则永远观察不到价格变动 */
-  setInterval(pull,15000);
+  /* ★★★★ 全局节拍：与首页共用 sessionStorage 的 'ps_beat'
+   *   从首页点进来时，节拍通常还没到 → 本页【不立刻拉】，沿用锚点值。
+   *   到点了才拉。这样"进去/出来"都不会多拉一次。 */
+  var BEAT=15000;
+  function beatDelay(){
+    try{
+      var raw=sessionStorage.getItem('ps_beat');
+      if(!raw) return 0;
+      var t=+raw||0;
+      if(!t) return 0;
+      var d=t+BEAT-Date.now();
+      return d>0?d:0;
+    }catch(e){ return 0; }
+  }
+  function beatMark(){
+    try{ sessionStorage.setItem('ps_beat',String(Date.now())); }catch(e){}
+  }
+  pull();                       /* ★ 首次一次（首屏要有数） */
+  beatMark();
+  var d0=beatDelay();
+  if(d0<=0){ setInterval(pull,BEAT); }
+  else setTimeout(function(){ pull(); setInterval(pull,BEAT); },d0);
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(paint,1000);
 })();`;

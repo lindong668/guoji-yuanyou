@@ -181,7 +181,7 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
    *   若改成"休市就不抓"，首页会用 /api/oil-live 的值、详情页留服务端值（3号），
    *   两个页面数字不一致 —— 用户实测到 110.56 vs 114.19。 */
   chk('休市也抓一次（拿收盘价，不是不抓）', !/if\(!mktOpen\(TZ\)\)\{ state='closed'/.test(pj));
-  chk('★ 详情页无条件 15 秒一抓（不节流）', /setInterval\(pull,15000\)/.test(pj));
+  chk('★ 详情页按全局节拍 15 秒一抓（不节流）', /setInterval\(pull,BEAT\)/.test(pj));
   chk('两腿独立判断（各自调 effOpen，不共用状态）',
       /oil\.state=effOpen\(oil\)\?'live':'closed'/.test(pj) &&
       /wti\.state=effOpen\(wti\)\?'live':'closed'/.test(pj));
@@ -259,8 +259,18 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
       pj.includes("sessionStorage.getItem('ps_anchor_gold')"));
   chk('★★★★★ 锚定有效期 = 15 秒（=轮询周期，不会把数据变旧）',
       (pj.match(/var ANCHOR_MS=15000;/g) || []).length >= 3);
+  /* ★★★★★ 全局节拍：刷新由"15 秒到了"触发，不由"打开页面"触发 */
+  chk('★★★★★ 有全局节拍 ps_beat（跨页面共享上次刷新时刻）',
+      pj.includes("'ps_beat'"));
+  chk('★★★★★ 节拍周期统一 15000ms',
+      (pj.match(/var BEAT=15000;/g) || []).length >= 3);
+  chk('★★★★★ 首页 startBeat 在 beatDelay<=0 时不再重复抓一次',
+      /if\(d<=0\)\{ setInterval\(function\(\)\{ fn\(\); beatMark\(\); \},BEAT\); \}/.test(pj));
+  chk('★★★★★ 锚点只对首次加载生效（避免与节拍同周期互相阻塞）',
+      pj.includes('var firstOil=true;') && pj.includes('var firstGold=true;')
+      && pj.includes('var firstPull=true;'));
   chk('★ 无条件 15 秒一抓（不再节流，否则观察不到变动）',
-      /^    pullOil\(\);$/m.test(pj) && /setInterval\(pull,15000\)/.test(pj));
+      /pullOil\(\);/.test(pj) && /setInterval\(pull,BEAT\)/.test(pj));
   /* 卡片上的「更新于 08:05」已去掉（已有实时徽标，多余且误导）；
      国内油价与汇率的日期保留 —— 那是按天更新的数据，日期有实际意义 */
   chk('★ 布伦特卡片不再显示更新时间', !/updatedLine\(lang, m\?\.oil\?\.updated/.test(pj));
