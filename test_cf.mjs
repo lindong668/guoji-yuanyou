@@ -208,7 +208,7 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
       /order\.length \? await getGoldLive\(order\)/.test(ij));
   /* ★★★ 来回导航一致性：黄金前端必须优先走接口缓存，不能直连外部源 */
   chk('★★★ 首页黄金优先走 /api/gold-live（不再直连外部源）',
-      /function pullGold\(\)\{[\s\S]{0,300}fetch\('\/api\/gold-live'/.test(pj));
+      /function pullGold\(\)\{[\s\S]{0,500}fetch\('\/api\/gold-live'/.test(pj));
   chk('★★★ 黄金详情页 pass 先走锚定/接口、失败才直连',
       /function pass\(cb\)\{[\s\S]{0,400}passDirect\(cb\)/.test(pj));
   chk('★★★ 直连降级为兜底函数（goldDirect / passDirect）',

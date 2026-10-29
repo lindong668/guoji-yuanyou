@@ -241,6 +241,8 @@ const GOLD_LIVE_JS = `
     var st=pGet();
     var s=SOURCES[st.i%SOURCES.length];
     one(s).then(function(v){
+      /* ★ 同首页：拿到值就更新 lastOk（链路通），否则 ago 暴涨误显示断线 */
+      if(v) lastOk=Date.now();
       /* ★★ 任一源返回新值 → 【立刻开市】 */
       if(v&&lastVal!=null&&Math.abs(v-lastVal)>1e-9){
         pClear(); tSet(v); usdOz=v; paint(); markLive(); return;
@@ -1066,6 +1068,19 @@ const HOME_LIVE_JS = `
       if(it.chip.textContent!==T.lost) it.chip.textContent=T.lost; return; }
     if(it.state==='closed'){ it.chip.classList.add('is-lost');
       if(it.chip.textContent!==T.closed) it.chip.textContent=T.closed; return; }
+    /* ★★★★★ 漏拍保护（本轮核心修复）
+     * 现象：用户截图看到「实时 · 20s / 28s / 29s前更新」。
+     *   但节拍是 15 秒 —— 秒数【超过 15 秒】本身就证明这一拍没抓成功
+     *   （源返回空值时走了静默分支，既不更新 lastOk
+     *     也不改 state），于是秒数一路涨到 29s，还假装"实时"。
+     * 危害：用户看到 29s 时点进详情页，详情页判定"早该刷了"→ 立刻真抓
+     *   → lastOk=now → 秒数【归零】。这就是"15 秒以上点进去变 0 秒"。
+     * 修法：live 状态下秒数超过一个节拍，就是漏拍，如实显示"连接中断"。 */
+    if(it.lastOk && (Date.now()-it.lastOk)>BEAT*1.5){
+      it.chip.classList.add('is-lost');
+      if(it.chip.textContent!==T.lost) it.chip.textContent=T.lost;
+      return;
+    }
     it.chip.classList.remove('is-lost');
     if(it.lastOk) setAgo(it.chip,agoTxt(it.lastOk));
     else it.chip.textContent=T.live;
@@ -1109,12 +1124,17 @@ const HOME_LIVE_JS = `
         /* ★★ 不再用 effOpen()（2 分钟）直接判休市 —— 那等于"只观察一个源
          *   两分钟没动"就下结论，正是用户批评的做法。
          *   现在：冻结 → 探测中（重新连接中）；跑满 3 轮 → 才判休市。 */
+        /* ★ 源返回空值（0/null）时【不能静默跳过】—— 那样 lastOk 不更新、
+         *   秒数会一路涨到 29s 还显示"实时"（见 paint 里的漏拍保护）。
+         *   这里如实标成断线，让用户看到真实状态。 */
         if(b&&oil){ if(oil.lastVal!=null&&b!==oil.lastVal) pClear('brent');
                     oil.el.textContent=fm(b); oil.lastOk=now; noteVal(oil,b);
                     oil.state=stOf(oil); oil.fetched=true; paint(oil); }
+        else if(oil){ oil.state='lost'; paint(oil); }
         if(w&&wti){ if(wti.lastVal!=null&&w!==wti.lastVal) pClear('wti');
                     wti.el.textContent=fm(w); wti.lastOk=now; noteVal(wti,w);
                     wti.state=stOf(wti); wti.fetched=true; paint(wti); }
+        else if(wti){ wti.state='lost'; paint(wti); }
       })
       .catch(function(){
         if(oil){ oil.state='lost'; paint(oil); }
@@ -1198,6 +1218,9 @@ const HOME_LIVE_JS = `
   function pullGold(){
     if(!gold) return;
     /* ★ 同原油：先恢复 lastVal/lastMoveAt，没到节拍就沿用、不抓 */
+    /* ★ 先恢复 lastOk（哪怕这一拍要真抓），这样"进来那一刻"显示的是
+     *   与首页一致的秒数，而不是空/0 —— 抓完再自然归零。 */
+    var _gs=tGet('gold'); if(_gs&&_gs.t&&!gold.lastOk) gold.lastOk=_gs.t;
     var okG=applyTick(gold,'gold');
     if(tDelay('gold')>0&&okG) return;
     fetch('/api/gold-live',{cache:'no-store'})
@@ -1284,6 +1307,12 @@ const HOME_LIVE_JS = `
   /* 一次探测结果：v 与当前不同 → 立刻开市；否则推进计数 */
   function probeResult(k,it,v,rounds,len,onNew){
     if(!it) return;
+    /* ★★★★★ 关键修复：探测【拿到值】就说明链路是通的，必须更新 lastOk。
+     *   原来只有"价格变了"才更新，于是价格冻结时 ago 一路涨到 70 秒，
+     *   触发漏拍保护显示"连接中断"—— 与"探测第一圈内保持实时"直接冲突
+     *   （probetest/fixtest 各 2 项因此变红）。
+     *   lastOk 的语义是【上次成功通信的时刻】，不是【上次价格变化的时刻】。 */
+    if(v) it.lastOk=Date.now();
     if(v&&it.lastVal!=null&&Math.abs(v-it.lastVal)>1e-9){
       pClear(k); noteVal(it,v); if(onNew) onNew(v);
       it.state='live'; paint(it); return;
@@ -1557,6 +1586,8 @@ function oilLiveJs(kind) {
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
         var v=(KIND==='wti')?(+j.wti||0):(+j.brent||0);
+        /* ★ 同首页：拿到值就更新 lastOk（链路通），否则 ago 暴涨误显示断线 */
+        if(v) lastOk=Date.now();
         /* ★★ 任一源返回新值 → 【立刻开市】，清零进度 */
         if(v&&lastVal!=null&&Math.abs(v-lastVal)>1e-9){
           pClear(); tSet(v); el.textContent=fm(v); lastOk=Date.now(); noteVal(v);
