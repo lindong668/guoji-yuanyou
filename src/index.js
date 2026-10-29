@@ -201,7 +201,97 @@ function bin(b64, mime) {
   });
 }
 
+/* ==================================================================
+ * ★★★ 服务端独立判定休市（Cron 每 10 分钟）—— 不依赖用户是否打开页面
+ * ------------------------------------------------------------------
+ * 解决的问题：前端只能从「用户打开页面」那一刻起才开始观察，于是周末
+ *   打开必须自己等满 15 分钟才敢显示休市中。服务端 Cron 一直在跑，
+ *   休市 15 分钟后就已记下状态，任何人任何时刻打开都【立刻】显示。
+ *
+ * ★ 省额度关键：只在【价格变了】或【状态翻转】时才写 KV。
+ *   休市期间价格不动 → 一次都不写（周末接近 0 次）。
+ *   这与上面那个「共享实时缓存」是两回事，后者 15 秒写一次必爆额度。
+ *
+ * MKT_FREEZE_MS 必须与 pages.js 里的 CLOSED_MS 保持一致（20 分钟）。
+ * 为什么是 20 而不是 15：Cron 每 10 分钟一跑，判定只能落在 10/20/30 整点。
+ *   15 与 20 都在第 2 次（20 分钟）判出，速度完全一样，但 20 多 5 分钟容错。
+ *   再往上（25/30）就要等第 3 次 = 30 分钟，慢 10 分钟，不划算。
+ * ================================================================= */
+const MKT_KEY = 'ps2_market_state';
+const MKT_FREEZE_MS = 1200000;     /* 价格冻结 20 分钟才判休市 */
+
+function mktKV(env) { return (env && env.MKT_STATE_KV) ? env.MKT_STATE_KV : null; }
+
+/* 判定单个品种：喂进新价，返回 { v 上次价, mv 上次变动时刻, st 状态 } */
+function mktStep(prev, v) {
+  const now = Date.now();
+  if (!(v > 0)) return prev || null;            /* 抓不到价：维持原状态 */
+  const p = (prev && prev.v) ? prev : { v: null, mv: now, st: 'live' };
+  if (p.v == null || Math.abs(v - p.v) > 1e-9) return { v: v, mv: now, st: 'live' };
+  const frozen = now - (p.mv || now);
+  return { v: p.v, mv: p.mv, st: frozen >= MKT_FREEZE_MS ? 'closed' : 'live' };
+}
+
+/* 只有「价变了」或「状态翻转」才值得写一次 KV */
+function mktNeedWrite(prev, next) {
+  if (!next) return false;
+  if (!prev) return true;
+  if (prev.st !== next.st) return true;
+  return Math.abs((prev.v || 0) - (next.v || 0)) > 1e-9;
+}
+
+async function mktRead(env) {
+  const kv = mktKV(env); if (!kv) return null;
+  try { return await kv.get(MKT_KEY, { type: 'json' }); } catch (e) { return null; }
+}
+async function mktWrite(env, obj) {
+  const kv = mktKV(env); if (!kv) return;
+  try { await kv.put(MKT_KEY, JSON.stringify(obj)); } catch (e) {}
+}
+
+/* Cron 主体：抓一次价 → 判定 → 必要时才写 */
+/* SSR 注入：把服务端已确认的休市状态直接写进 HTML。
+ * 为什么需要：前端 srvLoad() 是异步 fetch，首屏 paint 时还没回来，
+ *   周末用户会先看到「实时」再闪成「休市中」。写进 HTML 就零闪烁。 */
+async function mktInject(env) {
+  const kv = mktKV(env); if (!kv) return '';
+  const s = await mktRead(env);
+  if (!s) return '';
+  const o = { brent: (s.brent && s.brent.st) || null,
+              wti:   (s.wti   && s.wti.st)   || null,
+              gold:  (s.gold  && s.gold.st)  || null };
+  return '<script type="application/json" id="ps-mkt">'
+       + JSON.stringify(o).replace(/</g, '\\u003c')
+       + '<\/script>';
+}
+
+async function mktTick(env, grab) {
+  const kv = mktKV(env); if (!kv) return null;
+  const oilFn  = (grab && grab.oil)  || getOilLive;
+  const goldFn = (grab && grab.gold) || getGoldLive;
+  const [oil, gold] = await Promise.all([
+    oilFn().catch(() => null),
+    goldFn().catch(() => null),
+  ]);
+  const prev = (await mktRead(env)) || {};
+  const next = {
+    at: Date.now(),
+    brent: mktStep(prev.brent, oil && oil.brent),
+    wti:   mktStep(prev.wti,   oil && oil.wti),
+    gold:  mktStep(prev.gold,  gold && gold.usdOz),
+  };
+  const need = ['brent', 'wti', 'gold'].some(k => mktNeedWrite(prev[k], next[k]));
+  if (need) await mktWrite(env, next);
+  return next;
+}
+
+export { MKT_FREEZE_MS, mktStep, mktNeedWrite, mktTick, mktRead };
+
 export default {
+  /* Cron：每 10 分钟独立判定一次休市并记进 KV（不依赖用户打开页面） */
+  async scheduled(controller, env, ctx) {
+    try { await mktTick(env); } catch (e) { /* Cron 失败不影响站点 */ }
+  },
   async fetch(request, env, ctx) {
     bindKV(env);          /* ★ 绑定 KV（未配置则自动降级为模块级缓存） */
     const url = new URL(request.url);
@@ -341,7 +431,12 @@ Sitemap: ${SITE.domain}/sitemap.xml
       // 手动选过语言的访客按他选的渲染；新访客（无 cookie）仍是英文正门。
       const langR = langCookie || DEFAULT_LANG;
       const [mR, fxR, lvR] = await Promise.all([getMarket(), getFx(), liveOverlay()]);
-      const html = renderHome(langR, applyLive(mR, lvR), fxR, tz);
+      let html = renderHome(langR, applyLive(mR, lvR), fxR, tz);
+      /* ★ 首屏零闪烁：与 render() 同款注入（这个分支不走 render 包装） */
+      try {
+        const inj = await mktInject(env);
+        if (inj && html.indexOf('</head>') > 0) html = html.replace('</head>', inj + '</head>');
+      } catch (e) {}
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
@@ -360,6 +455,20 @@ Sitemap: ${SITE.domain}/sitemap.xml
     if (url.pathname === '/api/market') {
       const m = await getMarket();
       return Response.json(m, { headers: { 'cache-control': 'public, max-age=300' } });
+    }
+
+    /* ★ 服务端 Cron 判定的休市状态。前端首屏读一次，若服务端早已确认休市，
+     *   就【立刻】显示休市中，不必自己从零等满 15 分钟（这是周末体验的关键）。 */
+    if (url.pathname === '/api/market-state') {
+      const s = (await mktRead(env)) || {};
+      return Response.json({
+        ok: true,
+        at: s.at || 0,
+        brent: (s.brent && s.brent.st) || null,
+        wti:   (s.wti   && s.wti.st)   || null,
+        gold:  (s.gold  && s.gold.st)  || null,
+        hasKV: !!mktKV(env),
+      }, { headers: { 'cache-control': 'public, max-age=60' } });
     }
 
     /* ★ A22：黄金现抓代理
@@ -526,7 +635,12 @@ ${goldRows}
         needsFx ? getFx() : Promise.resolve(null),
         needsMarket ? liveOverlay() : Promise.resolve(null),
       ]);
-      const html = fn(lang, { m: applyLive(m, lv), fx }, tz);
+      let html = fn(lang, { m: applyLive(m, lv), fx }, tz);
+      /* ★ 首屏零闪烁：服务端已确认的休市状态直接写进 HTML */
+      try {
+        const inj = await mktInject(env);
+        if (inj && html.indexOf('</head>') > 0) html = html.replace('</head>', inj + '</head>');
+      } catch (e) { /* 注入失败不影响页面 */ }
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',

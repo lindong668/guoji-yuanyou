@@ -22,6 +22,8 @@ const M={oil:{price:110.78,updated:'x'},wti:{price:102.03,updated:'x'},
 const FX={base:'USD',rates:{CNY:6.68,EUR:0.89,JPY:157.4},date:'2026-10-28'};
 function mkstore(){const m=new Map();return{getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>{m.set(k,String(v));},removeItem:k=>{m.delete(k);},clear:()=>{m.clear();},key:i=>Array.from(m.keys())[i]??null,get length(){return m.size;}};}
 const secs=t=>{const mm=/(\d+)s/.exec(t||'');return mm?+mm[1]:null;};
+/* 服务端 Cron 判定的休市状态（模拟 /api/market-state 的返回） */
+let SRV_STATE=null;
 
 async function boot(html,shared,oilVal,goldVal){
   const bag={timers:[],intervals:[],fetches:[]};
@@ -37,6 +39,10 @@ async function boot(html,shared,oilVal,goldVal){
      Object.defineProperty(w.Document.prototype,'hidden',{get:function(){return false;},configurable:true});
      Object.defineProperty(w.Document.prototype,'visibilityState',{get:function(){return 'visible';},configurable:true});
      w.fetch=async(u)=>{ const s=String(u); bag.fetches.push(s);
+       if(s.includes('/api/market-state')){
+         return {ok:true,status:200,headers:{get:()=>'application/json'},
+                 json:async()=>SRV_STATE||{ok:true,brent:null,wti:null,gold:null,hasKV:false}};
+       }
        if(s.includes('/api/oil-live')){
          const v=(typeof oilVal==='function')?oilVal():oilVal;
          if(v==null) throw new Error('network down');
@@ -148,22 +154,23 @@ console.log('\n测试4  ★ 价格长期冻结 → 才判休市（不会几十�
   ok('★★★★★ 冻结但链路通 → 保持实时', chip(h.d,'home-oil-chip').indexOf('实时')>=0);
 }
 
-console.log('\n测试4b ★ 休市门槛边界（15 分钟，不是几十秒就下结论）');
+console.log('\n测试4b ★ 休市门槛边界（20 分钟，不是几十秒就下结论）');
 {
   const sh=mkstore();
   const h=await boot(renderHome('zh',M,FX,'Asia/Shanghai'),sh,110.78,4030.00);
   await step(60000,[h]);                       /* 累计冻结 1 分钟 */
   ok('★ 冻结 1 分钟 → 不判休市', chip(h.d,'home-oil-chip').indexOf('休市')<0);
   await step(300000,[h]);                      /* 累计 6 分钟 */
-  ok('★ 冻结 6 分钟 → 仍不判休市（15 分钟门槛）',
+  ok('★ 冻结 6 分钟 → 仍不判休市（20 分钟门槛）',
      chip(h.d,'home-oil-chip').indexOf('休市')<0);
   await step(480000,[h]);                      /* 累计 14 分钟 */
-  console.log('   冻结 14 分钟 ['+chip(h.d,'home-oil-chip')+']');
-  ok('★★★★★ 冻结 14 分钟 → 仍【不】判休市（差一点点也不行）',
+  await step(240000,[h]);                      /* 累计 18 分钟 */
+  console.log('   冻结 18 分钟 ['+chip(h.d,'home-oil-chip')+']');
+  ok('★★★★★ 冻结 18 分钟 → 仍【不】判休市（差一点点也不行）',
      chip(h.d,'home-oil-chip').indexOf('休市')<0);
-  await step(180000,[h]);                      /* 累计 17 分钟 > 15 */
-  console.log('   冻结 17 分钟 ['+chip(h.d,'home-oil-chip')+']');
-  ok('★★★★★ 冻结超 15 分钟 → 判休市中',
+  await step(360000,[h]);                      /* 累计 24 分钟 > 20 */
+  console.log('   冻结 24 分钟 ['+chip(h.d,'home-oil-chip')+']');
+  ok('★★★★★ 冻结超 20 分钟 → 判休市中',
      chip(h.d,'home-oil-chip').indexOf('休市')>=0);
   /* 开市必须立刻翻回：给一个新价 */
   await step(16000,[h]);
@@ -200,6 +207,40 @@ console.log('\n测试6  ★ 黄金：首页 ↔ 详情页 数字一致 + 秒数�
   console.log('   首页 ['+homeGold+' / '+homeSec+'s]   详情 ['+dGold+' / '+dSec+'s]');
   ok('★★★★★ 黄金详情页数字与首页一致', homeGold===dGold);
   ok('★★★★★ 黄金详情页秒数【不归零】', dSec!=null&&dSec>0&&Math.abs(dSec-homeSec)<=2);
+}
+
+console.log('\n测试7  ★★★★★ 周末打开：服务端已判休市 → 立刻显示，不用等 15 分钟');
+{
+  /* 对照组：服务端【没有】标记（没绑 KV / Cron 没跑）→ 新会话只能先显示实时 */
+  SRV_STATE=null;
+  {
+    const sh=mkstore();
+    const h=await boot(renderHome('zh',M,FX,'Asia/Shanghai'),sh,110.78,4030.00);
+    console.log('   [无服务端标记] 首页布伦特 ['+chip(h.d,'home-oil-chip')+']');
+    ok('★ 对照：服务端无标记 → 新会话先显示实时（要自己观察满 15 分钟）',
+       chip(h.d,'home-oil-chip').indexOf('实时')>=0);
+  }
+  /* 实验组：服务端 Cron 早已判定休市（周末） */
+  SRV_STATE={ok:true,brent:'closed',wti:'closed',gold:'closed',hasKV:true};
+  {
+    const sh=mkstore();
+    const h=await boot(renderHome('zh',M,FX,'Asia/Shanghai'),sh,110.78,4030.00);
+    console.log('   [服务端已判休市] 首页布伦特 ['+chip(h.d,'home-oil-chip')+']');
+    ok('★★★★★ 周末打开【立刻】显示休市中（零等待）',
+       chip(h.d,'home-oil-chip').indexOf('休市')>=0);
+  }
+  /* 开市：抓到新价必须立刻翻回实时，不能被服务端的旧 closed 压住 */
+  {
+    const sh=mkstore();
+    let v=110.78;
+    const h=await boot(renderHome('zh',M,FX,'Asia/Shanghai'),sh,
+      ()=>{ v=+(v+0.01).toFixed(2); return v; },4030.00);
+    await step(32000,[h]);      /* 让价格真的变几次 */
+    console.log('   [服务端 closed 但价格在动] 首页布伦特 ['+chip(h.d,'home-oil-chip')+']');
+    ok('★★★★★ 价格在动 → 立刻翻回实时（不被服务端旧标记压住）',
+       chip(h.d,'home-oil-chip').indexOf('实时')>=0);
+  }
+  SRV_STATE=null;
 }
 
 console.log('\n  通过 '+pass+' 项，失败 '+fail+' 项');

@@ -195,9 +195,16 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
   chk('★★★★ 未绑定 KV 时自动降级（bindKV 判空，不报错）',
       /function bindKV\(env\) \{ if \(env && env\.PRICESCOPE_CACHE\)/.test(ij));
   chk('★★★★ 入口已绑定 KV', /bindKV\(env\);/.test(ij));
-  chk('★★★★ wrangler.toml 未启用 KV（保持注释，避免误开导致数据变旧）',
-      wt.includes('# [[kv_namespaces]]') && !/\n\[\[kv_namespaces\]\]/.test(wt));
-  chk('★★★★ wrangler.toml 写有 KV 否决理由（防止后来人误启用）',
+  /* ★ 两种 KV 用途必须分清楚，不能混为一谈：
+   *   共享实时缓存 = 15 秒写一次 = 5760 次/天，必爆额度 → 永久保持注释
+   *   休市状态标记 = 只在价格变动/状态翻转时写 → 已启用，占用极小 */
+  chk('★★★★★ 共享实时缓存 KV 仍保持注释（15 秒写一次必爆额度）',
+      wt.includes('# binding = "PRICESCOPE_CACHE"'));
+  chk('★★★★★ 休市状态标记 KV 已启用（低频，只在变动/翻转时写）',
+      /binding = "MKT_STATE_KV"/.test(wt));
+  chk('★★★★★ Cron 已配置（服务端每 10 分钟独立判定休市）',
+      /crons = \["\*\/10 \* \* \* \*"\]/.test(wt));
+  chk('★★★★ wrangler.toml 写有共享缓存的否决理由（防止后来人误启用）',
       wt.includes('已否决'));
   /* ★ 额度：15 秒写一次 = 5760 次/天，必爆免费额度 1000/天 */
   chk('★★★★ 共享周期已放宽（不再是 15 秒，否则 KV 写入必爆额度）',

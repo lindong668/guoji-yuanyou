@@ -42,7 +42,7 @@ const BEAT_CORE = `
    *
    * 状态只有三个，全部由 bState() 纯函数算出 —— 无异步、无额外请求：
    *   ① now-t > 1.5 拍                      → 连接中断（这一拍没拿到数据）
-   *   ② 价格冻结 ≥15 分钟 且 连续成功 ≥60 次 → 休市中（链路通，市场真没动）
+   *   ② 价格冻结 ≥20 分钟 且 连续成功 ≥80 次 → 休市中（链路通，市场真没动）
    *   ③ 其他                                → 实时
    *
    * ★ 多源在哪？在【后端】：/api/oil-live 已按序试 8 个源，拿到就返回。
@@ -50,8 +50,29 @@ const BEAT_CORE = `
    * ================================================================ */
   var BEAT=15000;        /* 15 秒一拍 */
   var DEAD=22500;        /* 1.5 拍没拿到数据 = 漏拍 */
-  var CLOSED_MS=900000;  /* 价格冻结 15 分钟 */
-  var CLOSED_OK=60;      /* 且连续成功 60 次（60 × 15s = 15 分钟，必须与 CLOSED_MS 同步）*/
+  var CLOSED_MS=1200000; /* 价格冻结 20 分钟 */
+  var CLOSED_OK=80;      /* 且连续成功 80 次（80 × 15s = 20 分钟，必须与 CLOSED_MS 同步）*/
+  var WAKE=8000;         /* 后台切回来的宽限窗口（8 秒） */
+  /* ★ 页面被最小化 / 切到后台时 tick() 不抓取，快照会变旧。
+   *   切回来的瞬间若直接按"超过 22.5 秒"判 lost，就会闪一下"连接中断"——
+   *   那是【页面睡了一觉】，不是 API 断线，属于误报。
+   *   bWakeAll() 在切回前台时给"已经变旧"的快照打上唤醒标记 w，
+   *   bState() 在宽限窗口内不报断线：服务端已确认休市就立刻显示休市，
+   *   否则保持上一帧不动，等这一拍（≤1 秒）回来再更新。 */
+  function bWakeAll(){
+    var now=Date.now();
+    try{
+      for(var i=0;i<sessionStorage.length;i++){
+        var k=sessionStorage.key(i);
+        if(!k||k.indexOf('ps_beat_')!==0) continue;
+        var o=JSON.parse(sessionStorage.getItem(k)||'null');
+        /* 只给【已经变旧】的快照打标记；切出去两秒就回来不算 */
+        if(o&&typeof o.t==='number'&&o.t&&(now-o.t)>DEAD){ o.w=now; sessionStorage.setItem(k,JSON.stringify(o)); }
+      }
+    }catch(e){}
+    try{ if(!document.hidden){} }catch(e){}
+  }
+  try{ document.addEventListener('visibilitychange',function(){ if(!document.hidden) bWakeAll(); }); }catch(e){}
 
   function bKey(k){ return 'ps_beat_'+k; }
   function bGet(k){
@@ -62,19 +83,70 @@ const BEAT_CORE = `
   /* 距下次该拉还有多久（>0 就沿用快照，不请求） */
   function bDelay(k){ var o=bGet(k); if(!o||!o.t) return 0;
                       var d=o.t+BEAT-Date.now(); return d>0?d:0; }
+  /* 记录一次【失败】取数。
+   * f = 首次失败的时刻（只记一次）。
+   * 用途：页面【一次都没成功过】时（新访客、无痕、清缓存、API 全挂），
+   *       快照里没有 t，bState 原本会直接判 live —— 页面显示 SSR 的旧数字
+   *       却标着"实时"，严重误导。有了 f 就能如实报断线。 */
+  function bFail(k){
+    var now=Date.now(), o=bGet(k)||{t:0,v:null,mv:0,ok:0,moved:false};
+    if(!o.f) o.f=now;
+    bSet(k,o);
+  }
   /* 记录一次【成功】取数。取数失败【不要】调它 —— t 不动，秒数才会涨。 */
   function bNote(k,v){
     if(v==null) return;
-    var now=Date.now(), o=bGet(k)||{v:null,mv:0,ok:0};
+    var now=Date.now(), o=bGet(k)||{v:null,mv:0,ok:0,moved:false};
     var changed=(o.v!=null&&Math.abs(v-o.v)>1e-9);
-    bSet(k,{t:now,v:v,mv:changed?now:(o.mv||now),ok:changed?1:(o.ok||0)+1});
+    /* ★ moved：是否【真的观察到过】价格变动。
+     *   首次打开时 changed=false（因为 o.v 为空），不能算"市场在动"。 */
+    bSet(k,{t:now,v:v,mv:changed?now:(o.mv||now),
+            moved:changed?true:(o.moved||false),
+            ok:changed?1:(o.ok||0)+1});
   }
   /* 纯函数：由快照算出状态。s = live | lost | closed */
+  /* ★ 服务端 Cron 判定的休市状态（每 10 分钟更新一次，不依赖用户打开页面）。
+   *   周末用户一打开就能立刻显示休市中，不必自己从零等满 15 分钟。 */
+  var SRV={brent:null,wti:null,gold:null};
+  /* ★ 首屏零闪烁：直接读 SSR 写进 HTML 的状态，不等异步 fetch */
+  (function(){ try{
+    var e=document.getElementById('ps-mkt');
+    if(e){ var j=JSON.parse(e.textContent)||{};
+      SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null; }
+  }catch(err){} })();
+  function srvClosed(k){ return SRV[k]==='closed'; }
+  function srvLoad(){
+    fetch('/api/market-state',{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(!j) return;
+        SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null;
+      }).catch(function(){});   /* 读不到就当没有，本地兜底照常工作 */
+  }
+
   function bState(k){
     var o=bGet(k), now=Date.now();
-    if(!o||!o.t) return {s:'live',ago:0,t:now};
+    if(!o||!o.t){
+      /* 从未成功过：已失败够久就如实报断线，不能拿 SSR 旧数字假装实时 */
+      var f=(o&&o.f)||0;
+      if(f && (now-f)>DEAD) return {s:'lost',ago:Math.floor((now-f)/1000),t:f};
+      return {s:'live',ago:0,t:now};
+    }
     var ago=Math.floor((now-o.t)/1000);
+    /* ★ 刚从后台切回来：睡了一觉而已，不是断线 —— 先不报 lost */
+    var _wk=o.w||0;
+    if(_wk&&(now-_wk)<WAKE){
+      if(srvClosed(k)) return {s:'closed',ago:ago,t:o.t};
+      if(!o.moved&&(now-(o.mv||o.t))>CLOSED_MS&&(o.ok||0)>=CLOSED_OK) return {s:'closed',ago:ago,t:o.t};
+      return {s:'hold',ago:ago,t:o.t};
+    }
     if(now-o.t>DEAD) return {s:'lost',ago:ago,t:o.t};
+    /* ① 本地近期【真的】看到价格动过 → 一定开市（优先于服务端标记，
+     *    因为服务端 Cron 最多有 10 分钟延迟，而开市必须是即时的） */
+    if(o.moved && (now-(o.mv||o.t))<CLOSED_MS) return {s:'live',ago:ago,t:o.t};
+    /* ② 服务端 Cron 早已确认休市 → 立刻显示，不用本地等满 15 分钟 */
+    if(srvClosed(k)) return {s:'closed',ago:ago,t:o.t};
+    /* ③ 本地兜底：服务端不可用（没绑 KV / Cron 没跑）时自己累计 15 分钟 */
     if((now-(o.mv||o.t))>CLOSED_MS && (o.ok||0)>=CLOSED_OK) return {s:'closed',ago:ago,t:o.t};
     return {s:'live',ago:ago,t:o.t};
   }
@@ -203,10 +275,13 @@ const GOLD_LIVE_JS = `
     if(elNote) elNote.hidden=false;
   }
   function render(){
+    /* 后台不重绘：否则最小化期间会被一直画成断线，切回来第一眼就是它 */
+    if(document.hidden) return;
     var st=bState('gold');
     lastOk=st.t||0;
     /* 首次抓取还没回来：先显示 SSR 那个数，状态按实时（不吓人） */
     if(!booted){ markLive(); return; }
+    if(st.s==='hold') return;            /* 刚切回前台，保持上一帧，不闪断线 */
     if(st.s==='lost') markLost();
     else if(st.s==='closed') markClosed();
     else markLive();
@@ -300,7 +375,7 @@ const GOLD_LIVE_JS = `
     fetchOnce(function(ok){
       booted=true;
       /* ★ 只有【成功】才 bNote：失败时 t 不动 → 秒数照涨 → 到 1.5 拍就显示连接中断 */
-      if(ok) bNote('gold',usdOz);
+      if(ok) bNote('gold',usdOz); else bFail('gold');
       render();
     });
   }
@@ -323,6 +398,7 @@ const GOLD_LIVE_JS = `
   /* 首屏：优先用已有快照（与首页同一个数），没有才用 SSR 值 */
   var o0=bGet('gold');
   if(o0&&o0.v!=null) usdOz=o0.v;
+  srvLoad();          /* 读服务端 Cron 判定的休市状态 */
   paint(); render();
   schedule();
   /* 秒数 1 秒一跳：纯前端计时，不发请求 */
@@ -790,9 +866,11 @@ const HOME_LIVE_JS = `
   /* 渲染：只看 bState()，三张卡各自独立，互不干扰 */
   function paint(it){
     if(!it||!it.chip) return;
+    if(document.hidden) return;   /* 同上：后台不重绘 */
     it.chip.hidden=false;
     var st=bState(it.k);
-    if(st.s==='lost'){ it.chip.classList.add('is-lost');
+    if(st.s==='hold'){ /* 切回前台：保持上一帧 */ }
+    else if(st.s==='lost'){ it.chip.classList.add('is-lost');
       if(it.chip.textContent!==T.lost) it.chip.textContent=T.lost; return; }
     if(st.s==='closed'){ it.chip.classList.add('is-lost');
       if(it.chip.textContent!==T.closed) it.chip.textContent=T.closed; return; }
@@ -807,10 +885,10 @@ const HOME_LIVE_JS = `
       .then(function(r){ return r.json(); })
       .then(function(j){
         var b=+j.brent||0, w=+j.wti||0, ok=false;
-        if(b&&oil){ showVal(oil,b); bNote('brent',b); ok=true; }
-        if(w&&wti){ showVal(wti,w); bNote('wti',w); ok=true; }
+        if(b&&oil){ showVal(oil,b); bNote('brent',b); ok=true; } else bFail('brent');
+        if(w&&wti){ showVal(wti,w); bNote('wti',w); ok=true; } else bFail('wti');
         cb(ok);
-      }).catch(function(){ cb(false); });
+      }).catch(function(){ bFail('brent'); bFail('wti'); cb(false); });
   }
   function pullGold(cb){
     fetch('/api/gold-live',{cache:'no-store'})
@@ -818,8 +896,8 @@ const HOME_LIVE_JS = `
       .then(function(j){
         var v=+j.priceUsdPerOz||0;
         if(v&&gold){ showVal(gold,v); bNote('gold',v); cb(true); return; }
-        cb(false);
-      }).catch(function(){ cb(false); });
+        bFail('gold'); cb(false);
+      }).catch(function(){ bFail('gold'); cb(false); });
   }
   /* 没到节拍 → 沿用快照，一个请求都不发 */
   function tickOil(){
@@ -861,6 +939,7 @@ const HOME_LIVE_JS = `
     if(o&&o.v!=null) showVal(it,o.v);
   });
   renderAll();
+  srvLoad();          /* 读服务端 Cron 判定的休市状态 */
   schedOil(); schedGold();
   /* 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(renderAll,1000);
@@ -919,11 +998,13 @@ function oilLiveJs(kind) {
   /* 状态全由 bState() 纯函数算出，没有第二套判断 */
   function paint(){
     if(!chip) return;
+    if(document.hidden) return;   /* 同上：后台不重绘 */
     var st=bState(KEY);
     lastOk=st.t||0;
     chip.hidden=false;
     if(!booted){ chip.classList.remove('is-lost'); setAgo(chip,agoTxt(lastOk)); return; }
-    if(st.s==='lost'){ chip.classList.add('is-lost');
+    if(st.s==='hold'){ /* 切回前台：保持上一帧 */ }
+    else if(st.s==='lost'){ chip.classList.add('is-lost');
       if(chip.textContent!==T.lost) chip.textContent=T.lost; return; }
     if(st.s==='closed'){ chip.classList.add('is-lost');
       if(chip.textContent!==T.closed) chip.textContent=T.closed; return; }
@@ -942,9 +1023,9 @@ function oilLiveJs(kind) {
         var v=(KIND==='wti')?(+j.wti||0):(+j.brent||0);
         booted=true;
         /* 只有拿到值才 bNote：失败时 t 不动 → 秒数照涨 → 到 1.5 拍显示连接中断 */
-        if(v){ el.textContent=fm(v); bNote(KEY,v); }
+        if(v){ el.textContent=fm(v); bNote(KEY,v); } else bFail(KEY);
         paint();
-      }).catch(function(){ booted=true; paint(); });
+      }).catch(function(){ bFail(KEY); booted=true; paint(); });
   }
   function schedule(){
     var d=first?0:bDelay(KEY);
@@ -955,6 +1036,7 @@ function oilLiveJs(kind) {
   /* 首屏：优先用已有快照（与首页同一个数），没有就留 SSR 渲染的值 */
   var o0=bGet(KEY);
   if(o0&&o0.v!=null) el.textContent=fm(o0.v);
+  srvLoad();          /* 读服务端 Cron 判定的休市状态 */
   paint(); schedule();
   setInterval(paint,1000);
 })();`;
