@@ -90,7 +90,7 @@ console.log('   黄金详情页      :', g2, '（本次新增请求 '+(FETCHES-f
 ok('★★ 黄金 首页→详情页 一致', g1 === g2 && g1 != null);
 
 console.log('\n==== 场景4：锚点过期后应正常抓新值（不能把数据变旧）====\n');
-shared.removeItem('ps_anchor_brent');
+shared.removeItem('ps_tick_brent');
 const f4 = FETCHES;
 const d3 = await load(renderOil('zh',M,'Asia/Shanghai'), 'oil-live-price', shared);
 console.log('   清掉锚点后      :', d3, '（本次新增请求 '+(FETCHES-f4)+' 次）');

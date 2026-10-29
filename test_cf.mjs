@@ -245,30 +245,20 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
       && /if \(fresh && fresh\.at[\s\S]{0,120}return liveCache;/.test(ij));
   chk('★★★★★ 抓取逻辑已抽到 doRefresh（liveOverlay 只做闸门）',
       ij.includes('inflight = doRefresh(now);'));
-  /* ★★★★★ 前端锚定：不启用 KV 也能"来回导航不跳"（零额度消耗） */
-  chk('★★★★★ 首页有锚定（aGet/aSet/applyAnchor）',
-      pj.includes("function aGet(k){") && pj.includes("function aSet(k,it,v){")
-      && pj.includes("function applyAnchor(it,a){"));
-  chk('★★★★★ 首页原油走锚定：命中则不发请求',
-      /function pullOil\(\)\{[\s\S]{0,400}aGet\('brent'\)[\s\S]{0,200}return;/.test(pj));
-  chk('★★★★★ 首页黄金走锚定',
-      /function pullGold\(\)\{[\s\S]{0,200}aGet\('gold'\)/.test(pj));
-  chk('★★★★★ 原油详情页有自己的锚定（按 brent/wti 分 key）',
+  /* ★★★★★ 行情节拍快照：锚点与节拍合并后的统一机制 */
+  chk('★★★★★ 用统一快照 ps_tick_*（不再有独立的 ps_anchor / ps_beat）',
+      pj.includes("function tKey(k){ return 'ps_tick_'+k; }")
+      && !pj.includes('ps_anchor') && !pj.includes("'ps_beat'"));
+  chk('★★★★★ 节拍周期统一 15000ms（三处：首页/原油页/黄金页）',
+      (pj.match(/var BEAT=15000;/g) || []).length === 3);
+  chk('★★★★★ 首页沿用快照时不发请求',
+      /function pullOil\(\)\{[\s\S]{0,800}var d=oilDelay\(\);[\s\S]{0,200}return;/.test(pj));
+  chk('★★★★★ 黄金页沿用快照时不发请求', /tDelay\(\)>0&&a&&a\.v/.test(pj));
+  chk('★★★★★ 原油详情页按 brent/wti 分 key',
       pj.includes("var AK=(KIND==='wti')?'wti':'brent';"));
-  chk('★★★★★ 黄金详情页有自己的锚定（ps_anchor_gold）',
-      pj.includes("sessionStorage.getItem('ps_anchor_gold')"));
-  chk('★★★★★ 锚定有效期 = 15 秒（=轮询周期，不会把数据变旧）',
-      (pj.match(/var ANCHOR_MS=15000;/g) || []).length >= 3);
-  /* ★★★★★ 全局节拍：刷新由"15 秒到了"触发，不由"打开页面"触发 */
-  chk('★★★★★ 有全局节拍 ps_beat（跨页面共享上次刷新时刻）',
-      pj.includes("'ps_beat'"));
-  chk('★★★★★ 节拍周期统一 15000ms',
-      (pj.match(/var BEAT=15000;/g) || []).length >= 3);
-  chk('★★★★★ 首页 startBeat 在 beatDelay<=0 时不再重复抓一次',
-      /if\(d<=0\)\{ setInterval\(function\(\)\{ fn\(\); beatMark\(\); \},BEAT\); \}/.test(pj));
-  chk('★★★★★ 锚点只对首次加载生效（避免与节拍同周期互相阻塞）',
-      pj.includes('var firstOil=true;') && pj.includes('var firstGold=true;')
-      && pj.includes('var firstPull=true;'));
+  chk('★★★★★ 启动逻辑不在 fetch 完成前算 d0（避免 setTimeout(fn,0) 重复抓）',
+      /if\(oilDelay\(\)>0\)\{[\s\S]{0,120}\}else\{[\s\S]{0,60}setInterval\(cycle,BEAT\)/.test(pj));
+
   chk('★ 无条件 15 秒一抓（不再节流，否则观察不到变动）',
       /pullOil\(\);/.test(pj) && /setInterval\(pull,BEAT\)/.test(pj));
   /* 卡片上的「更新于 08:05」已去掉（已有实时徽标，多余且误导）；
