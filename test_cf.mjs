@@ -196,6 +196,15 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
       /return \(Date\.now\(\)-it\.lastMoveAt\) < MOVE_MS;/.test(pj));
   chk('★ 首次取到值也记时刻（否则冻结永远判不出来）',
       /if\(it\.lastVal==null\)\{ it\.lastVal=v; it\.lastMoveAt=Date\.now\(\); return; \}/.test(pj));
+  /* ★★ 根因修复：/api 必须走同一份缓存，否则 SSR 与前端轮询取到不同值 */
+  const ij = fs.readFileSync(ROOT + '/src/index.js', 'utf8');
+  chk('★★ /api/oil-live 走 liveOverlay 缓存（不再绕过缓存直连）',
+      ij.includes('liveOverlay()).oil'));
+  chk('★★ /api/gold-live 走 liveOverlay 缓存',
+      ij.includes('liveOverlay()).gold'));
+  chk('★★ 探针带 ?src= 时仍绕过缓存（排查要新鲜值）',
+      /order\.length \? await getOilLive\(order\)/.test(ij) &&
+      /order\.length \? await getGoldLive\(order\)/.test(ij));
   chk('★ 无条件 15 秒一抓（不再节流，否则观察不到变动）',
       /^    pullOil\(\);$/m.test(pj) && /setInterval\(pull,15000\)/.test(pj));
   /* 卡片上的「更新于 08:05」已去掉（已有实时徽标，多余且误导）；
