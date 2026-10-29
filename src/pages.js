@@ -714,7 +714,7 @@ const HOME_LIVE_JS = `
     if(!el) return null;
     var it={el:el,chip:document.getElementById(chipId),
             gram:gramId?document.getElementById(gramId):null,
-            lastOk:0,state:'init'};
+            lastOk:0,state:'init',fetched:false};
     items.push(it); return it;
   }
   var oil=mk('home-oil-chip','home-oil-price');
@@ -820,10 +820,14 @@ const HOME_LIVE_JS = `
       .then(function(j){
         var now=Date.now();
         var b=+j.brent||0, w=+j.wti||0;
+        /* ★ 休市那一腿【仍然写入】，但只写一次（见 cycle 的 fetched 标记）：
+         *   之前休市时首页照写实时值、详情页因不抓而留服务端值，
+         *   两个页面显示不同数字（实测 110.56 vs 114.19）。
+         *   现在两边都取 /api/oil-live 同一个值 → 必然一致。 */
         if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now;
-                    oil.state=mktOpen(oil.tz)?'live':'closed'; paint(oil); }
+                    oil.state=mktOpen(oil.tz)?'live':'closed'; oil.fetched=true; paint(oil); }
         if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now;
-                    wti.state=mktOpen(wti.tz)?'live':'closed'; paint(wti); }
+                    wti.state=mktOpen(wti.tz)?'live':'closed'; wti.fetched=true; paint(wti); }
       })
       .catch(function(){
         if(oil){ oil.state='lost'; paint(oil); }
@@ -867,12 +871,18 @@ const HOME_LIVE_JS = `
     })();
   }
 
+  /* ★ 休市定格规则（重要，别改成"休市就不抓"）：
+   *   休市时【抓一次】，拿到的是市场最后一笔成交价（即收盘价），写入后就【不再轮询】，
+   *   数字从此定格不动，徽标显示「休市中」、不跳秒。
+   *   为什么不能"休市就不抓"：那样首页会用 /api/oil-live 的值、
+   *   详情页会留服务端值（3号），两个页面显示不同数字 —— 用户实测到 110.56 vs 114.19。
+   *   统一成"两边都取同一个接口"，一致性才有保证。 */
   function cycle(){
-    /* 布伦特与 WTI 各自判断：只要有一腿开市就去拉（一次请求拿两个数），
-     * 休市那一腿在 pullOil 里会被置为 closed，不会把沿用值当新数据显示。
-     * 两腿都休市 → 完全不发请求，直接显示「休市中」。 */
     var bOpen=oil?mktOpen(oil.tz):false, wOpen=wti?mktOpen(wti.tz):false;
-    if(bOpen||wOpen) pullOil();
+    /* 开市 → 持续轮询；休市 → 只在还没抓过时抓一次（拿收盘价） */
+    var needB = oil && (bOpen || !oil.fetched);
+    var needW = wti && (wOpen || !wti.fetched);
+    if(needB||needW) pullOil();
     else { if(oil){ oil.state='closed'; paint(oil); } if(wti){ wti.state='closed'; paint(wti); } }
     if(gold){
       /* 黄金与 WTI 同为纽约时段，直接复用 mktOpen，去掉重复的 goldState */
@@ -994,9 +1004,8 @@ function oilLiveJs(kind) {
     else chip.textContent=T.live;
   }
   function pull(){
-    /* ★ 休市时抓到的只是沿用值，抓了也白抓 —— 直接置为「休市中」。
-     *   数字照常显示（服务端首屏值，即休市前最后一次真实成交价）。 */
-    if(!mktOpen(TZ)){ state='closed'; paint(); return Promise.resolve(); }
+    /* ★ 与首页同一套规则：休市也抓（拿收盘价），之后不再轮询。
+     *   两边都取 /api/oil-live，保证总览页与详情页数字一致。 */
     return fetch('/api/oil-live',{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
@@ -1010,7 +1019,9 @@ function oilLiveJs(kind) {
       })
       .catch(function(){ state='lost'; paint(); });
   }
-  pull(); setInterval(pull,15000);
+  pull();
+  /* 开市才持续轮询；休市时上面那次 pull 已拿到收盘价并定格，不再发请求 */
+  setInterval(function(){ if(mktOpen(TZ)) pull(); },15000);
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(paint,1000);
 })();`;

@@ -177,7 +177,12 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
   chk('首页三卡各自绑定时区', /oil\.tz='Europe\/London'/.test(pj) && /wti\.tz='America\/New_York'/.test(pj));
   chk('用 IANA 时区名（不写死 UTC 偏移）',
       pj.includes("timeZone:tz") && !/UTC[+-]\d/.test(pj.slice(pj.indexOf('function mktOpen'))));
-  chk('休市时不发请求', /if\(!mktOpen\(TZ\)\)\{ state='closed'; paint\(\); return/.test(pj));
+  /* ★ 休市定格规则（曾写反过）：休市【也要抓一次】拿收盘价，之后不再轮询。
+   *   若改成"休市就不抓"，首页会用 /api/oil-live 的值、详情页留服务端值（3号），
+   *   两个页面数字不一致 —— 用户实测到 110.56 vs 114.19。 */
+  chk('休市也抓一次（拿收盘价，不是不抓）', !/if\(!mktOpen\(TZ\)\)\{ state='closed'/.test(pj));
+  chk('详情页：休市后不再轮询', /setInterval\(function\(\)\{ if\(mktOpen\(TZ\)\) pull\(\); \},15000\)/.test(pj));
+  chk('首页：休市腿只抓一次（fetched 标记）', /needB = oil && \(bOpen \|\| !oil\.fetched\)/.test(pj));
   chk('两腿独立判断（一开一休时不互相覆盖）',
       /oil\.state=mktOpen\(oil\.tz\)\?'live':'closed'/.test(pj) &&
       /wti\.state=mktOpen\(wti\.tz\)\?'live':'closed'/.test(pj));

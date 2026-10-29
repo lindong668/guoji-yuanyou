@@ -1,5 +1,5 @@
 import { JSDOM } from '/usr/local/lib/node_modules/jsdom/lib/api.js';
-import { renderHome } from './src/pages.js';
+import { renderHome, renderOil } from './src/pages.js';
 
 let pass=0, fail=0;
 const chk=(n,c)=>{ c?pass++:(fail++,console.log('  NG  '+n)); };
@@ -118,5 +118,73 @@ await new Promise(r=>setTimeout(r,400));
 const after2=chip.querySelector('.ago').textContent;
 console.log('     拉到新数据后：['+after2+']');
 ok('拉到新数据后秒数归零', after2==='0s');
+
+
+// ================= 休市定格一致性（本次核心 bug）=================
+// 用户实测：总览显示 110.56、点进卡片显示 114.19 —— 两个页面数字不一致。
+// 根因：首页休市那一腿仍用 /api/oil-live 覆盖；详情页休市时不抓、留服务端值。
+// 这里【真实加载两个页面】，冻结到"布伦特休市、WTI 开市"的时刻，比对数字。
+console.log('\n  ---- 休市定格一致性（总览 vs 详情页）----');
+{
+  const RealDate = Date;
+  // 冻结：北京 2026-10-29 07:26 → 伦敦 23:26（布伦特休市）、纽约 19:26（WTI 开市）
+  const FROZEN = '2026-10-29T07:26:00+08:00';
+  globalThis.Date = class extends RealDate {
+    constructor(...a){ return a.length ? new RealDate(...a) : new RealDate(FROZEN); }
+    static now(){ return new RealDate(FROZEN).getTime(); }
+  };
+
+  const m = {oil:{price:114.19,updated:'x'}, wti:{price:103.04,updated:'x'}};
+  const LIVE = {ok:true, brent:110.56, wti:103.44, provider:'yahoo'};
+
+  const build = (bodyHtml) => {
+    let ticks=[], slow=[];
+    const d = new JSDOM('<!doctype html><html><body>'+bodyHtml+'</body></html>',
+      { runScripts:'dangerously', beforeParse(w){
+        // jsdom 内的 Date 也要冻结，页面脚本才能算出同一个开休市状态
+        const RD = w.Date;
+        w.Date = class extends RD {
+          constructor(...a){ return a.length ? new RD(...a) : new RD(FROZEN); }
+          static now(){ return new RD(FROZEN).getTime(); }
+        };
+        w.fetch = async (u) => String(u).includes('oil-live')
+          ? {ok:true,status:200,headers:{get:()=>'application/json'},
+             json:async()=>LIVE, text:async()=>JSON.stringify(LIVE)}
+          : {ok:true,status:200,headers:{get:()=>'application/json'},
+             json:async()=>({spot_usd_oz:4038,data_state:'fresh'})};
+        w.setInterval=(fn,ms)=>{ (ms&&ms<5000?ticks:slow).push(fn); return 1; };
+        w.setTimeout=(fn)=>{ return 1; };
+      }});
+    return {d, ticks, slow};
+  };
+
+  const home = build(renderHome('zh', m, {rates:{}}, 'Asia/Shanghai'));
+  const detail = build(renderOil('zh', m, 'Asia/Shanghai'));
+  await new Promise(r=>setTimeout(r,400));
+
+  const hv = home.d.window.document.getElementById('home-oil-price').textContent;
+  const dv = detail.d.window.document.getElementById('oil-live-price').textContent;
+  console.log('     总览布伦特：'+hv+'   详情页布伦特：'+dv);
+  ok('★ 休市时总览与详情页布伦特数字一致', hv === dv);
+  ok('★ 两边都取到了实时接口的收盘价（非服务端旧值）', hv.indexOf('110.56') >= 0);
+
+  const hc = home.d.window.document.getElementById('home-oil-chip');
+  const dc = detail.d.window.document.getElementById('oil-live-chip');
+  console.log('     总览徽标：['+hc.textContent+']   详情徽标：['+dc.textContent+']');
+  ok('★ 休市时总览徽标显示休市中', hc.textContent.indexOf('休市') >= 0);
+  ok('★ 休市时详情徽标显示休市中', dc.textContent.indexOf('休市') >= 0);
+
+  // 休市后反复走秒/轮询，数字必须保持定格不动
+  for(let i=0;i<30;i++){
+    home.ticks.forEach(f=>{try{f()}catch(e){}});
+    home.slow.forEach(f=>{try{f()}catch(e){}});
+    await new Promise(r=>setTimeout(r,5));
+  }
+  const hv2 = home.d.window.document.getElementById('home-oil-price').textContent;
+  ok('★ 休市后反复刷新，数字保持定格不变', hv2 === hv);
+  console.log('     30 次刷新后：'+hv2);
+
+  globalThis.Date = RealDate;
+}
 
 console.log('\n  最终：通过 '+pass+' 项，失败 '+fail+' 项');
