@@ -74,7 +74,7 @@ export const CONTENT = {
       ],
     },
     fx: {
-      intro: 'The converter below uses reference exchange rates that are updated in real time during trading hours. It is designed for quick estimates rather than exact settlement.',
+      intro: 'The converter below uses reference exchange rates that are refreshed on a daily schedule. It is designed for quick estimates rather than exact settlement.',
       sections: [
         { h: 'What is a reference exchange rate?', p: 'A mid-market or reference rate sits roughly halfway between the buy and sell prices that banks quote each other. It is the fairest single number to describe what a currency is worth at a point in time, and it is what most public rate tables display.' },
         { h: 'Why your bank gives a different number', p: 'Retail and commercial banks add a margin on top of the mid-market rate, and card networks add their own spread and fees. That is why the rate you receive in practice is usually a little worse than the reference rate shown here.' },
@@ -82,7 +82,7 @@ export const CONTENT = {
         { h: 'What moves exchange rates', p: 'Interest rate differentials between countries, inflation outlook, trade balances, capital flows, political stability and central bank policy all influence rates. Currency markets are open around the clock on weekdays but close at weekends, which is why rates appear frozen from Friday evening to Sunday.' },
       ],
       faq: [
-        { q: 'How current are these rates?', a: 'Rates are updated in real time during trading hours. They are suitable for budgeting and comparison, but not for executing a transfer.' },
+        { q: 'How current are these rates?', a: 'Rates are refreshed on a daily schedule. They are suitable for budgeting and comparison, but not for executing a transfer.' },
         { q: 'Is this the rate my bank will give me?', a: 'No. Banks and money transfer services apply a margin and fees on top of the reference rate. Expect the practical rate to differ.' },
         { q: 'Can I use this for accounting or settlement?', a: 'No. Use the official rate published by your bank, payment provider or tax authority for any financial record.' },
       ],
