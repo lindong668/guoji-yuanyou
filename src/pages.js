@@ -216,6 +216,26 @@ const GOLD_LIVE_JS = `
        if(st&&st!=='fresh') throw new Error('xaus-usd:'+st);
        return +(j.spot_usd_oz||j.price||j.spot)||0;}}
   ];
+
+  /* ★★ 前端源粘滞（与后端 stickyProvider 同一套思路）
+   * ------------------------------------------------------------------
+   * 问题：原来每次都从 i=0 从头按序尝试，一旦 biquote 偶发慢/超时就落到
+   *   xaus 或 gold-api —— 三个源口径略有差异，于是用户看到
+   *   「首页一个价、点进去又一个价」「刷新一下数字就跳」。
+   *
+   * 修法：记住上次成功的源，下次【优先复用】它；只有它失败才往后试。
+   *   ★ 用 sessionStorage 而不是普通变量：这样【跨页面导航】也保持一致 ——
+   *     首页用了 biquote，点进黄金详情页也从 biquote 开始，两端数值同源。
+   */
+  var GKEY='ps_gold_src';
+  function gsGet(){ try{ var v=sessionStorage.getItem(GKEY); return v==null?0:(+v||0); }catch(e){ return 0; } }
+  function gsSet(i){ try{ sessionStorage.setItem(GKEY,String(i)); }catch(e){} }
+  /* 把上次成功的源排到最前面（其余顺序不变） */
+  function goldOrder(arr){
+    var st=gsGet();
+    if(!st||st>=arr.length) return arr.slice();
+    return [arr[st]].concat(arr.filter(function(_,i){ return i!==st; }));
+  }
   var TIMEOUT=2500;   // 前端时间金贵，每个源最多等 2.5 秒，不让用户干等
 
   function one(s){
@@ -234,11 +254,16 @@ const GOLD_LIVE_JS = `
   }
   /* 一轮：主 → 备 → 兜底。拿到就停。 */
   function pass(cb){
+    /* ★ 用粘滞顺序：把上次成功的源排到最前（其余顺序不变） */
+    var list=goldOrder(SOURCES);
     var i=0;
     (function step(){
-      if(i>=SOURCES.length){ cb(false); return; }
-      one(SOURCES[i]).then(function(v){ busy=false; usdOz=v; paint(); cb(true); },
-                           function(){ i++; step(); });
+      if(i>=list.length){ cb(false); return; }
+      var srcIdx=SOURCES.indexOf(list[i]);
+      one(list[i]).then(function(v){
+        gsSet(srcIdx);            /* ★ 记住这次成功的源 */
+        busy=false; usdOz=v; paint(); cb(true);
+      },function(){ i++; step(); });
     })();
   }
   /* 连续两轮全灭才认定断开 —— 抖动常在半秒内自愈，别急着吓用户。 */
@@ -895,6 +920,26 @@ const HOME_LIVE_JS = `
      p:function(j){var st=j&&j.data_state; if(st&&st!=='fresh') throw new Error('xaus-usd:'+st);
                    return +(j.spot_usd_oz||j.price||j.spot)||0;}}
   ];
+
+  /* ★★ 前端源粘滞（与后端 stickyProvider 同一套思路）
+   * ------------------------------------------------------------------
+   * 问题：原来每次都从 i=0 从头按序尝试，一旦 biquote 偶发慢/超时就落到
+   *   xaus 或 gold-api —— 三个源口径略有差异，于是用户看到
+   *   「首页一个价、点进去又一个价」「刷新一下数字就跳」。
+   *
+   * 修法：记住上次成功的源，下次【优先复用】它；只有它失败才往后试。
+   *   ★ 用 sessionStorage 而不是普通变量：这样【跨页面导航】也保持一致 ——
+   *     首页用了 biquote，点进黄金详情页也从 biquote 开始，两端数值同源。
+   */
+  var GKEY='ps_gold_src';
+  function gsGet(){ try{ var v=sessionStorage.getItem(GKEY); return v==null?0:(+v||0); }catch(e){ return 0; } }
+  function gsSet(i){ try{ sessionStorage.setItem(GKEY,String(i)); }catch(e){} }
+  /* 把上次成功的源排到最前面（其余顺序不变） */
+  function goldOrder(arr){
+    var st=gsGet();
+    if(!st||st>=arr.length) return arr.slice();
+    return [arr[st]].concat(arr.filter(function(_,i){ return i!==st; }));
+  }
   function one(s){
     return new Promise(function(res,rej){
       var done=false;
@@ -907,10 +952,14 @@ const HOME_LIVE_JS = `
   }
   function pullGold(){
     if(!gold) return;
+    /* ★ 用粘滞顺序：把上次成功的源排到最前（其余顺序不变） */
+    var list=goldOrder(GSRC);
     var i=0;
     (function step(){
-      if(i>=GSRC.length){ gold.state='lost'; paint(gold); return; }
-      one(GSRC[i]).then(function(v){
+      if(i>=list.length){ gold.state='lost'; paint(gold); return; }
+      var srcIdx=GSRC.indexOf(list[i]);
+      one(list[i]).then(function(v){
+        gsSet(srcIdx);            /* ★ 记住这次成功的源 */
         gold.el.textContent=fm(v);
         if(gold.gram){
           var ug=gold.gram.getAttribute('data-ug')||'gram';

@@ -268,7 +268,13 @@ Sitemap: ${SITE.domain}/sitemap.xml
      * 同源（/api/...），因此没有 CORS 问题。 */
     if (url.pathname === '/api/gold-live') {
       const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
-      const r = await getGoldLive(order);
+      /* ★★ 根因修复：原来这里【直接调 getGoldLive()，绕过 15 秒缓存】，
+       *   于是 SSR（走缓存）与前端轮询（现抓）取到的不是同一份值 ——
+       *   用户看到"点进去一个数、点出来又一个数"。
+       *   现在：不带 ?src= 时统一走 liveOverlay()（与 SSR 同一份缓存）；
+       *   只有探针显式指定 ?src= 才绕过缓存直连（那是排查用的，要新鲜值）。 */
+      const r = order.length ? await getGoldLive(order)
+                             : (await liveOverlay()).gold || {};
       // 字段契约保持与旧版一致（前端读 priceUsdPerOz / live），
       // 额外带出 provider / stale / tried，便于排查到底走的哪条链路。
       return Response.json({
@@ -287,7 +293,9 @@ Sitemap: ${SITE.domain}/sitemap.xml
      * 同源调用，无 CORS 问题；结果不缓存，保证每次都是新的。 */
     if (url.pathname === '/api/oil-live') {
       const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
-      const r = await getOilLive(order);
+      /* ★★ 同上：不带 ?src= 时走 liveOverlay()，保证与 SSR 同一份值 */
+      const r = order.length ? await getOilLive(order)
+                             : (await liveOverlay()).oil || {};
       return Response.json(r, { headers: { 'cache-control': 'no-store' } });
     }
 
