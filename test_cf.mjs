@@ -181,11 +181,20 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
    *   若改成"休市就不抓"，首页会用 /api/oil-live 的值、详情页留服务端值（3号），
    *   两个页面数字不一致 —— 用户实测到 110.56 vs 114.19。 */
   chk('休市也抓一次（拿收盘价，不是不抓）', !/if\(!mktOpen\(TZ\)\)\{ state='closed'/.test(pj));
-  chk('详情页：休市后不再轮询', /setInterval\(function\(\)\{ if\(mktOpen\(TZ\)\) pull\(\); \},15000\)/.test(pj));
-  chk('首页：休市腿只抓一次（fetched 标记）', /needB = oil && \(bOpen \|\| !oil\.fetched\)/.test(pj));
-  chk('两腿独立判断（一开一休时不互相覆盖）',
-      /oil\.state=mktOpen\(oil\.tz\)\?'live':'closed'/.test(pj) &&
-      /wti\.state=mktOpen\(wti\.tz\)\?'live':'closed'/.test(pj));
+  chk('详情页：休市降级为 5 分钟复查（不是完全不查）',
+      /if\(effOpen\(\) \|\| Date\.now\(\)-lastTryAt>300000\)/.test(pj));
+  chk('首页：休市腿降级为 5 分钟复查', /now-oil\.lastTryAt>300000/.test(pj));
+  chk('两腿独立判断（各自调 effOpen，不共用状态）',
+      /oil\.state=effOpen\(oil\)\?'live':'closed'/.test(pj) &&
+      /wti\.state=effOpen\(wti\)\?'live':'closed'/.test(pj));
+  /* ★★ 实测覆盖层：排程只是参考，价格有没有在动才是真相 */
+  chk('★ 已加实测覆盖层 effOpen（首页）', /function effOpen\(it\)\{/.test(pj));
+  chk('★ 已加实测覆盖层 effOpen（详情页）', pj.includes('function effOpen(){'));
+  chk('★ 状态改由实测值决定，不再直接用 mktOpen',
+      !/oil\.state=mktOpen\(oil\.tz\)/.test(pj) && !/lastOk=Date\.now\(\); state=mktOpen\(TZ\)/.test(pj));
+  /* ★ h24 bug：hour12:false 在 en-US 下午夜返回 24，会导致时段判断错乱 */
+  chk('★ 已修 h24 午夜 bug（改用 hourCycle h23）',
+      pj.includes("hourCycle:'h23'") && !/hour:'2-digit',hour12:false/.test(pj));
   chk('休市/断线也幂等（不每秒重写 DOM）',
       /state==='closed'\)\{ chip\.classList\.add\('is-lost'\); setNote\(true\);\s*\n?\s*if\(chip\.textContent!==T\.closed\)/.test(pj));
   chk('两页都有休市说明元素', (pj.match(/id="oil-closed-note"/g)||[]).length === 2);

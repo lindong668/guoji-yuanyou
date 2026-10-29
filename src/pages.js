@@ -167,7 +167,7 @@ const GOLD_LIVE_JS = `
      用 Intl 标准时区名，冬令时自动跟随，不需要改代码。 */
   function nyParts(){
     try{
-      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',hour12:false});
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',hourCycle:'h23'});
       var o={};
       f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
       var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
@@ -714,7 +714,8 @@ const HOME_LIVE_JS = `
     if(!el) return null;
     var it={el:el,chip:document.getElementById(chipId),
             gram:gramId?document.getElementById(gramId):null,
-            lastOk:0,state:'init',fetched:false};
+            lastOk:0,state:'init',fetched:false,
+            lastVal:null,lastMoveAt:0,lastTryAt:0};
     items.push(it); return it;
   }
   var oil=mk('home-oil-chip','home-oil-price');
@@ -735,7 +736,7 @@ const HOME_LIVE_JS = `
    *   ★ 取不到时区信息时默认 open —— 宁可多抓一次，也不要误显示"休市中"。 */
   function mktParts(tz){
     try{
-      var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',hour:'2-digit',hour12:false});
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',hour:'2-digit',hourCycle:'h23'});
       var o={}; f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
       var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
       var hh=parseInt(o.hour,10);
@@ -759,6 +760,27 @@ const HOME_LIVE_JS = `
     if(p.wd===6||p.wd===0) return false;
     return p.hour>=1 && p.hour<23;
   }
+  /* ★★ 实测覆盖层（关键修复）：排程只是"参考"，【数据有没有在动】才是真相。
+   *
+   * 问题：布伦特按 ICE 官方时段是伦敦 01:00–23:00，伦敦 00:30 应判休市；
+   *   但我们的源是券商 CFD 链路（biquote MT5），它近乎全天报价，
+   *   于是出现「显示休市中，数字却一直在跳」—— 用户一眼就看出来不对。
+   *
+   * 修法：观察到价格在动 → 认定交易中；排程休市【且】价格确实不动 → 才显示休市中。
+   *   这样无论交易所时段怎么变、源怎么换，显示都与用户看到的数字一致。 */
+  var MOVE_MS=180000;   /* 3 分钟内有变动即视为交易中（轮询 15s，足够灵敏） */
+  function effOpen(it){
+    if(it && it.lastMoveAt && (Date.now()-it.lastMoveAt) < MOVE_MS) return true;
+    return it ? mktOpen(it.tz) : true;
+  }
+  /* 记录本次取到的价：与上次不同则记下"最后变动时刻" */
+  function noteVal(it,v){
+    if(!it||!v) return;
+    /* 首次只记录基准值，不算"变动" —— 否则第一次取到值就会被当成在交易 */
+    if(it.lastVal==null){ it.lastVal=v; return; }
+    if(v!==it.lastVal){ it.lastVal=v; it.lastMoveAt=Date.now(); }
+  }
+
 
   function fm(v){ try{ return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }catch(e){ return '$'+v; } }
   function agoTxt(ms){
@@ -824,10 +846,10 @@ const HOME_LIVE_JS = `
          *   之前休市时首页照写实时值、详情页因不抓而留服务端值，
          *   两个页面显示不同数字（实测 110.56 vs 114.19）。
          *   现在两边都取 /api/oil-live 同一个值 → 必然一致。 */
-        if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now;
-                    oil.state=mktOpen(oil.tz)?'live':'closed'; oil.fetched=true; paint(oil); }
-        if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now;
-                    wti.state=mktOpen(wti.tz)?'live':'closed'; wti.fetched=true; paint(wti); }
+        if(b&&oil){ oil.el.textContent=fm(b); oil.lastOk=now; noteVal(oil,b);
+                    oil.state=effOpen(oil)?'live':'closed'; oil.fetched=true; paint(oil); }
+        if(w&&wti){ wti.el.textContent=fm(w); wti.lastOk=now; noteVal(wti,w);
+                    wti.state=effOpen(wti)?'live':'closed'; wti.fetched=true; paint(wti); }
       })
       .catch(function(){
         if(oil){ oil.state='lost'; paint(oil); }
@@ -878,12 +900,15 @@ const HOME_LIVE_JS = `
    *   详情页会留服务端值（3号），两个页面显示不同数字 —— 用户实测到 110.56 vs 114.19。
    *   统一成"两边都取同一个接口"，一致性才有保证。 */
   function cycle(){
-    var bOpen=oil?mktOpen(oil.tz):false, wOpen=wti?mktOpen(wti.tz):false;
-    /* 开市 → 持续轮询；休市 → 只在还没抓过时抓一次（拿收盘价） */
-    var needB = oil && (bOpen || !oil.fetched);
-    var needW = wti && (wOpen || !wti.fetched);
-    if(needB||needW) pullOil();
-    else { if(oil){ oil.state='closed'; paint(oil); } if(wti){ wti.state='closed'; paint(wti); } }
+    var now=Date.now();
+    /* 开市 → 15s 轮询；休市 → 每 5 分钟复查一次
+     * （不能不复查，否则市场重新开盘后我们永远发现不了） */
+    var bOpen=oil?effOpen(oil):false, wOpen=wti?effOpen(wti):false;
+    var bDue = oil && (bOpen || !oil.fetched || now-oil.lastTryAt>300000);
+    var wDue = wti && (wOpen || !wti.fetched || now-wti.lastTryAt>300000);
+    if(bDue||wDue){ if(oil) oil.lastTryAt=now; if(wti) wti.lastTryAt=now; pullOil(); }
+    else { if(oil){ oil.state=effOpen(oil)?'live':'closed'; paint(oil); }
+           if(wti){ wti.state=effOpen(wti)?'live':'closed'; paint(wti); } }
     if(gold){
       /* 黄金与 WTI 同为纽约时段，直接复用 mktOpen，去掉重复的 goldState */
       if(mktOpen(gold.tz)) pullGold();
@@ -939,7 +964,7 @@ function oilLiveJs(kind) {
    *   ★ 取不到时区信息时默认开市 —— 宁可多抓一次，也不误显示"休市中"。 */
   function mktOpen(tz){
     try{
-      var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',hour:'2-digit',hour12:false});
+      var f=new Intl.DateTimeFormat('en-US',{timeZone:tz,weekday:'short',hour:'2-digit',hourCycle:'h23'});
       var o={}; f.formatToParts(new Date()).forEach(function(p){ o[p.type]=p.value; });
       var wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(o.weekday);
       var hh=parseInt(o.hour,10);
@@ -954,6 +979,21 @@ function oilLiveJs(kind) {
       if(wd===6||wd===0) return false;
       return hh>=1 && hh<23;
     }catch(e){ return true; }
+  }
+
+  /* ★★ 实测覆盖层（与首页同一套）：排程只是参考，价格有没有在动才是真相。
+   *   券商 CFD 源近乎全天报价，若只按 ICE 时段判断，会出现
+   *   「显示休市中、数字却在跳」—— 用户一眼能看出来。 */
+  var MOVE_MS=180000;
+  var lastVal=null, lastMoveAt=0, lastTryAt=0;
+  function noteVal(v){
+    if(!v) return;
+    if(lastVal==null){ lastVal=v; return; }   /* 首次不算变动 */
+    if(v!==lastVal){ lastVal=v; lastMoveAt=Date.now(); }
+  }
+  function effOpen(){
+    if(lastMoveAt && (Date.now()-lastMoveAt) < MOVE_MS) return true;
+    return mktOpen(TZ);
   }
   var noteEl=document.getElementById('oil-closed-note');
   function setNote(show){
@@ -1012,7 +1052,7 @@ function oilLiveJs(kind) {
         var v=(KIND==='wti')?(j.wti||0):(j.brent||0);
         if(!v) return;
         el.textContent=fm(v);
-        lastOk=Date.now(); state=mktOpen(TZ)?'live':'closed';
+        lastOk=Date.now(); noteVal(v); state=effOpen()?'live':'closed';
         /* 源名称不再占徽标（徽标统一显示「实时 · Ns 前」），改为悬停可见 */
         if(chip&&j.providerLabel) chip.title=j.providerLabel;
         paint();
@@ -1021,7 +1061,11 @@ function oilLiveJs(kind) {
   }
   pull();
   /* 开市才持续轮询；休市时上面那次 pull 已拿到收盘价并定格，不再发请求 */
-  setInterval(function(){ if(mktOpen(TZ)) pull(); },15000);
+  /* 开市 15s 轮询；休市每 5 分钟复查一次（否则重新开盘后永远发现不了） */
+  setInterval(function(){
+    if(effOpen() || Date.now()-lastTryAt>300000){ lastTryAt=Date.now(); pull(); }
+    else { state=effOpen()?'live':'closed'; paint(); }
+  },15000);
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(paint,1000);
 })();`;

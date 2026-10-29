@@ -8,6 +8,56 @@ import { getMarket, getFx, fetchGoldLive } from './data.js';
 import { getOilLive, probeAll as probeOil, OIL_PROVIDERS } from './oilLive.js';
 import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
+/* ------------------------------------------------------------
+ * ★ 服务端实时覆盖层（A26）
+ * 背景：页面首屏数字来自 getMarket()（3号后端），而浏览器进来后
+ *   又去拉 /api/oil-live（8源实时链路）覆盖 —— 两个来源数值不同，
+ *   用户看到「点进卡片先闪 114.10，再跳回 110.70」。
+ *   SEO 要求首屏 HTML 里必须有真数字，所以不能把首屏留空。
+ * 做法：首屏【也用实时链路的值】，与浏览器后来拉的是同一个来源 → 不再跳变。
+ *   为避免每个访客都触发一次外部请求，这里做 15 秒模块级缓存；
+ *   链路全挂时回落到 3 号的值（保留原 getMarket 结果）。
+ * ---------------------------------------------------------- */
+const LIVE_TTL = 15000;
+let liveCache = { at: 0, oil: null, gold: null };
+
+async function liveOverlay() {
+  const now = Date.now();
+  if (liveCache.at && now - liveCache.at < LIVE_TTL) return liveCache;
+  const [o, g] = await Promise.all([
+    getOilLive().catch(() => null),
+    getGoldLive().catch(() => null),
+  ]);
+  /* 只登记成功的那一半，失败的沿用上一轮缓存值，避免一次抖动把整页打空 */
+  liveCache = {
+    at: now,
+    oil: (o && (o.brent || o.wti)) ? o : liveCache.oil,
+    gold: (g && g.usdOz && !g.stale) ? g : liveCache.gold,
+  };
+  return liveCache;
+}
+
+/* 把实时值覆盖进 getMarket() 的结果（3号的值作为兜底保留） */
+function applyLive(m, lv) {
+  if (!m) return m;
+  const out = { ...m };
+  if (lv && lv.oil) {
+    const b = +lv.oil.brent || 0, w = +lv.oil.wti || 0;
+    if (b) out.oil = { ...(out.oil || {}), price: b,
+                       updated: lv.oil.updated || out.oil?.updated,
+                       provider: lv.oil.provider };
+    if (w) out.wti = { ...(out.wti || {}), price: w,
+                       updated: lv.oil.updated || out.wti?.updated,
+                       provider: lv.oil.provider };
+  }
+  if (lv && lv.gold && +lv.gold.usdOz) {
+    out.gold = { ...(out.gold || {}), usdOz: +lv.gold.usdOz,
+                 updated: lv.gold.updated || out.gold?.updated,
+                 provider: lv.gold.provider };
+  }
+  return out;
+}
+
 import {
   renderHome, renderOil, renderGold, renderCn, renderFx,
   renderPrivacy, renderAbout, renderContact, renderFaq, sitemap,
@@ -191,8 +241,8 @@ Sitemap: ${SITE.domain}/sitemap.xml
       // an unknown language segment is resolved from Accept-Language below.
       // 手动选过语言的访客按他选的渲染；新访客（无 cookie）仍是英文正门。
       const langR = langCookie || DEFAULT_LANG;
-      const [mR, fxR] = await Promise.all([getMarket(), getFx()]);
-      const html = renderHome(langR, mR, fxR, tz);
+      const [mR, fxR, lvR] = await Promise.all([getMarket(), getFx(), liveOverlay()]);
+      const html = renderHome(langR, applyLive(mR, lvR), fxR, tz);
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
@@ -364,11 +414,12 @@ ${goldRows}
     }
 
     const render = async (fn, needsMarket, needsFx) => {
-      const [m, fx] = await Promise.all([
+      const [m, fx, lv] = await Promise.all([
         needsMarket ? getMarket() : Promise.resolve(null),
         needsFx ? getFx() : Promise.resolve(null),
+        needsMarket ? liveOverlay() : Promise.resolve(null),
       ]);
-      const html = fn(lang, { m, fx }, tz);
+      const html = fn(lang, { m: applyLive(m, lv), fx }, tz);
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
