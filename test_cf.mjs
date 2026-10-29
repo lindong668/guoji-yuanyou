@@ -181,17 +181,29 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
    *   若改成"休市就不抓"，首页会用 /api/oil-live 的值、详情页留服务端值（3号），
    *   两个页面数字不一致 —— 用户实测到 110.56 vs 114.19。 */
   chk('休市也抓一次（拿收盘价，不是不抓）', !/if\(!mktOpen\(TZ\)\)\{ state='closed'/.test(pj));
-  chk('详情页：休市降级为 5 分钟复查（不是完全不查）',
-      /if\(effOpen\(\) \|\| Date\.now\(\)-lastTryAt>300000\)/.test(pj));
-  chk('首页：休市腿降级为 5 分钟复查', /now-oil\.lastTryAt>300000/.test(pj));
+  chk('★ 详情页无条件 15 秒一抓（不节流）', /setInterval\(pull,15000\)/.test(pj));
   chk('两腿独立判断（各自调 effOpen，不共用状态）',
       /oil\.state=effOpen\(oil\)\?'live':'closed'/.test(pj) &&
       /wti\.state=effOpen\(wti\)\?'live':'closed'/.test(pj));
-  /* ★★ 实测覆盖层：排程只是参考，价格有没有在动才是真相 */
+  /* ★★★ 开休市判定 = 三规则（抗抖动最终版） */
   chk('★ 已加实测覆盖层 effOpen（首页）', /function effOpen\(it\)\{/.test(pj));
   chk('★ 已加实测覆盖层 effOpen（详情页）', pj.includes('function effOpen(){'));
-  chk('★ 状态改由实测值决定，不再直接用 mktOpen',
+  chk('★ 状态改由 effOpen 决定，不再直接用 mktOpen',
       !/oil\.state=mktOpen\(oil\.tz\)/.test(pj) && !/lastOk=Date\.now\(\); state=mktOpen\(TZ\)/.test(pj));
+  chk('★ 定义了冻结阈值 IDLE_MS=10 分钟（判休市的必要条件）',
+      /IDLE_MS=600000/.test(pj));
+  chk('★ 判休市需同时满足「冻结够久」且「排程休市」',
+      /lastMoveAt\) > IDLE_MS\)/.test(pj) && /IDLE_MS/.test(pj));
+  chk('★ 冻结 3~10 分钟之间维持实时（抗抖动关键）',
+      /return true;\s*\/\* 3 冻结 3~10 分钟 → 维持实时 \*\//.test(pj));
+  chk('★ 无条件 15 秒一抓（不再节流，否则观察不到变动）',
+      /^    pullOil\(\);$/m.test(pj) && /setInterval\(pull,15000\)/.test(pj));
+  /* 卡片上的「更新于 08:05」已去掉（已有实时徽标，多余且误导）；
+     国内油价与汇率的日期保留 —— 那是按天更新的数据，日期有实际意义 */
+  chk('★ 布伦特卡片不再显示更新时间', !/updatedLine\(lang, m\?\.oil\?\.updated/.test(pj));
+  chk('★ WTI 卡片不再显示更新时间', !/updatedLine\(lang, m\?\.wti\?\.updated/.test(pj));
+  chk('国内油价/汇率的日期保留（按天更新，日期有意义）',
+      /updatedLine\(lang, m\?\.cnOil\?\.updated/.test(pj));
   /* ★ h24 bug：hour12:false 在 en-US 下午夜返回 24，会导致时段判断错乱 */
   chk('★ 已修 h24 午夜 bug（改用 hourCycle h23）',
       pj.includes("hourCycle:'h23'") && !/hour:'2-digit',hour12:false/.test(pj));

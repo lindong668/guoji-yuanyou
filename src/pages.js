@@ -636,15 +636,13 @@ export function renderHome(lang, m, fx, tz) {
       <h3><span class="hd"><span class="swatch o"></span><span class="ttl">${esc(L.secOil)}</span></span><span id="home-oil-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-oil-price">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.oil?.updated, tz)}</span>
-        <span class="go">${esc(L.viewAll)} →</span></div>
+      <div class="meta"><span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card oil" href="/${lang}/wti/">
       <h3><span class="hd"><span class="swatch w"></span><span class="ttl">${esc(L.nav.wti)}</span></span><span id="home-wti-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-wti-price">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span>${updatedLine(lang, m?.wti?.updated, tz)}</span>
-        <span class="go">${esc(L.viewAll)} →</span></div>
+      <div class="meta"><span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
       <h3><span class="hd"><span class="swatch"></span><span class="ttl">${esc(L.secGold)}</span></span><span id="home-gold-chip" class="live-dot" hidden></span></h3>
@@ -768,10 +766,30 @@ const HOME_LIVE_JS = `
    *
    * 修法：观察到价格在动 → 认定交易中；排程休市【且】价格确实不动 → 才显示休市中。
    *   这样无论交易所时段怎么变、源怎么换，显示都与用户看到的数字一致。 */
-  var MOVE_MS=180000;   /* 3 分钟内有变动即视为交易中（轮询 15s，足够灵敏） */
+  var MOVE_MS=180000;   /* 3 分钟内有变动 = 价格在动 */
+  var IDLE_MS=600000;   /* 冻结满 10 分钟，才【有资格】判休市 */
+
+  /* ★★★ 开休市判定（最终版，不再抖动）
+   *
+   * 之前的错：单独用"价格动不动"来判定 → 行情清淡时几分钟不动就翻成休市，
+   *   一动又翻回实时，于是用户看到"一下实时、一下休市"，非常乱。
+   *
+   * 现在的规则（三条，互斥且稳定）：
+   *   1. 价格在动（3 分钟内有变化）              → 实时
+   *   2. 冻结 ≥10 分钟【且】排程也说休市          → 休市中
+   *   3. 其他（不动但排程说开市 / 冻结未满10分钟） → 实时
+   *      （行情清淡或源延迟，不算休市）
+   *
+   * 为什么不抖：判休市要【同时】满足"冻结够久"和"排程休市"两个条件，
+   *   而排程是确定的（IANA 时区算出来，不会来回变）。
+   *   所以只可能在"真的收盘、且价格真的停了"时才翻成休市。 */
   function effOpen(it){
-    if(it && it.lastMoveAt && (Date.now()-it.lastMoveAt) < MOVE_MS) return true;
-    return it ? mktOpen(it.tz) : true;
+    if(!it) return true;
+    if(it.lastMoveAt && (Date.now()-it.lastMoveAt) < MOVE_MS) return true;   /* 1 在动 */
+    if(it.lastMoveAt && (Date.now()-it.lastMoveAt) > IDLE_MS)                /* 2 冻结够久 */
+      return mktOpen(it.tz);
+    if(!it.lastMoveAt) return mktOpen(it.tz);                                /* 从没动过 → 排程 */
+    return true;                                                             /* 3 冻结 3~10 分钟 → 维持实时 */
   }
   /* 记录本次取到的价：与上次不同则记下"最后变动时刻" */
   function noteVal(it,v){
@@ -900,15 +918,14 @@ const HOME_LIVE_JS = `
    *   详情页会留服务端值（3号），两个页面显示不同数字 —— 用户实测到 110.56 vs 114.19。
    *   统一成"两边都取同一个接口"，一致性才有保证。 */
   function cycle(){
-    var now=Date.now();
-    /* 开市 → 15s 轮询；休市 → 每 5 分钟复查一次
-     * （不能不复查，否则市场重新开盘后我们永远发现不了） */
-    var bOpen=oil?effOpen(oil):false, wOpen=wti?effOpen(wti):false;
-    var bDue = oil && (bOpen || !oil.fetched || now-oil.lastTryAt>300000);
-    var wDue = wti && (wOpen || !wti.fetched || now-wti.lastTryAt>300000);
-    if(bDue||wDue){ if(oil) oil.lastTryAt=now; if(wti) wti.lastTryAt=now; pullOil(); }
-    else { if(oil){ oil.state=effOpen(oil)?'live':'closed'; paint(oil); }
-           if(wti){ wti.state=effOpen(wti)?'live':'closed'; paint(wti); } }
+    /* ★★ 死循环 bug（本轮修复）：
+     *   旧逻辑是"判定休市 → 就停止轮询，5 分钟才复查一次"。
+     *   问题是：判断开休市【靠观察价格有没有在动】，
+     *   而停止轮询就【永远观察不到变动】—— 于是永远显示休市中，自己锁死自己。
+     * 修法：去掉节流，无条件 15 秒一抓。
+     *   CF 不像 Netlify 有部署额度限制，请求成本可忽略；
+     *   而且只有持续抓着，才能真的看见价格动没动。 */
+    pullOil();
     if(gold){
       /* 黄金与 WTI 同为纽约时段，直接复用 mktOpen，去掉重复的 goldState */
       if(mktOpen(gold.tz)) pullGold();
@@ -984,16 +1001,19 @@ function oilLiveJs(kind) {
   /* ★★ 实测覆盖层（与首页同一套）：排程只是参考，价格有没有在动才是真相。
    *   券商 CFD 源近乎全天报价，若只按 ICE 时段判断，会出现
    *   「显示休市中、数字却在跳」—— 用户一眼能看出来。 */
-  var MOVE_MS=180000;
+  var MOVE_MS=180000, IDLE_MS=600000;
   var lastVal=null, lastMoveAt=0, lastTryAt=0;
   function noteVal(v){
     if(!v) return;
     if(lastVal==null){ lastVal=v; return; }   /* 首次不算变动 */
     if(v!==lastVal){ lastVal=v; lastMoveAt=Date.now(); }
   }
+  /* 与首页同一套三规则：在动→实时；冻结≥10分钟且排程休市→休市；其余→实时 */
   function effOpen(){
     if(lastMoveAt && (Date.now()-lastMoveAt) < MOVE_MS) return true;
-    return mktOpen(TZ);
+    if(lastMoveAt && (Date.now()-lastMoveAt) > IDLE_MS) return mktOpen(TZ);
+    if(!lastMoveAt) return mktOpen(TZ);
+    return true;
   }
   var noteEl=document.getElementById('oil-closed-note');
   function setNote(show){
@@ -1060,12 +1080,8 @@ function oilLiveJs(kind) {
       .catch(function(){ state='lost'; paint(); });
   }
   pull();
-  /* 开市才持续轮询；休市时上面那次 pull 已拿到收盘价并定格，不再发请求 */
-  /* 开市 15s 轮询；休市每 5 分钟复查一次（否则重新开盘后永远发现不了） */
-  setInterval(function(){
-    if(effOpen() || Date.now()-lastTryAt>300000){ lastTryAt=Date.now(); pull(); }
-    else { state=effOpen()?'live':'closed'; paint(); }
-  },15000);
+  /* ★ 同样去掉节流：无条件 15 秒一抓，否则永远观察不到价格变动 */
+  setInterval(pull,15000);
   /* ★ 秒数 1 秒一跳：纯前端计时，不发请求 */
   setInterval(paint,1000);
 })();`;
