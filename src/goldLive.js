@@ -170,8 +170,16 @@ export const GOLD_PROVIDERS = [
 /* ------------------------------------------------------------------
  * getGoldLive() —— 生产链路：按序尝试，拿到就停
  * ---------------------------------------------------------------- */
+/* ★★ Sticky Provider（与原油同一套）：记住上次成功的源并优先复用，
+ * 避免"首页一个价、详情页又一个价"的源漂移问题。 */
+let stickyProvider = null;
+
 export async function getGoldLive(order) {
-  const ids = (order && order.length ? order : GOLD_PROVIDERS.map(p => p.id));
+  let ids = (order && order.length ? order : GOLD_PROVIDERS.map(p => p.id));
+  /* 粘滞：把上次成功的源提到最前面（不改变整体顺序，只是优先尝试） */
+  if (stickyProvider && !order) {
+    ids = [stickyProvider, ...ids.filter(x => x !== stickyProvider)];
+  }
   const tried = [];
   for (const id of ids) {
     const p = GOLD_PROVIDERS.find(x => x.id === id);
@@ -179,6 +187,7 @@ export async function getGoldLive(order) {
     try {
       const r = await p.fn();
       if (r && r.usdOz) {
+        stickyProvider = p.id;      /* ★ 记住这次成功的源，下次优先复用 */
         return { ...r, provider: p.id, providerLabel: p.label, tried };
       }
       tried.push({ id: p.id, ok: false, error: '返回为空' });

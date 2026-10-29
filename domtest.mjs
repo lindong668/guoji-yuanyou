@@ -171,8 +171,31 @@ console.log('\n  ---- 休市定格一致性（总览 vs 详情页）----');
   const hc = home.d.window.document.getElementById('home-oil-chip');
   const dc = detail.d.window.document.getElementById('oil-live-chip');
   console.log('     总览徽标：['+hc.textContent+']   详情徽标：['+dc.textContent+']');
-  ok('★ 休市时总览徽标显示休市中', hc.textContent.indexOf('休市') >= 0);
-  ok('★ 休市时详情徽标显示休市中', dc.textContent.indexOf('休市') >= 0);
+  /* ★ 新判定是"连抓几轮不动才判休市"，刚加载时必然显示实时。
+   *   这里推进时钟 2 分钟（价格始终不变）后再断言休市。 */
+  ok('★ 刚加载时显示实时（还没观察到冻结）', hc.textContent.indexOf('实时') >= 0);
+  const FROZEN2 = '2026-10-29T07:28:00+08:00';   /* +2 分钟，价未变 */
+  for (const h of [home, detail]) {
+    const RD = h.d.window.Date;
+    h.d.window.Date = class extends RD {
+      constructor(...a){ return a.length ? new RD(...a) : new RD(FROZEN2); }
+      static now(){ return new RD(FROZEN2).getTime(); }
+    };
+  }
+  globalThis.Date = class extends RealDate {
+    constructor(...a){ return a.length ? new RealDate(...a) : new RealDate(FROZEN2); }
+    static now(){ return new RealDate(FROZEN2).getTime(); }
+  };
+  for (let i=0;i<3;i++){
+    home.slow.forEach(f=>{try{f()}catch(e){}});
+    detail.slow.forEach(f=>{try{f()}catch(e){}});
+    await new Promise(r=>setTimeout(r,20));
+  }
+  const hc2 = home.d.window.document.getElementById('home-oil-chip');
+  const dc2 = detail.d.window.document.getElementById('oil-live-chip');
+  console.log('     冻结 2 分钟后 → 总览徽标 ['+hc2.textContent+']  详情徽标 ['+dc2.textContent+']');
+  ok('★ 价格连续 2 分钟不动 → 总览显示休市中', hc2.textContent.indexOf('休市') >= 0);
+  ok('★ 价格连续 2 分钟不动 → 详情显示休市中', dc2.textContent.indexOf('休市') >= 0);
 
   // 休市后反复走秒/轮询，数字必须保持定格不动
   for(let i=0;i<30;i++){

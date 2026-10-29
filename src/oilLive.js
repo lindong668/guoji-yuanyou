@@ -245,8 +245,27 @@ export const OIL_PROVIDERS = [
 /* ------------------------------------------------------------------
  * getOilLive() —— 生产链路：按序尝试，拿到就停
  * ---------------------------------------------------------------- */
+/* ------------------------------------------------------------------
+ * ★★ Sticky Provider（源粘滞）—— 解决"首页 102.03、点进去 102.02"
+ * --------------------------------------------------------------------
+ * 问题：原来每次请求都从头按序尝试，一旦 biquote 偶尔慢/超时，
+ *   这次就落到 yahoo，下次又回到 biquote —— 两个源口径略有差异，
+ *   于是用户看到"点进去价格跳一下、点出来又跳一下"。
+ *
+ * 修法：记住上次成功的源，下次【优先复用】它；只有它失败了才换下一个。
+ *   这样同一时间窗口内，首页 / 详情页 / 连续刷新 拿到的都是同一个源的值。
+ *
+ * 说明：CF Worker 同一 isolate 内可复用该变量（与 liveCache 同理）。
+ *   不同 isolate 各自维护，冷启动第一次会重新选源，属于可接受范围。
+ * ---------------------------------------------------------------- */
+let stickyProvider = null;
+
 export async function getOilLive(order) {
-  const ids = (order && order.length ? order : OIL_PROVIDERS.map(p => p.id));
+  let ids = (order && order.length ? order : OIL_PROVIDERS.map(p => p.id));
+  /* 粘滞：把上次成功的源提到最前面（不改变整体顺序，只是优先尝试） */
+  if (stickyProvider && !order) {
+    ids = [stickyProvider, ...ids.filter(x => x !== stickyProvider)];
+  }
   const tried = [];
   for (const id of ids) {
     const p = OIL_PROVIDERS.find(x => x.id === id);
@@ -254,6 +273,7 @@ export async function getOilLive(order) {
     try {
       const r = await p.fn();
       if (r && (r.brent || r.wti)) {
+        stickyProvider = p.id;      /* ★ 记住这次成功的源，下次优先复用 */
         return { ...r, provider: p.id, providerLabel: p.label, tried };
       }
       tried.push({ id: p.id, ok: false, error: '返回为空' });

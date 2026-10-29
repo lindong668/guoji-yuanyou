@@ -766,8 +766,19 @@ const HOME_LIVE_JS = `
    *
    * 修法：观察到价格在动 → 认定交易中；排程休市【且】价格确实不动 → 才显示休市中。
    *   这样无论交易所时段怎么变、源怎么换，显示都与用户看到的数字一致。 */
-  var MOVE_MS=180000;   /* 3 分钟内有变动 = 价格在动 */
-  var IDLE_MS=600000;   /* 冻结满 10 分钟，才【有资格】判休市 */
+  /* ★★★ 开休市判定 —— 用户拍板的最终方案（简单、直观、可自证）
+   *   「连抓几轮价格定在那里 = 休市；一旦抓到变动 = 立刻开市」
+   *
+   *   为什么不再用交易所排程：我们的源是券商 CFD（biquote），
+   *   它近乎全天报价，ICE 官方时段（伦敦 01:00–23:00）跟它对不上 ——
+   *   于是出现"明明价格在跳，却显示休市中"。排程不可靠，实测才可靠。
+   *
+   *   现在的规则只有两条，互斥且立刻生效：
+   *     ① 价格有变动（或 2 分钟内变动过） → 实时
+   *     ② 连续 2 分钟（约 8 轮 × 15s）完全没动 → 休市中
+   *   一有变动，立刻翻回实时，无需等待。 */
+  var MOVE_MS=120000;   /* 2 分钟内变动过 = 开市中 */
+  var IDLE_MS=120000;   /* 连续 2 分钟没动 = 休市 */
 
   /* ★★★ 开休市判定（最终版，不再抖动）
    *
@@ -785,17 +796,16 @@ const HOME_LIVE_JS = `
    *   所以只可能在"真的收盘、且价格真的停了"时才翻成休市。 */
   function effOpen(it){
     if(!it) return true;
-    if(it.lastMoveAt && (Date.now()-it.lastMoveAt) < MOVE_MS) return true;   /* 1 在动 */
-    if(it.lastMoveAt && (Date.now()-it.lastMoveAt) > IDLE_MS)                /* 2 冻结够久 */
-      return mktOpen(it.tz);
-    if(!it.lastMoveAt) return mktOpen(it.tz);                                /* 从没动过 → 排程 */
-    return true;                                                             /* 3 冻结 3~10 分钟 → 维持实时 */
+    if(!it.lastMoveAt) return mktOpen(it.tz);        /* 还没观察过 → 先用排程兜底 */
+    return (Date.now()-it.lastMoveAt) < MOVE_MS;     /* 2 分钟内动过 = 开市，否则休市 */
   }
   /* 记录本次取到的价：与上次不同则记下"最后变动时刻" */
   function noteVal(it,v){
     if(!it||!v) return;
-    /* 首次只记录基准值，不算"变动" —— 否则第一次取到值就会被当成在交易 */
-    if(it.lastVal==null){ it.lastVal=v; return; }
+    /* ★ 首次也记时刻：这样"从第一次取到值起就一直没动"也能被判定为休市。
+     *   之前首次不记时刻 → lastMoveAt 恒为 0 → 永远走排程兜底，
+     *   于是"排程开市 + 价格其实冻结着"会一直显示实时（场景3 暴露的 bug）。 */
+    if(it.lastVal==null){ it.lastVal=v; it.lastMoveAt=Date.now(); return; }
     if(v!==it.lastVal){ it.lastVal=v; it.lastMoveAt=Date.now(); }
   }
 
@@ -1001,19 +1011,17 @@ function oilLiveJs(kind) {
   /* ★★ 实测覆盖层（与首页同一套）：排程只是参考，价格有没有在动才是真相。
    *   券商 CFD 源近乎全天报价，若只按 ICE 时段判断，会出现
    *   「显示休市中、数字却在跳」—— 用户一眼能看出来。 */
-  var MOVE_MS=180000, IDLE_MS=600000;
+  var MOVE_MS=120000;   /* 与首页同一套：2 分钟内变动过 = 开市 */
   var lastVal=null, lastMoveAt=0, lastTryAt=0;
   function noteVal(v){
     if(!v) return;
-    if(lastVal==null){ lastVal=v; return; }   /* 首次不算变动 */
+    if(lastVal==null){ lastVal=v; lastMoveAt=Date.now(); return; }  /* 首次也记时刻 */
     if(v!==lastVal){ lastVal=v; lastMoveAt=Date.now(); }
   }
   /* 与首页同一套三规则：在动→实时；冻结≥10分钟且排程休市→休市；其余→实时 */
   function effOpen(){
-    if(lastMoveAt && (Date.now()-lastMoveAt) < MOVE_MS) return true;
-    if(lastMoveAt && (Date.now()-lastMoveAt) > IDLE_MS) return mktOpen(TZ);
     if(!lastMoveAt) return mktOpen(TZ);
-    return true;
+    return (Date.now()-lastMoveAt) < MOVE_MS;
   }
   var noteEl=document.getElementById('oil-closed-note');
   function setNote(show){

@@ -54,20 +54,36 @@ setNow('2026-10-29T08:30:00+08:00');
 {
   const h=build(()=>110.78);
   await new Promise(r=>setTimeout(r,350));
-  await poll(h,12,60000);  // 冻结 12 分钟
+  await poll(h,4,60000);   // 冻结 4 分钟 > 2 分钟
   console.log('       布伦特 '+h.d.window.document.getElementById('home-oil-price').textContent+'  徽标 ['+chipOf(h)+']');
   ok('冻结够久且排程休市 → 显示休市中', chipOf(h).indexOf('休市')>=0);
 }
 
-/* ---------- 场景3：排程【开市】+ 价格冻结超10分钟（清淡，不能算休市）---------- */
-console.log('场景3  排程开市 + 价格冻结 >10 分钟');
-setNow('2026-10-29T20:00:00+08:00');   // 伦敦 12:00 → 排程开市
+/* ---------- 场景3：★ 用户拍板的方案 —— 停了就休市，动了立刻开市 ---------- */
+console.log('场景3  价格冻结 >2 分钟 → 休市（不管排程怎么说）');
+setNow('2026-10-29T20:00:00+08:00');   // 伦敦 12:00 → 排程【开市】
 {
   const h=build(()=>110.78);
   await new Promise(r=>setTimeout(r,350));
-  await poll(h,12,60000);
+  await poll(h,4,60000);   // 冻结 4 分钟 > 2 分钟
   console.log('       布伦特 '+h.d.window.document.getElementById('home-oil-price').textContent+'  徽标 ['+chipOf(h)+']');
-  ok('★ 排程开市时即使价格不动也显示实时（不误判休市）', chipOf(h).indexOf('实时')>=0);
+  ok('★ 连续 2 分钟没动 → 显示休市中（按用户方案，不看排程）', chipOf(h).indexOf('休市')>=0);
+}
+
+/* ---------- 场景5：★ 休市之后一有变动，立刻翻回实时 ---------- */
+console.log('场景5  判定休市后价格又动了 → 立刻翻回实时');
+setNow('2026-10-29T20:00:00+08:00');
+{
+  let seq=[110.78,110.78,110.78,110.78,110.95];  // 前4轮不动，第5轮变动
+  let i=0;
+  const h=build(()=>seq[Math.min(i++,seq.length-1)]);
+  await new Promise(r=>setTimeout(r,350));
+  await poll(h,3,60000);   // 3 分钟不动 → 休市
+  const before=chipOf(h);
+  await poll(h,2,60000);   // 第5轮变动
+  console.log('       冻结中 ['+before+'] → 变动后 ['+chipOf(h)+']');
+  ok('★ 冻结 2 分钟后进入休市', before.indexOf('休市')>=0);
+  ok('★★ 一有变动立刻翻回实时（无需等待）', chipOf(h).indexOf('实时')>=0);
 }
 
 /* ---------- 场景4：抗抖动 —— 动一下又冻结5分钟，不能翻成休市 ---------- */
@@ -78,9 +94,9 @@ setNow('2026-10-29T08:30:00+08:00');   // 排程休市
   let i=0;
   const h=build(()=>seq[Math.min(i++,seq.length-1)]);
   await new Promise(r=>setTimeout(r,350));
-  await poll(h,5,60000);   // 第1分钟动了一下，之后冻结共5分钟
+  await poll(h,1,60000);   // 动过一次，之后只冻结 1 分钟（< 2 分钟）
   console.log('       布伦特 '+h.d.window.document.getElementById('home-oil-price').textContent+'  徽标 ['+chipOf(h)+']');
-  ok('★ 冻结未满10分钟不翻休市（不再抖动）', chipOf(h).indexOf('实时')>=0);
+  ok('★ 冻结未满 2 分钟仍是实时（阈值边界）', chipOf(h).indexOf('实时')>=0);
 }
 
 globalThis.Date=RealDate;

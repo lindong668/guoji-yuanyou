@@ -190,12 +190,12 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
   chk('★ 已加实测覆盖层 effOpen（详情页）', pj.includes('function effOpen(){'));
   chk('★ 状态改由 effOpen 决定，不再直接用 mktOpen',
       !/oil\.state=mktOpen\(oil\.tz\)/.test(pj) && !/lastOk=Date\.now\(\); state=mktOpen\(TZ\)/.test(pj));
-  chk('★ 定义了冻结阈值 IDLE_MS=10 分钟（判休市的必要条件）',
-      /IDLE_MS=600000/.test(pj));
-  chk('★ 判休市需同时满足「冻结够久」且「排程休市」',
-      /lastMoveAt\) > IDLE_MS\)/.test(pj) && /IDLE_MS/.test(pj));
-  chk('★ 冻结 3~10 分钟之间维持实时（抗抖动关键）',
-      /return true;\s*\/\* 3 冻结 3~10 分钟 → 维持实时 \*\//.test(pj));
+  chk('★ 判定阈值为 2 分钟（用户拍板：连抓几轮不动即休市）',
+      /MOVE_MS=120000/.test(pj));
+  chk('★ 判定只看「价格有没有在动」，不再依赖交易所排程',
+      /return \(Date\.now\(\)-it\.lastMoveAt\) < MOVE_MS;/.test(pj));
+  chk('★ 首次取到值也记时刻（否则冻结永远判不出来）',
+      /if\(it\.lastVal==null\)\{ it\.lastVal=v; it\.lastMoveAt=Date\.now\(\); return; \}/.test(pj));
   chk('★ 无条件 15 秒一抓（不再节流，否则观察不到变动）',
       /^    pullOil\(\);$/m.test(pj) && /setInterval\(pull,15000\)/.test(pj));
   /* 卡片上的「更新于 08:05」已去掉（已有实时徽标，多余且误导）；
