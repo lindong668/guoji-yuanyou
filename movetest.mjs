@@ -96,10 +96,10 @@ setNow('2026-10-29T20:00:00+08:00');
   const before=chipOf(h);
   /* ⚠️ 只推进【一轮】：再推进一轮又会因"冻结 1 分钟"而翻回探测态，
    *   那样测到的就不是"刚变动那一刻"了 */
-  await poll(h,1,60000);   // 第5轮变动
+  await poll(h,1,70000);   // 第5轮变动
   console.log('       冻结中 ['+before+'] → 变动后 ['+chipOf(h)+']');
-  ok('★★★★★ 冻结后先进入"重新连接中"而不是直接休市',
-     before.indexOf('休市')<0 && (before.indexOf('重试')>=0||before.indexOf('连接')>=0));
+  ok('★★★★★ 冻结后【不直接】休市，也不立刻显示连接中断（先悄悄探测）',
+     before.indexOf('休市')<0 && before.indexOf('中断')<0);
   ok('★★ 一有变动立刻翻回实时（无需等待）', chipOf(h).indexOf('实时')>=0);
 }
 

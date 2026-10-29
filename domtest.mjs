@@ -201,8 +201,9 @@ console.log('\n  ---- 休市定格一致性（总览 vs 详情页）----');
      hc2.textContent.indexOf('休市') < 0);
   ok('★★★★★ 只冻结 2 分钟 → 详情【不】显示休市中（应先重新连接中）',
      dc2.textContent.indexOf('休市') < 0);
-  ok('★★★★★ 冻结 2 分钟时显示的是"重新连接中"',
-     (hc2.textContent.indexOf('重试')>=0 || hc2.textContent.indexOf('连接')>=0));
+  /* ★ 新规则：第一整圈（8源×3次）内连"连接中断"都不显示，仍保持实时 */
+  ok('★★★★★ 冻结 2 分钟时【不】显示连接中断（第一圈内不吓人）',
+     hc2.textContent.indexOf('中断')<0);
 
   // 休市后反复走秒/轮询，数字必须保持定格不动
   for(let i=0;i<30;i++){

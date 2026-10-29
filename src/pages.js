@@ -149,7 +149,14 @@ const GOLD_LIVE_JS = `
     if(sp.textContent!==ago) sp.textContent=ago;
   }
   function markLive(){
-    dead=false; fails=0; lastOk=Date.now();
+    dead=false; fails=0;
+    /* ★★ 根因修复：原来这里【无条件】lastOk=Date.now()，
+     *   于是"沿用快照进详情页"时刚恢复的秒数被立刻清零 ——
+     *   用户实测："外面跳到 10 秒，点进去又是 0 秒"。
+     *   现在 lastOk 统一取自【节拍快照的 t】：
+     *     · 沿用进来 → 快照 t 就是首页那次抓取时刻 → 秒数连续
+     *     · 真抓成功 → tSet() 已先写入 t=now → 秒数从 0 正常起算 */
+    var _o=tGet(); lastOk=(_o&&_o.t)||Date.now();
     card1.classList.remove('is-stale'); card2.classList.remove('is-stale');
     elStatus.classList.remove('is-lost');
     setAgo(elStatus,agoTxt());
@@ -201,7 +208,8 @@ const GOLD_LIVE_JS = `
    *   4 源 × 3 次 × 6 轮 = 72 次都无变动，才敢判休市。
    *   与首页共用 ps_probe_gold —— 从首页点进来 / 刷新都不从头再来。
    * ================================================================ */
-  var PGAP=3000, PPER=3, PSTILL=2, GOLD_ROUNDS=6;
+  /* ★ 连接中断不能随便显示：跑完【第一整圈】才允许 */
+  var PGAP=3000, PPER=3, PSTILL=4, GOLD_ROUNDS=6;
   function pKey(){ return 'ps_probe_gold'; }
   function pGet(){
     try{ var o=JSON.parse(sessionStorage.getItem(pKey())||'null');
@@ -224,7 +232,10 @@ const GOLD_LIVE_JS = `
     if(failed) st.k=0; else st.k++;
     if(failed||st.k>=PPER){ st.k=0; st.i++; if(st.i>=SOURCES.length){ st.i=0; st.r++; } }
     pSet(st);
-    if(st.r>=GOLD_ROUNDS) markClosed(); else markProbing();
+    /* ★ 第一圈（r<1）内保持"实时"，跑完一整圈才转为"连接中断" */
+    if(st.r>=GOLD_ROUNDS) markClosed();
+    else if(st.r>=1) markProbing();
+    else if(needProbe()) markLive();
   }
   function probeOnce(){
     var st=pGet();
@@ -351,6 +362,8 @@ const GOLD_LIVE_JS = `
     var a=tGet();
     if(tDelay()>0&&a&&a.v){
       usdOz=a.v; busy=false;
+      /* ★ lastOk 也要恢复，否则 agoTxt() 算出空值 → 徽标只剩一个点、没有秒数 */
+      lastOk=a.t;
       if(lastVal==null){ lastVal=a.v; lastMoveAt=a.mv||a.t; }   /* ★ 恢复，探测才能连续 */
       paint(); cb(true); return;
     }
@@ -367,8 +380,12 @@ const GOLD_LIVE_JS = `
      *   一律正常拉；是否休市交给【多源多轮探测】认定。 */
     busy=true;
     pass(function(ok){
-      /* 拿到值但价格冻结 → 不再显示"实时"，转为探测中的"重新连接中" */
-      if(ok){ if(needProbe()) markProbing(); else markLive(); return; }
+      /* ★ 拿到值但价格冻结：第一圈内【照常显示实时】，别一上来就吓用户 */
+      if(ok){
+        if(needProbe() && pGet().r>=1) markProbing();
+        else markLive();
+        return;
+      }
       setTimeout(function(){
         pass(function(ok2){
           busy=false;
@@ -883,7 +900,9 @@ const HOME_LIVE_JS = `
     if(!it||!o||!o.v) return false;
     it.el.textContent=fm(o.v);
     it.lastVal=o.v; it.lastMoveAt=o.mv||o.t; it.lastOk=o.t;
-    it.state=effOpen(it)?'live':'closed'; it.fetched=true;
+    /* ★ 与真抓时同一套判定：不能用 effOpen()（它只看 2 分钟，太草率，
+     *   会绕过多源探测直接显示"休市中"）。统一走"探测进度"判定。 */
+    it.state=stOf(it,o.mv||o.t); it.fetched=true;
     if(it.gram){
       var ug=it.gram.getAttribute('data-ug')||'gram';
       it.gram.textContent=fm(o.v/OZ)+' / '+ug;
@@ -892,18 +911,19 @@ const HOME_LIVE_JS = `
   }
 
   var items=[];
-  function mk(chipId,elId,gramId){
+  function mk(chipId,elId,gramId,k){
     var el=document.getElementById(elId);
     if(!el) return null;
     var it={el:el,chip:document.getElementById(chipId),
             gram:gramId?document.getElementById(gramId):null,
+            __k:k||'',
             lastOk:0,state:'init',fetched:false,
             lastVal:null,lastMoveAt:0,lastTryAt:0};
     items.push(it); return it;
   }
-  var oil=mk('home-oil-chip','home-oil-price');
-  var wti=mk('home-wti-chip','home-wti-price');
-  var gold=mk('home-gold-chip','home-gold-price','home-gold-gram');
+  var oil=mk('home-oil-chip','home-oil-price',null,'brent');
+  var wti=mk('home-wti-chip','home-wti-price',null,'wti');
+  var gold=mk('home-gold-chip','home-gold-price','home-gold-gram','gold');
   if(!items.length) return;
   /* ★ 每张卡绑定自己的交易时区 —— 布伦特(伦敦)与 WTI(纽约)时段不同，
    *   经常出现"布伦特休市、WTI 开市"（例如北京 07:00 前后）。
@@ -1091,12 +1111,10 @@ const HOME_LIVE_JS = `
          *   现在：冻结 → 探测中（重新连接中）；跑满 3 轮 → 才判休市。 */
         if(b&&oil){ if(oil.lastVal!=null&&b!==oil.lastVal) pClear('brent');
                     oil.el.textContent=fm(b); oil.lastOk=now; noteVal(oil,b);
-                    oil.state=(probeDone('brent',OIL_ROUNDS))?'closed':(needProbe(oil)?'probing':'live');
-                    oil.fetched=true; paint(oil); }
+                    oil.state=stOf(oil); oil.fetched=true; paint(oil); }
         if(w&&wti){ if(wti.lastVal!=null&&w!==wti.lastVal) pClear('wti');
                     wti.el.textContent=fm(w); wti.lastOk=now; noteVal(wti,w);
-                    wti.state=(probeDone('wti',OIL_ROUNDS))?'closed':(needProbe(wti)?'probing':'live');
-                    wti.fetched=true; paint(wti); }
+                    wti.state=stOf(wti); wti.fetched=true; paint(wti); }
       })
       .catch(function(){
         if(oil){ oil.state='lost'; paint(oil); }
@@ -1145,6 +1163,11 @@ const HOME_LIVE_JS = `
     });
   }
   function setGoldVal(v){
+    /* ★★ 根因修复：原来这里【没有写节拍快照】，于是 ps_tick_gold.t 永远是旧值（或 null）。
+     *   点进黄金详情页时 tDelay()=0 → 判定"该刷了" → 立刻真抓一次 → lastOk=now
+     *   → 秒数【归零】。用户实测："外面跳到 10 秒，点进去又是 0 秒"。
+     *   补上 tSet 后，详情页才会沿用同一个节拍，秒数连续。 */
+    tSet('gold',v,gold&&gold.lastMoveAt);
     if(gold.lastVal!=null&&Math.abs(v-gold.lastVal)>1e-9) pClear('gold');
     noteVal(gold,v);
     gold.el.textContent=fm(v);
@@ -1152,7 +1175,7 @@ const HOME_LIVE_JS = `
       var ug=gold.gram.getAttribute('data-ug')||'gram';
       gold.gram.textContent=fm(v/OZ)+' / '+ug;
     }
-    gold.lastOk=Date.now(); gold.state='live'; paint(gold);
+    gold.lastOk=Date.now(); gold.state=stOf(gold); paint(gold);
   }
   /* 直连外部源（仅在接口拿不到值时兜底） */
   function goldDirect(){
@@ -1224,7 +1247,18 @@ const HOME_LIVE_JS = `
    * ★ 进度存 sessionStorage：刷新 / 导航【不会】从头再来。
    *   否则用户一刷新探测就重置、永远走不完（用户实测到的现象）。
    * ================================================================ */
-  var PGAP=3000, PPER=3, PSTILL=2;
+  /* ★★★★★ 连接中断【不能】随随便便就显示（用户明确要求）
+   *   "最起码得从头到尾跑一轮，抓不到才显示连接中断，再接着跑剩下的轮次"
+   *
+   *   所以探测分三段，且【第一圈全程隐身】—— 用户完全看不出异常：
+   *     · 冻结 <60 秒                → 实时（市场本来就可能几十秒不动）
+   *     · 冻结 ≥60 秒，开始悄悄探测  → 仍显示实时（第一圈内不吓人）
+   *     · 跑完【第一整圈】仍无新值   → 才显示「连接中断，正在重试」
+   *     · 跑满 3 轮（8源×3次×3轮）   → 才判「休市中」
+   *
+   *   为什么敢等：休市不可能只休三五分钟，起码半小时起步，
+   *   我们有充足时间去确认，没必要几十秒就下结论。 */
+  var PGAP=3000, PPER=3, PSTILL=4;
   var OIL_SRCS=['biquote','yahoo','yahoo2','site3','stooq','oilwatch','opademo','cpapi'];
   var OIL_ROUNDS=3, GOLD_ROUNDS=6;
   function pKey(k){ return 'ps_probe_'+k; }
@@ -1235,8 +1269,18 @@ const HOME_LIVE_JS = `
   function pSet(k,o){ try{ sessionStorage.setItem(pKey(k),JSON.stringify(o)); }catch(e){} }
   function pClear(k){ try{ sessionStorage.removeItem(pKey(k)); }catch(e){} }
   function probeDone(k,rounds){ return pGet(k).r>=rounds; }
-  /* 该不该探测：lastMoveAt 距今已超过 PSTILL 个节拍（30 秒） */
+  /* 该不该探测：lastMoveAt 距今已超过 PSTILL 个节拍 */
   function needProbe(it){ return !!(it&&it.lastMoveAt&&(Date.now()-it.lastMoveAt)>PSTILL*BEAT); }
+  /* ★ 统一的状态判定：三个页面共用，避免各处各写一套又走偏 */
+  function stOf(it,mv){
+    if(!it) return 'live';
+    var m=mv||it.lastMoveAt||0;
+    if(!needProbe({lastMoveAt:m})) return 'live';       /* 还在动，或刚动过 */
+    var pr=pGet(it.__k||'').r;
+    if(pr>=OIL_ROUNDS) return 'closed';                  /* 跑满所有轮 → 休市 */
+    if(pr>=1) return 'probing';                          /* 跑完一圈仍无新值 → 连接中断 */
+    return 'live';                                       /* 第一圈内 → 仍显示实时 */
+  }
   /* 一次探测结果：v 与当前不同 → 立刻开市；否则推进计数 */
   function probeResult(k,it,v,rounds,len,onNew){
     if(!it) return;
@@ -1247,7 +1291,7 @@ const HOME_LIVE_JS = `
     var st=pGet(k); st.k++;
     if(st.k>=PPER){ st.k=0; st.i++; if(st.i>=len){ st.i=0; st.r++; } }
     pSet(k,st);
-    it.state=(st.r>=rounds)?'closed':'probing'; paint(it);
+    it.state=(st.r>=rounds)?'closed':(st.r>=1?'probing':'live'); paint(it);
   }
   /* 源失败：不算"没变动"的证据，但也推进（避免卡死在一个坏源上） */
   function probeFail(k,it,len,rounds){
@@ -1255,7 +1299,7 @@ const HOME_LIVE_JS = `
     var st=pGet(k); st.k=0; st.i++;
     if(st.i>=len){ st.i=0; st.r++; }
     pSet(k,st);
-    it.state=(st.r>=rounds)?'closed':'probing'; paint(it);
+    it.state=(st.r>=rounds)?'closed':(st.r>=1?'probing':'live'); paint(it);
   }
   function probeOilOnce(){
     var st=pGet('brent');
@@ -1475,13 +1519,62 @@ function oilLiveJs(kind) {
     var d=o.t+BEAT-Date.now();
     return d>0?d:0;
   }
+  /* ================================================================
+   * ★★★★★ 多源多轮探测（与首页共用 ps_probe_{brent|wti}）
+   *   ⚠️ 本模块上一版【漏插】，导致下面 setInterval(probeTick,PGAP)
+   *      引用了不存在的函数 → 整个脚本抛错 → 徽标再也不更新，
+   *      用户看到的就是「只剩一个绿点」。本版补齐。
+   *
+   *   规则（用户要求）：连接中断不能随随便便显示
+   *     · 冻结 <60 秒              → 实时（市场本来就可能几十秒不动）
+   *     · 冻结 ≥60 秒，悄悄开始探测 → 仍显示实时（第一圈内不吓人）
+   *     · 跑完【第一整圈】仍无新值  → 才显示「连接中断，正在重试」
+   *     · 跑满 3 轮（8源×3次×3轮） → 才判「休市中」
+   * ================================================================ */
+  var PGAP=3000, PPER=3, PSTILL=4, ROUNDS=3;
+  var OIL_SRCS=['biquote','yahoo','yahoo2','site3','stooq','oilwatch','opademo','cpapi'];
+  function pKey(){ return 'ps_probe_'+AK; }
+  function pGet(){
+    try{ var o=JSON.parse(sessionStorage.getItem(pKey())||'null');
+         return (o&&typeof o.r==='number')?o:{r:0,i:0,k:0}; }catch(e){ return {r:0,i:0,k:0}; }
+  }
+  function pSet(o){ try{ sessionStorage.setItem(pKey(),JSON.stringify(o)); }catch(e){} }
+  function pClear(){ try{ sessionStorage.removeItem(pKey()); }catch(e){} }
+  function needProbe(){ return !!(lastMoveAt&&(Date.now()-lastMoveAt)>PSTILL*BEAT); }
+  function probeAdvance(failed){
+    var st=pGet();
+    if(failed) st.k=0; else st.k++;
+    if(failed||st.k>=PPER){ st.k=0; st.i++; if(st.i>=OIL_SRCS.length){ st.i=0; st.r++; } }
+    pSet(st);
+    /* ★ 第一圈内不吓人：跑完一整圈才显示"连接中断" */
+    state=(st.r>=ROUNDS)?'closed':((needProbe()&&st.r>=1)?'probing':'live');
+    paint();
+  }
+  function probeOnce(){
+    var st=pGet();
+    var src=OIL_SRCS[st.i%OIL_SRCS.length];
+    fetch('/api/oil-live?src='+src,{cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+      .then(function(j){
+        var v=(KIND==='wti')?(+j.wti||0):(+j.brent||0);
+        /* ★★ 任一源返回新值 → 【立刻开市】，清零进度 */
+        if(v&&lastVal!=null&&Math.abs(v-lastVal)>1e-9){
+          pClear(); tSet(v); el.textContent=fm(v); lastOk=Date.now(); noteVal(v);
+          state='live'; paint(); return;
+        }
+        probeAdvance(false);
+      })
+      .catch(function(){ probeAdvance(true); });
+  }
+  function probeTick(){ if(needProbe()&&pGet().r<ROUNDS) probeOnce(); }
+
   function pull(){
     /* ★ 没到节拍 → 沿用快照，不抓、不更新 t */
     var a=tGet(), d=tDelay();
     if(d>0&&a&&a.v){
       el.textContent=fm(a.v);
       lastVal=a.v; lastMoveAt=a.mv||a.t; lastOk=a.t;
-      state=(pGet().r>=ROUNDS)?'closed':(needProbe()?'probing':'live');
+      state=(pGet().r>=ROUNDS)?'closed':((needProbe()&&pGet().r>=1)?'probing':'live');
       paint();
       return;
     }
@@ -1495,8 +1588,8 @@ function oilLiveJs(kind) {
         tSet(v);                      /* ★ 只在真抓到时更新 t */
         el.textContent=fm(v);
         lastOk=Date.now(); noteVal(v);
-        /* ★ 与首页一致：冻结 → 探测中（重新连接中）；跑满 3 轮 → 才判休市 */
-        state=(pGet().r>=ROUNDS)?'closed':(needProbe()?'probing':'live');
+        /* ★ 与首页一致：跑满 3 轮 → 休市；跑完一整圈 → 连接中断；否则实时 */
+        state=(pGet().r>=ROUNDS)?'closed':((needProbe()&&pGet().r>=1)?'probing':'live');
         /* 源名称不再占徽标（徽标统一显示「实时 · Ns 前」），改为悬停可见 */
         if(chip&&j.providerLabel) chip.title=j.providerLabel;
         paint();

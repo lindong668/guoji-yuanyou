@@ -253,10 +253,13 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
       (pj.match(/var BEAT=15000;/g) || []).length === 3);
   chk('★★★★★ 首页沿用快照时不发请求',
       /function pullOil\(\)\{[\s\S]{0,900}var d=oilDelay\(\);[\s\S]{0,400}return;/.test(pj));
-  chk('★★★★★ 首页不再用 effOpen 直接判休市（改为探测确认）',
-      /oil\.state=\(probeDone\('brent',OIL_ROUNDS\)\)/.test(pj));
-  chk('★★★★★ 探测参数：每源 3 次、原油 3 轮、黄金 6 轮',
-      pj.includes('var PGAP=3000, PPER=3, PSTILL=2') && pj.includes('OIL_ROUNDS=3, GOLD_ROUNDS=6'));
+  chk('★★★★★ 首页不再用 effOpen 直接判休市（改为 stOf 探测确认）',
+      /oil\.state=stOf\(oil\)/.test(pj) && /wti\.state=stOf\(wti\)/.test(pj));
+  chk('★★★★★ 探测参数：每源 3 次、原油 3 轮、黄金 6 轮、冻结 4 拍才启动',
+      pj.includes('var PGAP=3000, PPER=3, PSTILL=4') && pj.includes('OIL_ROUNDS=3, GOLD_ROUNDS=6'));
+  chk('★★★★★ 连接中断不能随便显示：跑完第一整圈（r>=1）才允许',
+      /st\.r>=rounds\)\?'closed':\(st\.r>=1\?'probing':'live'\)/.test(pj)
+      || /st\.r>=ROUNDS\)\?'closed':\(\(needProbe\(\)&&st\.r>=1\)\?'probing':'live'\)/.test(pj));
   chk('★★★★★ 三个页面都注册了探测心跳 3000ms',
       (pj.match(/setInterval\((probeTick|probeTick),PGAP\)/g)||[]).length>=2
       || /setInterval\(probeTick,PGAP\)/.test(pj));

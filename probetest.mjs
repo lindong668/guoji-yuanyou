@@ -65,23 +65,30 @@ console.log('场景1  价格长期冻结（模拟真休市）');
 {
   const sh=mkstore();
   const h=await boot(sh,110.78,4030.00);
-  adv(60000);                       /* 冻结 1 分钟 > 30 秒 → 该进入探测 */
+  adv(70000);                       /* 冻结 70 秒 > 60 秒阈值 → 该进入探测 */
   await runProbe(h,1);
   const c1=chipOf(h);
   console.log('   探测 1 次后   徽标 ['+c1+']');
-  ok('★★★★★ 只探测 1 次【不能】判休市（应显示重新连接中）', c1.indexOf('休市')<0);
-  ok('★★★★★ 探测中显示"重试/重新连接"而不是"休市中"',
-     c1.indexOf('重试')>=0||c1.indexOf('连接')>=0);
+  ok('★★★★★ 只探测 1 次【不能】判休市', c1.indexOf('休市')<0);
+  /* ★ 新规则：第一整圈（8源×3次=24次）内【连"连接中断"都不显示】，
+   *   仍保持"实时"，免得一冻结就吓用户 */
+  ok('★★★★★ 第一圈内【不显示】连接中断（仍实时）', c1.indexOf('中断')<0);
 
-  await runProbe(h,40);
+  await runProbe(h,20);
+  const c15=chipOf(h);
+  console.log('   探测 21 次后  徽标 ['+c15+']  进度='+JSON.stringify(prog(sh,'brent')));
+  ok('★★★★★ 还没跑完一整圈 → 仍【不显示】连接中断', c15.indexOf('中断')<0);
+
+  await runProbe(h,10);
   const c2=chipOf(h);
-  console.log('   探测 41 次后  徽标 ['+c2+']  进度='+JSON.stringify(prog(sh,'brent')));
-  ok('★★★★★ 探测未满 3 轮仍【不能】判休市', c2.indexOf('休市')<0);
+  console.log('   探测 31 次后  徽标 ['+c2+']  进度='+JSON.stringify(prog(sh,'brent')));
+  ok('★★★★★ 跑完一整圈后 → 显示"连接中断，正在重试"', c2.indexOf('中断')>=0);
+  ok('★★★★★ 跑完一整圈仍【不能】判休市', c2.indexOf('休市')<0);
 
-  await runProbe(h,40);             /* 累计 81 次 > 72 */
+  await runProbe(h,70);             /* 累计约 101 次，异步请求有延迟，留足余量 */
   const c3=chipOf(h);
-  console.log('   探测 81 次后  徽标 ['+c3+']  进度='+JSON.stringify(prog(sh,'brent')));
-  ok('★★★★★ 跑满 3 轮(72 次)后才判休市', c3.indexOf('休市')>=0);
+  console.log('   探测 101 次后 徽标 ['+c3+']  进度='+JSON.stringify(prog(sh,'brent')));
+  ok('★★★★★ 跑满 3 轮（8源×3次×3轮=72 次）后才判休市', c3.indexOf('休市')>=0);
 }
 
 /* ---------- 场景2：探测中途拿到新值 → 立刻开市（同一个页面内变价） ---------- */
@@ -93,7 +100,7 @@ console.log('\n场景2  探测中途市场重新开盘（出现新价）');
   adv(60000);                        /* 冻结 → 进入探测 */
   await runProbe(h,10);
   console.log('   探测 10 次后  徽标 ['+chipOf(h)+']  进度='+JSON.stringify(prog(sh,'brent')));
-  ok('★★ 探测中确实是"重新连接中"', chipOf(h).indexOf('休市')<0);
+  ok('★★ 探测中【不能】判休市', chipOf(h).indexOf('休市')<0);
   /* 同一个页面内，市场重新开盘 → 下一次探测应立刻翻回实时 */
   cur=110.99;
   await runProbe(h,1);
@@ -108,7 +115,7 @@ console.log('\n场景3  探测进度跨刷新保留（不从头再来）');
 {
   const sh=mkstore();
   const h=await boot(sh,110.78,4030.00);
-  adv(60000);
+  adv(70000);
   await runProbe(h,20);
   const p1=prog(sh,'brent');
   console.log('   第一个页面   进度='+JSON.stringify(p1));
@@ -128,7 +135,7 @@ console.log('\n场景4  探测时源全部失败（网络问题）');
   /* 先正常抓一次，建立 lastVal（否则连"冻结"都无从谈起） */
   let cur=110.78;
   const h=await boot(sh,()=>cur,4030.00);
-  adv(60000);
+  adv(70000);
   /* 再让所有源失败 */
   h.failOil=true;
   await runProbe(h,10);
