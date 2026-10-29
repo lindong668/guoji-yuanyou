@@ -253,7 +253,8 @@ const GOLD_LIVE_JS = `
     });
   }
   /* 一轮：主 → 备 → 兜底。拿到就停。 */
-  function pass(cb){
+  /* 直连外部源（兜底） */
+  function passDirect(cb){
     /* ★ 用粘滞顺序：把上次成功的源排到最前（其余顺序不变） */
     var list=goldOrder(SOURCES);
     var i=0;
@@ -262,9 +263,38 @@ const GOLD_LIVE_JS = `
       var srcIdx=SOURCES.indexOf(list[i]);
       one(list[i]).then(function(v){
         gsSet(srcIdx);            /* ★ 记住这次成功的源 */
+        aSet(v);
         busy=false; usdOz=v; paint(); cb(true);
       },function(){ i++; step(); });
     })();
+  }
+  /* ★★ 与首页统一：先走后端接口（与 SSR 同一份缓存），拿不到才直连 */
+  /* ★★★ 前端价格锚定（与首页共用 sessionStorage，零 KV 消耗）
+   *   从首页点进黄金页只用 1~2 秒，锚点必然未过期 → 沿用首页那个值，
+   *   【不发请求】，不会拿到另一个实例刚抓的新价 → 数字不动。 */
+  var ANCHOR_MS=15000;
+  function aGet(){
+    try{
+      var raw=sessionStorage.getItem('ps_anchor_gold');
+      if(!raw) return null;
+      var o=JSON.parse(raw);
+      if(!o||typeof o.v!=='number'||!o.t) return null;
+      if(Date.now()-o.t>=ANCHOR_MS) return null;
+      return o;
+    }catch(e){ return null; }
+  }
+  function aSet(v){
+    try{ sessionStorage.setItem('ps_anchor_gold',
+      JSON.stringify({v:v,t:Date.now(),mv:Date.now()})); }catch(e){}
+  }
+  function pass(cb){
+    /* ★ 锚点命中 → 沿用，本轮不抓 */
+    var a=aGet();
+    if(a&&a.v){ usdOz=a.v; busy=false; paint(); cb(true); return; }
+    askBackend(function(ok){
+      if(ok){ busy=false; aSet(usdOz); cb(true); return; }
+      passDirect(cb);
+    });
   }
   /* 连续两轮全灭才认定断开 —— 抖动常在半秒内自愈，别急着吓用户。 */
   var busy=false;
@@ -287,15 +317,18 @@ const GOLD_LIVE_JS = `
   }
   /* 最后一条路：让 2 号 Worker 请 3 号【现在】去抓一个新价。
      注意要的是"现抓"，不是 3 号仓库里的旧货。 */
-  function askBackend(){
+  function askBackend(cb){
     fetch('/api/gold-live',{cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){
         if(j&&j.priceUsdPerOz){
           usdOz=j.priceUsdPerOz; paint();
-          if(j.live===true) markLive(); else markLost();
+          if(j.live===true) markLive();
+          if(cb) cb(true);
+          return;
         }
-      }).catch(function(){});
+        if(cb) cb(false);
+      }).catch(function(){ if(cb) cb(false); });
   }
 
   elCur.addEventListener('change',function(){
@@ -731,6 +764,51 @@ const HOME_LIVE_JS = `
   var tEl=document.getElementById('ps-live-t');
   if(tEl){ try{ T=JSON.parse(tEl.textContent)||T; }catch(e){} }
 
+  /* ================================================================
+   * ★★★ 前端价格锚定（sessionStorage）—— 不启用 KV 也能"来回导航不跳"
+   * ----------------------------------------------------------------
+   * 为什么不用 KV：免费版写入额度 1,000 次/天，要省就只能把刷新降到 3 分钟，
+   *   那等于把实时行情变成 3 分钟前的旧值 —— 捡芝麻丢西瓜，已否决。
+   *
+   * 思路：真正让人觉得"跳"的场景是【用户自己来回点】，间隔通常只有几秒。
+   *   那就记住"上次显示的价格"，短时间内重复加载直接沿用，不去重新抓。
+   *
+   *   · 完全不写服务端，零额度消耗
+   *   · sessionStorage 整站共享 → 首页/详情页天然同源
+   *   · 锚点有效期 = 轮询周期(15s)，超过就正常抓新值，不会把数据变旧
+   *
+   * 结构 {v:价格, t:抓取时刻, mv:最后变动时刻}
+   *   mv 必须存：否则新页面 lastMoveAt 恒为 0，开休市判断会退化成排程兜底。
+   * ================================================================ */
+  var ANCHOR_MS=15000;
+  function aKey(k){ return 'ps_anchor_'+k; }
+  function aGet(k){
+    try{
+      var raw=sessionStorage.getItem(aKey(k));
+      if(!raw) return null;
+      var o=JSON.parse(raw);
+      if(!o||typeof o.v!=='number'||!o.t) return null;
+      if(Date.now()-o.t>=ANCHOR_MS) return null;   /* 过期 → 老实去抓 */
+      return o;
+    }catch(e){ return null; }
+  }
+  function aSet(k,it,v){
+    try{ sessionStorage.setItem(aKey(k), JSON.stringify({
+      v:v, t:Date.now(), mv:(it&&it.lastMoveAt)||Date.now() })); }catch(e){}
+  }
+  /* 用锚点恢复一张卡：价格 + 时刻 + 最后变动时刻都还原，开休市判断才准 */
+  function applyAnchor(it,a){
+    if(!it||!a||!a.v) return false;
+    it.el.textContent=fm(a.v);
+    it.lastVal=a.v; it.lastMoveAt=a.mv||a.t; it.lastOk=a.t;
+    it.state=effOpen(it)?'live':'closed'; it.fetched=true;
+    if(it.gram){
+      var ug=it.gram.getAttribute('data-ug')||'gram';
+      it.gram.textContent=fm(a.v/OZ)+' / '+ug;
+    }
+    paint(it); return true;
+  }
+
   var items=[];
   function mk(chipId,elId,gramId){
     var el=document.getElementById(elId);
@@ -890,11 +968,17 @@ const HOME_LIVE_JS = `
   /* 一次请求同时拿布伦特 + WTI，但【各自独立判断开休市】：
    *   某一腿休市时，即使拿到数字也只是沿用值 → 不写、显示"休市中"。 */
   function pullOil(){
+    /* ★ 锚点命中 → 直接沿用上次的值，本轮【不发请求】。
+     *   用户几秒内来回导航时看到的数字完全不动。 */
+    var aB=aGet('brent'), aW=aGet('wti');
+    if(oil&&wti&&aB&&aW&&applyAnchor(oil,aB)&&applyAnchor(wti,aW)) return;
     fetch('/api/oil-live',{cache:'no-store'})
       .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
       .then(function(j){
         var now=Date.now();
         var b=+j.brent||0, w=+j.wti||0;
+        if(b) aSet('brent',oil,b);
+        if(w) aSet('wti',wti,w);
         /* ★ 休市那一腿【仍然写入】，但只写一次（见 cycle 的 fetched 标记）：
          *   之前休市时首页照写实时值、详情页因不抓而留服务端值，
          *   两个页面显示不同数字（实测 110.56 vs 114.19）。
@@ -950,8 +1034,16 @@ const HOME_LIVE_JS = `
         .catch(function(e){ if(!done){done=true;clearTimeout(t);rej(e);} });
     });
   }
-  function pullGold(){
-    if(!gold) return;
+  function setGoldVal(v){
+    gold.el.textContent=fm(v);
+    if(gold.gram){
+      var ug=gold.gram.getAttribute('data-ug')||'gram';
+      gold.gram.textContent=fm(v/OZ)+' / '+ug;
+    }
+    gold.lastOk=Date.now(); gold.state='live'; paint(gold);
+  }
+  /* 直连外部源（仅在接口拿不到值时兜底） */
+  function goldDirect(){
     /* ★ 用粘滞顺序：把上次成功的源排到最前（其余顺序不变） */
     var list=goldOrder(GSRC);
     var i=0;
@@ -960,14 +1052,26 @@ const HOME_LIVE_JS = `
       var srcIdx=GSRC.indexOf(list[i]);
       one(list[i]).then(function(v){
         gsSet(srcIdx);            /* ★ 记住这次成功的源 */
-        gold.el.textContent=fm(v);
-        if(gold.gram){
-          var ug=gold.gram.getAttribute('data-ug')||'gram';
-          gold.gram.textContent=fm(v/OZ)+' / '+ug;
-        }
-        gold.lastOk=Date.now(); gold.state='live'; paint(gold);
+        aSet('gold',gold,v);
+        setGoldVal(v);
       },function(){ i++; step(); });
     })();
+  }
+  /* ★★ 与原油统一：优先走后端接口（与 SSR 同一份 15 秒缓存），失败才直连。
+   *   原来这里【直接连外部源、完全不受缓存约束】，于是每次导航都现抓一次，
+   *   市场在动 → 首页/详情页来回点就看到不同数字。 */
+  function pullGold(){
+    if(!gold) return;
+    /* ★ 同原油：锚点命中就直接沿用，不重抓 */
+    var a=aGet('gold');
+    if(a&&applyAnchor(gold,a)) return;
+    fetch('/api/gold-live',{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j && j.priceUsdPerOz){ aSet('gold',gold,j.priceUsdPerOz); setGoldVal(j.priceUsdPerOz); return; }
+        goldDirect();
+      })
+      .catch(function(){ goldDirect(); });
   }
 
   /* ★ 休市定格规则（重要，别改成"休市就不抓"）：
@@ -1120,7 +1224,36 @@ function oilLiveJs(kind) {
     if(lastOk) setAgo(chip,agoTxt());
     else chip.textContent=T.live;
   }
+  /* ★★★ 前端价格锚定（与首页共用 sessionStorage，零 KV 消耗）
+   *   用户从首页点进来只用 1~2 秒，此时锚点必然未过期 → 直接沿用首页那个值，
+   *   【不发请求】，因此不会拿到"另一个实例刚抓的新价"—— 数字不动。
+   *   结构 {v,t,mv}：mv = 最后变动时刻，还原后开休市判断才不会退化成排程兜底。 */
+  var AK=(KIND==='wti')?'wti':'brent';
+  var ANCHOR_MS=15000;
+  function aGet(){
+    try{
+      var raw=sessionStorage.getItem('ps_anchor_'+AK);
+      if(!raw) return null;
+      var o=JSON.parse(raw);
+      if(!o||typeof o.v!=='number'||!o.t) return null;
+      if(Date.now()-o.t>=ANCHOR_MS) return null;
+      return o;
+    }catch(e){ return null; }
+  }
+  function aSet(v){
+    try{ sessionStorage.setItem('ps_anchor_'+AK,
+      JSON.stringify({v:v,t:Date.now(),mv:lastMoveAt||Date.now()})); }catch(e){}
+  }
   function pull(){
+    /* ★ 锚点命中 → 沿用，本轮不抓 */
+    var a=aGet();
+    if(a&&a.v){
+      el.textContent=fm(a.v);
+      lastVal=a.v; lastMoveAt=a.mv||a.t; lastOk=a.t;
+      state=effOpen()?'live':'closed';
+      paint();
+      return;
+    }
     /* ★ 与首页同一套规则：休市也抓（拿收盘价），之后不再轮询。
      *   两边都取 /api/oil-live，保证总览页与详情页数字一致。 */
     return fetch('/api/oil-live',{cache:'no-store'})
@@ -1128,6 +1261,7 @@ function oilLiveJs(kind) {
       .then(function(j){
         var v=(KIND==='wti')?(j.wti||0):(j.brent||0);
         if(!v) return;
+        aSet(v);                      /* ★ 记住，供跨页面沿用 */
         el.textContent=fm(v);
         lastOk=Date.now(); noteVal(v); state=effOpen()?'live':'closed';
         /* 源名称不再占徽标（徽标统一显示「实时 · Ns 前」），改为悬停可见 */

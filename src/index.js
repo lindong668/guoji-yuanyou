@@ -19,21 +19,119 @@ import { page, esc, configure, adsTxtPublisher } from './ui.js';
  *   链路全挂时回落到 3 号的值（保留原 getMarket 结果）。
  * ---------------------------------------------------------- */
 const LIVE_TTL = 15000;
+const KV_KEY = 'live:v1';
 let liveCache = { at: 0, oil: null, gold: null };
+
+/* ------------------------------------------------------------------
+ * ★★★ 共享缓存（KV）—— 彻底解决"来回导航跳价"
+ * --------------------------------------------------------------------
+ * 问题：模块级 liveCache 是【每个 Worker 实例各自一份】。
+ *   CF 会并行跑多个实例，用户点页面这次打到 A 实例、下次打到 B 实例，
+ *   两份缓存各自刷新 → 来回导航时拿到不同值。模块级缓存治不了这个。
+ *
+ * 修法：把缓存写进 KV（所有实例共享同一份），读的时候统一从 KV 取。
+ *   未绑定 KV 时【自动降级】为原来的模块级缓存 —— 开箱即用，不会报错。
+ *
+ * ★ 当前【未启用】：wrangler.toml 里 kv_namespaces 保持注释。
+ *   否决理由：见 wrangler.toml 顶部说明 —— 省额度就得把刷新降到 3 分钟，
+ *   那会把实时行情变成旧值，不划算。跨实例的一致性改由【前端锚定】解决
+ *   （见 pages.js 的 ps_anchor_*），零额度消耗且更对症。
+ *
+ * 若将来启用（见 wrangler.toml 与 README）：
+ *   npx wrangler kv:namespace create PRICESCOPE_CACHE
+ *   把返回的 id 填进 wrangler.toml 的 [[kv_namespaces]]
+ * ---------------------------------------------------------------- */
+let KV = null;
+function bindKV(env) { if (env && env.PRICESCOPE_CACHE) KV = env.PRICESCOPE_CACHE; }
+
+async function kvGet() {
+  if (!KV) return null;
+  try {
+    const raw = await KV.get(KV_KEY, { type: 'json' });
+    if (!raw || !raw.at) return null;
+    /* ★ 与 liveOverlay 同一周期，别再用 15 秒判断（否则 KV 永远算过期，
+     *   每次都重抓 → 写入次数翻几十倍，额度瞬间耗尽） */
+    if (Date.now() - raw.at >= KV_SHARE_TTL) return null;   /* 已过期 */
+    return raw;
+  } catch (e) { return null; }
+}
+async function kvPut(v) {
+  if (!KV) return;
+  /* expirationTtl 以秒计：比共享周期多留一倍余量，
+     避免"刚好过期但还没人重写"的空窗（读到 null 会各自重抓，又不一致了） */
+  try { await KV.put(KV_KEY, JSON.stringify(v),
+        { expirationTtl: Math.ceil(KV_SHARE_TTL/1000) * 2 }); } catch (e) {}
+}
+
+/* ------------------------------------------------------------------
+ * ★ 共享缓存的有效期 = 全局刷新频率 = KV 写入频率（重要！）
+ * --------------------------------------------------------------------
+ * 额度账（Workers KV 免费版：1,000 次写入/天，按账号算、所有 namespace 合计）：
+ *
+ *   15 秒 → 5,760 次/天   ✗ 必爆
+ *   60 秒 → 1,440 次/天   ✗ 爆
+ *  120 秒 →   720 次/天   △ 偏紧
+ *  180 秒 →   480 次/天   ★ 默认（与 3 号黄金同频）
+ *  300 秒 →   288 次/天   ○ 省，但页面 5 分钟才变一次
+ *
+ * 注意：3 号自己也在写同一份额度（黄金每 3 分钟写 2 个 key ≈ 960 次/天），
+ * 所以 2 号必须省着用。想更实时就调小这个值，或升级 Workers 付费版。
+ * ---------------------------------------------------------------- */
+const KV_SHARE_TTL = 180000;   /* 3 分钟 —— 想更实时可改小，注意额度 */
+
+/* ------------------------------------------------------------------
+ * ★★★★ 并发闸门 —— 防止"访问量一大就把 KV 写爆"
+ * --------------------------------------------------------------------
+ * 危险（已实测，见 bursttest.mjs）：
+ *   缓存过期的瞬间，如果同时来了 N 个请求，【每个都会认为该自己刷新】，
+ *   于是 N 次抓取 + N 次 KV 写入。实测 50 并发 = 50 次写入。
+ *   访问量一大，480 次/天会变成几千次/天，额度瞬间耗尽。
+ *
+ * 两道闸门：
+ *   ① 单飞（inflight）：同一实例内并发请求【共享同一次抓取】，不重复抓。
+ *   ② 写入前二次确认（double-check）：抓完准备写 KV 时，再看一眼 KV ——
+ *      若别人已经写了更新的，就【丢弃自己的、采用别人的】，不写第二次。
+ *      这样即使跨实例撞车，实际落盘次数也接近 1。
+ * ---------------------------------------------------------------- */
+let inflight = null;
 
 async function liveOverlay() {
   const now = Date.now();
-  if (liveCache.at && now - liveCache.at < LIVE_TTL) return liveCache;
+  /* 有效期：有 KV 时用共享周期，没 KV 时用原来的 15 秒 */
+  const ttl = KV ? KV_SHARE_TTL : LIVE_TTL;
+  /* ① 先看本实例内存（最快） */
+  if (liveCache.at && now - liveCache.at < ttl) return liveCache;
+  /* ② 再看共享 KV —— 别的实例刚抓过就直接复用，避免重复抓导致数值不同 */
+  const shared = await kvGet();
+  if (shared && (shared.oil || shared.gold)) {
+    liveCache = shared;   /* ★ 保留 shared.at（真实抓取时刻），否则永远不更新 */
+    return liveCache;
+  }
+  /* ③ 闸门①：本实例已有刷新在跑 → 直接等它，不重复抓 */
+  if (inflight) return inflight;
+  inflight = doRefresh(now);
+  try { return await inflight; } finally { inflight = null; }
+}
+
+async function doRefresh(now) {
+  /* 都没有才真的去抓 */
   const [o, g] = await Promise.all([
     getOilLive().catch(() => null),
     getGoldLive().catch(() => null),
   ]);
-  /* 只登记成功的那一半，失败的沿用上一轮缓存值，避免一次抖动把整页打空 */
-  liveCache = {
-    at: now,
+  const mine = {
+    at: Date.now(),
     oil: (o && (o.brent || o.wti)) ? o : liveCache.oil,
     gold: (g && g.usdOz && !g.stale) ? g : liveCache.gold,
   };
+  /* ④ 闸门②：写之前再确认一次 —— 别人已经写了更新的就采用别人的 */
+  const fresh = await kvGet();
+  if (fresh && fresh.at && fresh.at > mine.at - 1000 && (fresh.oil || fresh.gold)) {
+    liveCache = fresh;      /* 用别人的，保证所有实例同一份 */
+    return liveCache;
+  }
+  liveCache = mine;
+  await kvPut(liveCache);   /* 写回共享缓存，让其它实例也用同一份 */
   return liveCache;
 }
 
@@ -105,6 +203,7 @@ function bin(b64, mime) {
 
 export default {
   async fetch(request, env, ctx) {
+    bindKV(env);          /* ★ 绑定 KV（未配置则自动降级为模块级缓存） */
     const url = new URL(request.url);
     const seg = url.pathname.split('/').filter(Boolean);
 

@@ -198,6 +198,7 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
       /if\(it\.lastVal==null\)\{ it\.lastVal=v; it\.lastMoveAt=Date\.now\(\); return; \}/.test(pj));
   /* ★★ 根因修复：/api 必须走同一份缓存，否则 SSR 与前端轮询取到不同值 */
   const ij = fs.readFileSync(ROOT + '/src/index.js', 'utf8');
+  const wt = fs.readFileSync(ROOT + '/wrangler.toml', 'utf8');
   chk('★★ /api/oil-live 走 liveOverlay 缓存（不再绕过缓存直连）',
       ij.includes('liveOverlay()).oil'));
   chk('★★ /api/gold-live 走 liveOverlay 缓存',
@@ -205,6 +206,59 @@ console.log('==== 七之二、原油开休市判断（本次新增）====');
   chk('★★ 探针带 ?src= 时仍绕过缓存（排查要新鲜值）',
       /order\.length \? await getOilLive\(order\)/.test(ij) &&
       /order\.length \? await getGoldLive\(order\)/.test(ij));
+  /* ★★★ 来回导航一致性：黄金前端必须优先走接口缓存，不能直连外部源 */
+  chk('★★★ 首页黄金优先走 /api/gold-live（不再直连外部源）',
+      /function pullGold\(\)\{[\s\S]{0,300}fetch\('\/api\/gold-live'/.test(pj));
+  chk('★★★ 黄金详情页 pass 先走锚定/接口、失败才直连',
+      /function pass\(cb\)\{[\s\S]{0,400}passDirect\(cb\)/.test(pj));
+  chk('★★★ 直连降级为兜底函数（goldDirect / passDirect）',
+      /function goldDirect\(\)\{/.test(pj) && /function passDirect\(cb\)\{/.test(pj));
+  chk('★★★ askBackend 支持回调（供 pass 判断是否成功）',
+      /function askBackend\(cb\)\{/.test(pj) && /if\(cb\) cb\(true\)/.test(pj));
+  /* ★★★★ 共享缓存 KV：解决跨实例跳价（原油/黄金都靠它） */
+  chk('★★★★ 已接入共享缓存 KV（kvGet/kvPut）',
+      ij.includes('async function kvGet()') && ij.includes('async function kvPut(v)'));
+  chk('★★★★ liveOverlay 优先读共享缓存，命中就不再抓',
+      /const shared = await kvGet\(\);[\s\S]{0,200}return liveCache;/.test(ij));
+  chk('★★★★ 抓完写回共享缓存，让其它实例复用',
+      /await kvPut\(liveCache\);/.test(ij));
+  chk('★★★★ 未绑定 KV 时自动降级（bindKV 判空，不报错）',
+      /function bindKV\(env\) \{ if \(env && env\.PRICESCOPE_CACHE\)/.test(ij));
+  chk('★★★★ 入口已绑定 KV', /bindKV\(env\);/.test(ij));
+  chk('★★★★ wrangler.toml 未启用 KV（保持注释，避免误开导致数据变旧）',
+      wt.includes('# [[kv_namespaces]]') && !/\n\[\[kv_namespaces\]\]/.test(wt));
+  chk('★★★★ wrangler.toml 写有 KV 否决理由（防止后来人误启用）',
+      wt.includes('已否决'));
+  /* ★ 额度：15 秒写一次 = 5760 次/天，必爆免费额度 1000/天 */
+  chk('★★★★ 共享周期已放宽（不再是 15 秒，否则 KV 写入必爆额度）',
+      /const KV_SHARE_TTL = (\d+);/.test(ij) &&
+      +ij.match(/const KV_SHARE_TTL = (\d+);/)[1] > 15000);
+  chk('★★★★ KV 过期判断用同一周期（否则每次都重抓，写入翻倍）',
+      /raw\.at >= KV_SHARE_TTL/.test(ij));
+  /* ★★★★★ 并发闸门：防止访问量一大就把 KV 写爆（实测 50 并发曾 = 50 次写入） */
+  chk('★★★★★ 单飞闸门：本实例已有刷新在跑则共享（不重复抓）',
+      ij.includes('let inflight = null;') && /if \(inflight\) return inflight;/.test(ij));
+  chk('★★★★★ 单飞用 try/finally 释放（异常时不会永久卡死）',
+      /try \{ return await inflight; \} finally \{ inflight = null; \}/.test(ij));
+  chk('★★★★★ 写入前二次确认：别人已写更新则采用别人的、不写第二次',
+      ij.includes('async function doRefresh(') && /const fresh = await kvGet\(\);/.test(ij)
+      && /if \(fresh && fresh\.at[\s\S]{0,120}return liveCache;/.test(ij));
+  chk('★★★★★ 抓取逻辑已抽到 doRefresh（liveOverlay 只做闸门）',
+      ij.includes('inflight = doRefresh(now);'));
+  /* ★★★★★ 前端锚定：不启用 KV 也能"来回导航不跳"（零额度消耗） */
+  chk('★★★★★ 首页有锚定（aGet/aSet/applyAnchor）',
+      pj.includes("function aGet(k){") && pj.includes("function aSet(k,it,v){")
+      && pj.includes("function applyAnchor(it,a){"));
+  chk('★★★★★ 首页原油走锚定：命中则不发请求',
+      /function pullOil\(\)\{[\s\S]{0,400}aGet\('brent'\)[\s\S]{0,200}return;/.test(pj));
+  chk('★★★★★ 首页黄金走锚定',
+      /function pullGold\(\)\{[\s\S]{0,200}aGet\('gold'\)/.test(pj));
+  chk('★★★★★ 原油详情页有自己的锚定（按 brent/wti 分 key）',
+      pj.includes("var AK=(KIND==='wti')?'wti':'brent';"));
+  chk('★★★★★ 黄金详情页有自己的锚定（ps_anchor_gold）',
+      pj.includes("sessionStorage.getItem('ps_anchor_gold')"));
+  chk('★★★★★ 锚定有效期 = 15 秒（=轮询周期，不会把数据变旧）',
+      (pj.match(/var ANCHOR_MS=15000;/g) || []).length >= 3);
   chk('★ 无条件 15 秒一抓（不再节流，否则观察不到变动）',
       /^    pullOil\(\);$/m.test(pj) && /setInterval\(pull,15000\)/.test(pj));
   /* 卡片上的「更新于 08:05」已去掉（已有实时徽标，多余且误导）；

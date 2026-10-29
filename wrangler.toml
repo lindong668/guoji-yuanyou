@@ -27,11 +27,40 @@ routes = [
 ]
 # workers_dev = true
 
-# Uncomment and fill after `wrangler kv:namespace create PRICESCOPE_CACHE`
-# if you later want persistent caching:
+# ===================================================================
+# ★★ 共享缓存 KV —— 彻底解决"来回导航跳价"
+# -------------------------------------------------------------------
+# 现象：点布伦特进去→退出来→点WTI进去→退出来，价格会跳，
+#       且【不是刷新时刻】也跳。
+#
+# 根因：模块级缓存是【每个 Worker 实例各自一份】。CF 并行跑多个实例，
+#       这次请求打到 A、下次打到 B，两份缓存各自刷新 → 拿到不同值。
+#
+# 修法：缓存写进 KV，所有实例共享同一份。
+#   代码已做【优雅降级】：没绑定 KV 时自动退回模块级缓存，不会报错。
+#
+# ★ 启用只需两步（不做也能正常跑，只是跨实例仍可能跳）：
+#   ① npx wrangler kv:namespace create PRICESCOPE_CACHE
+#   ② 把返回的 id 填到下面 id = "..." 处，然后重新部署
+# ===================================================================
+# ===================================================================
+# ★★ KV 共享缓存 —— 【已否决，保持注释，不要启用】
+# -------------------------------------------------------------------
+# 否决理由（用户拍板）：要让写入次数落进免费额度（1,000/天），
+#   就必须把刷新周期从 15 秒放宽到 3 分钟 —— 等于把实时行情变成
+#   3 分钟前的旧值。为了消灭"两个页面差 0.02"而牺牲数据的新鲜度，不划算。
+#   两个页面差 0.02 本来就是市场在这 1 秒里真的动了，不是错误。
+#
+# 替代方案（已实现）：前端价格锚定（sessionStorage），见 src/pages.js。
+#   零服务端写入、零额度消耗，且专门治"用户来回导航"这个真实场景。
+#
+# 真要启用：① npx wrangler kv:namespace create PRICESCOPE_CACHE
+#           ② 取消下面三行注释并填 id
+#           ③ 同步把 src/index.js 的 KV_SHARE_TTL 调大（否则写入必爆额度）
+# ===================================================================
 # [[kv_namespaces]]
 # binding = "PRICESCOPE_CACHE"
-# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# id = "把这里换成真实 id"
 
 # ---- Fill AFTER AdSense approval / Search Console verification ----
 # Leave blank for now; the site shows placeholders instead of real ads.
