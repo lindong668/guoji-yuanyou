@@ -231,13 +231,21 @@ async function srcCommodityPriceApi() {
   return { brent, wti, note: '官方宣称每秒刷新（需付费 key）' };
 }
 
+/* ★ 顺序原则与黄金一致：【自己的源】全部排前面，3号排在最后兜底。
+ *
+ * 原来 site3 排在第 4 位，意味着 biquote / yahoo / yahoo2 三个自有源
+ * 一旦同时卡住（网络抖动时很常见），原油就会转去问 3 号。
+ * 虽然 3 号 /data 是只读 KV（不现抓、不消耗配额），但把外部依赖放在
+ * 自有源前面，等于让自己站点的实时性受制于另一个站点的可用性。
+ *
+ * 现在：5 个自有源跑完都没结果，才会轮到 3 号。 */
 export const OIL_PROVIDERS = [
   { id: 'biquote',  label: 'biquote 券商链路（与黄金同源，无需 key）', fn: srcBiquote },
   { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key）',           fn: srcYahoo },
   { id: 'yahoo2',   label: 'Yahoo 备用域名 query2（无需 key）',         fn: srcYahoo2 },
-  { id: 'site3',    label: '3号后端 ss.wwok.eu.cc（自有 CF 源，带密钥）', fn: srcSite3 },
   { id: 'stooq',    label: 'Stooq 免费 CSV（无需 key）',               fn: srcStooq },
   { id: 'oilwatch', label: 'AmericasOilWatch（无需 key，5 分钟缓存）',  fn: srcOilWatch },
+  { id: 'site3',    label: '3号后端 ss.wwok.eu.cc（读已存值，兜底）',   fn: srcSite3 },
   { id: 'opademo',  label: 'OilPriceAPI 演示端点（20次/小时，仅测试）', fn: srcOilPriceApiDemo },
   { id: 'cpapi',    label: 'CommodityPriceAPI（需 CP_API_KEY）',       fn: srcCommodityPriceApi },
 ];
