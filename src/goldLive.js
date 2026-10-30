@@ -16,9 +16,18 @@
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
 
 const SITE3_BASE = 'https://ss.wwok.eu.cc';
-const SITE3_KEY =
-  (typeof process !== 'undefined' && process.env && process.env.SITE3_KEY) ||
-  'lfwczh8pa4atakrpj7uwhybo2vexc76u';
+
+/* 同 oilLive.js：CF Workers 没有 process.env，密钥必须靠 env 注入。 */
+const SITE3_KEY_BUILTIN = ''; // 已清空：密钥改由平台侧 Secret 注入（SITE3_KEY），不再进 Git
+let SITE3_KEY_RT = '';
+
+export function setSite3Key(env) {
+  const v = env && (env.SITE3_KEY || env.SOURCE_ACCESS_KEY);
+  if (v) SITE3_KEY_RT = String(v);
+}
+export function site3Key() {
+  return SITE3_KEY_RT || SITE3_KEY_BUILTIN;
+}
 
 async function getJson(u, ms = 3000, headers = {}) {
   const ac = new AbortController();
@@ -68,7 +77,7 @@ function pickNum(obj, keys) {
  * ---------------------------------------------------------------- */
 async function srcSite3Live() {
   const j = await getJson(SITE3_BASE + '/gold/live', 4000, {
-    'X-Access-Key': SITE3_KEY,
+    'X-Access-Key': site3Key(),
     'User-Agent': 'PriceScope/1.0 (+test)',
   });
   const p = pickNum(j && (j.gold || j['金子'] || j.data || j),
@@ -82,7 +91,7 @@ async function srcSite3Live() {
  * ---------------------------------------------------------------- */
 async function srcSite3Data() {
   const j = await getJson(SITE3_BASE + '/data', 4000, {
-    'X-Access-Key': SITE3_KEY,
+    'X-Access-Key': site3Key(),
     'User-Agent': 'PriceScope/1.0 (+test)',
   });
   const g = j && (j.gold || j['金子']) || {};

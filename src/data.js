@@ -26,8 +26,26 @@ const SOURCE_CACHE_TTL = 10;    // ★ 秒。手刷 /update 后前端最多等�
 /* 3 号（oil-data-worker）已开启私有后端访问控制，
  * 访问 /data 必须携带此密钥，否则返回 403。
  * ⚠️ 必须与 3 号 wrangler.toml 里的 ACCESS_KEY 完全一致，
- *    否则 2 号站取不到任何行情数据（页面空白）。 */
-const SOURCE_ACCESS_KEY = 'lfwczh8pa4atakrpj7uwhybo2vexc76u';
+ *    否则 2 号站取不到任何行情数据（页面空白）。
+ *
+ * ★ 密钥分两层（同 oilLive.js / goldLive.js）：
+ *   ① 运行时值 —— index.js 每次请求开头 setSourceKey(env) 注入，
+ *      来源是 CF 后台配置的 Secret（加密，不进代码、不进 Git）。
+ *   ② 内置兜底 —— 平台侧没配时才用，保证不停服。
+ *   ⚠️ CF Workers 没有 process.env，配了变量必须走 env 注入才读得到。
+ */
+const SOURCE_ACCESS_KEY_BUILTIN = ''; // 已清空：密钥改由平台侧 Secret 注入（SOURCE_ACCESS_KEY），不再进 Git
+let SOURCE_ACCESS_KEY_RT = '';
+
+/** 在每个请求开头调用一次，把平台侧 Secret 注入本模块。 */
+export function setSourceKey(env) {
+  const v = env && (env.SOURCE_ACCESS_KEY || env.SITE3_KEY);
+  if (v) SOURCE_ACCESS_KEY_RT = String(v);
+}
+/** 取当前生效的密钥：优先运行时注入值，没配才回退内置。 */
+export function sourceKey() {
+  return SOURCE_ACCESS_KEY_RT || SOURCE_ACCESS_KEY_BUILTIN;
+}
 // Primary FX source: the keyless ExchangeRate-API open endpoint. It refreshes
 // every 24h at ~00:00 UTC — INCLUDING weekends — so the date on the page stays
 // current. The ECB/Frankfurter feed publishes on business days only, which was
@@ -214,7 +232,7 @@ async function fetchSource() {
           'User-Agent': 'PriceScope/1.0 (+https://you.piccalc.com)',
           'Accept': 'application/json',
           // 3 号已开启私有后端访问控制，需携带同一密钥
-          'X-Access-Key': SOURCE_ACCESS_KEY,
+          'X-Access-Key': sourceKey(),
         },
         // ★ 第一层缓存：与模块级统一，否则改了 TTL 也不生效
         cf: { cacheTtl: SOURCE_CACHE_TTL, cacheEverything: true },
@@ -444,7 +462,7 @@ export async function fetchGoldLive() {
       headers: {
         'User-Agent': 'PriceScope/1.0 (+https://you.piccalc.com)',
         'Accept': 'application/json',
-        'X-Access-Key': SOURCE_ACCESS_KEY,
+        'X-Access-Key': sourceKey(),
       },
       cf: { cacheTtl: 0 },        // 现抓就是要新，一层缓存都不能有
     });

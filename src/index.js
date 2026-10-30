@@ -2,11 +2,18 @@
 // PriceScope — Cloudflare Worker entry (SSR, multilingual)
 // Deploy target: https://you.piccalc.com
 // Data source:   https://ss.wwok.eu.cc/data  (your existing Worker)
+//
+// ★★ 版本号：A27（2026-10-30 基线，当前线上生效版）
+//    版本序列：… A22o → A22p → A26 → 【A27 本轮】
+//    A27 改动：冷实例崩溃修复 / 接口预算分离 / robots 屏蔽 /api/·/probe
+//              / 布伦特合流补齐 / 布伦特锁死时效 / 原油取数重做
+//              / 布伦特取 K 线 close（治"不爱动"）
+//    详见归档包 01_2号版本与当前基线.md
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
-import { getMarket, getFx, fetchGoldLive } from './data.js';
-import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback } from './oilLive.js';
-import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
+import { getMarket, getFx, fetchGoldLive, setSourceKey } from './data.js';
+import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback, setSite3Key as setOilKey } from './oilLive.js';
+import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS, setSite3Key as setGoldKey } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 /* ------------------------------------------------------------
  * ★ 服务端实时覆盖层（A26）
@@ -374,6 +381,9 @@ export default {
   },
   async fetch(request, env, ctx) {
     bindKV(env);          /* ★ 绑定 KV（未配置则自动降级为模块级缓存） */
+    /* ★ 注入 3 号密钥：CF Workers 没有 process.env，必须靠这里把
+     *   平台侧配置的 Secret 传给各取数模块。没配就用内置兜底，不停服。 */
+    setSourceKey(env); setOilKey(env); setGoldKey(env);
     const url = new URL(request.url);
     const seg = url.pathname.split('/').filter(Boolean);
 
@@ -453,6 +463,7 @@ export default {
        *   ★ Disallow 只管爬虫，真实浏览器完全不受影响，实时跳动照常。 */
       const DENY = `Disallow: /api/
 Disallow: /probe
+Disallow: /diag
 `;
       const body = `User-agent: Mediapartners-Google
 Allow: /
@@ -610,6 +621,29 @@ Sitemap: ${SITE.domain}/sitemap.xml
       const r = order.length ? await getOilLive(order)
                              : (await liveOverlay(API_LIVE_BUDGET)).oil || {};
       return Response.json(r, { headers: { 'cache-control': 'no-store' } });
+    }
+
+    /* ★★ 数据源体检（可视化、可点按钮）
+     * 与 /probe 的区别：/probe 是【源级】静态表格，一个源出一行；
+     * 这里是【端点级】—— 布伦特和 WTI 各自单独打各自的 URL。
+     * 这样才能直接回答"为什么 WTI 一直有、布伦特一直卡"：
+     * 看到底是 XBRUSD 挂了、还是 BZ=F 挂了、还是 cb.f 挂了。 */
+    if (url.pathname === '/api/diag') {
+      const t0 = Date.now();
+      const res = await Promise.all(DIAG_ENDPOINTS.map(probeEndpoint));
+      const ok = res.filter(x => x.ok).length;
+      return Response.json({
+        at: new Date().toISOString(),
+        total: res.length, ok, fail: res.length - ok,
+        ms: Date.now() - t0,
+        results: res,
+      }, { headers: { 'cache-control': 'no-store' } });
+    }
+
+    if (url.pathname === '/diag') {
+      return new Response(diagHtml(), {
+        headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' },
+      });
     }
 
     /* ★ Vercel 测试版：数据源探针
@@ -810,3 +844,203 @@ ${goldRows}
     }
   },
 };
+
+
+/* ==================================================================
+ * 数据源体检（端点级）
+ *   每个端点单独计时、单独判成败。布伦特与 WTI 是【不同的 URL】，
+ *   所以分开测；这样一眼能看出到底哪一组挂了。
+ * ================================================================ */
+
+const CSV_KIND = 'csv';
+const S3_KIND  = 'site3';
+
+export function csvPrice(txt) {
+  const lines = String(txt || '').trim().split('\n');
+  if (lines.length < 2) return 0;
+  const cols = lines[0].split(','), vals = lines[1].split(',');
+  const i = cols.indexOf('Close');
+  return Number(i >= 0 ? vals[i] : vals[vals.length - 2]) || 0;
+}
+
+const yahooPick = (j) => {
+  const r = j && j.chart && j.chart.result && j.chart.result[0];
+  const m = r && r.meta;
+  return Number(m && (m.regularMarketPrice || m.previousClose)) || 0;
+};
+const biqPick = (j) => {
+  const b = Number(j && j.bid), a = Number(j && j.ask);
+  if (b && a) return (b + a) / 2;
+  return Number(j && j.mid) || 0;
+};
+const watchPick = (j) => Number(j && (j.price != null ? j.price : (j.value != null ? j.value : j.close))) || 0;
+
+export const DIAG_ENDPOINTS = [
+  /* ---- 布伦特（这组的 URL 与 WTI 完全不同） ---- */
+  { cat: '布伦特', name: 'biquote XBRUSD', url: 'https://biquote.io/api/XBRUSD', pick: biqPick },
+  { cat: '布伦特', name: 'Yahoo BZ=F',    url: 'https://query1.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1m&range=1d', pick: yahooPick },
+  { cat: '布伦特', name: 'Yahoo2 BZ=F',   url: 'https://query2.finance.yahoo.com/v8/finance/chart/BZ=F?interval=1m&range=1d', pick: yahooPick },
+  { cat: '布伦特', name: 'Stooq cb.f',    url: 'https://stooq.com/q/l/?s=cb.f&f=sd2t2ohlcv&h&e=csv', kind: CSV_KIND },
+  { cat: '布伦特', name: 'OilWatch brent', url: 'https://americasoilwatch.com/api/v1/brent', pick: watchPick,
+    tip: '每天 06:00 UTC 更新 + CDN 缓存 5 分钟，非严格实时' },
+
+  /* ---- WTI ---- */
+  { cat: 'WTI', name: 'biquote XTIUSD', url: 'https://biquote.io/api/XTIUSD', pick: biqPick },
+  { cat: 'WTI', name: 'Yahoo CL=F',     url: 'https://query1.finance.yahoo.com/v8/finance/chart/CL=F?interval=1m&range=1d', pick: yahooPick },
+  { cat: 'WTI', name: 'Yahoo2 CL=F',    url: 'https://query2.finance.yahoo.com/v8/finance/chart/CL=F?interval=1m&range=1d', pick: yahooPick },
+  { cat: 'WTI', name: 'Stooq cl.f',     url: 'https://stooq.com/q/l/?s=cl.f&f=sd2t2ohlcv&h&e=csv', kind: CSV_KIND },
+  { cat: 'WTI', name: 'OilWatch wti',   url: 'https://americasoilwatch.com/api/v1/wti', pick: watchPick,
+    tip: '每天 06:00 UTC 更新 + CDN 缓存 5 分钟，非严格实时' },
+
+  /* ---- 黄金 ---- */
+  { cat: '黄金', name: 'biquote XAUUSD', url: 'https://biquote.io/api/XAUUSD', pick: biqPick },
+  { cat: '黄金', name: 'xaus.com',       url: 'https://xaus.com/api/v1/spot?currency=USD&unit=oz&compact=1',
+    pick: (j) => Number(j && (j.price != null ? j.price : (j.bid != null ? j.bid : j.spot))) || 0 },
+  { cat: '黄金', name: 'gold-api XAU',   url: 'https://api.gold-api.com/price/XAU',
+    pick: (j) => Number(j && j.price) || 0 },
+  { cat: '黄金', name: 'Yahoo GC=F',     url: 'https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1m&range=1d', pick: yahooPick },
+  { cat: '黄金', name: 'Stooq xauusd',   url: 'https://stooq.com/q/l/?s=xauusd&f=sd2t2ohlcv&h&e=csv', kind: CSV_KIND },
+
+  /* ---- 3 号后端 ---- */
+  { cat: '3号后端', name: 'site3 /data', url: 'https://ss.wwok.eu.cc/data', kind: S3_KIND,
+    tip: '只读 KV，不消耗配额；这里看它存的值有多旧' },
+];
+
+export async function probeEndpoint(ep) {
+  const t0 = Date.now();
+  const base = { cat: ep.cat, name: ep.name, tip: ep.tip || '' };
+  try {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 6000);
+    const r = await fetch(ep.url, {
+      signal: ctl.signal,
+      headers: {
+        'user-agent': 'Mozilla/5.0 (compatible; PriceScope-Diag/1.0)',
+        accept: 'application/json,text/plain,*/*',
+      },
+    });
+    clearTimeout(timer);
+    const txt = await r.text();
+    const ms = Date.now() - t0;
+    if (!r.ok) return { ...base, ok: false, ms, error: 'HTTP ' + r.status };
+    if (ep.kind === CSV_KIND) {
+      const v = csvPrice(txt);
+      return v ? { ...base, ok: true, ms, value: v }
+               : { ...base, ok: false, ms, error: 'CSV 解析不到价' };
+    }
+    let j = null;
+    try { j = JSON.parse(txt); } catch (e) {
+      return { ...base, ok: false, ms, error: '返回不是 JSON' };
+    }
+    if (ep.kind === S3_KIND) {
+      const o = j && j.oil, w = j && j.wti, g = j && j.gold;
+      const b = Number(o && o.price) || 0;
+      const v = b || Number(w && w.price) || 0;
+      return { ...base, ok: !!v, ms, value: v,
+               extra: '布伦特 ' + (b || '—') + ' / WTI ' + (Number(w && w.price) || '—')
+                      + ' / 黄金 ' + (Number(g && g.price) || '—'),
+               error: v ? '' : '3号没返回价' };
+    }
+    const v = ep.pick ? ep.pick(j) : 0;
+    return v ? { ...base, ok: true, ms, value: v }
+             : { ...base, ok: false, ms, error: '解析不到价格' };
+  } catch (e) {
+    return { ...base, ok: false, ms: Date.now() - t0, error: String((e && e.message) || e) };
+  }
+}
+
+export function diagHtml() {
+  return `<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>数据源体检 · PriceScope</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0 auto;padding:16px;max-width:760px;background:#0d1117;color:#e6edf3;font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+h1{font-size:20px;margin:8px 0 4px}
+.sub{color:#8b949e;font-size:13px;margin:0 0 16px}
+#go{width:100%;padding:14px;font-size:16px;font-weight:600;border:0;border-radius:10px;background:#f0b429;color:#1a1a1a;cursor:pointer}
+#go:disabled{background:#30363d;color:#8b949e}
+#sum{margin:14px 0;padding:12px;border-radius:10px;background:#161b22;font-size:14px;display:none}
+.grp{margin:14px 0}
+.grp h2{font-size:15px;margin:0 0 8px;color:#f0b429;border-left:3px solid #f0b429;padding-left:8px}
+.row{background:#161b22;border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.row.bad{background:#2d1a1a}
+.nm{font-weight:600;flex:1 1 160px;min-width:130px}
+.st{flex:0 0 auto;font-size:13px;font-weight:600;color:#3fb950}
+.row.bad .st{color:#f85149}
+.val{flex:0 0 auto;color:#f0b429;font-variant-numeric:tabular-nums;font-size:13px}
+.ms{flex:0 0 auto;color:#8b949e;font-size:12px}
+.err{flex:1 1 100%;color:#f85149;font-size:12px;word-break:break-all}
+.tip{flex:1 1 100%;color:#8b949e;font-size:12px}
+#cp{width:100%;margin-top:14px;padding:12px;font-size:15px;border:1px solid #30363d;border-radius:10px;background:#21262d;color:#e6edf3;cursor:pointer;display:none}
+</style>
+</head><body>
+<h1>数据源体检</h1>
+<p class="sub">逐端点实测 · 测的是 Cloudflare 节点到各数据源的真实连通性。<br>布伦特与 WTI 走的是不同 URL，分开测。</p>
+<button id="go">开始测试</button>
+<div id="sum"></div>
+<div id="out"></div>
+<button id="cp">复制结果</button>
+<script>
+var last = null;
+function $(i){ return document.getElementById(i); }
+function esc(t){ return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+$("go").onclick = function(){
+  var b = this;
+  b.disabled = true; b.textContent = "测试中…";
+  $("out").innerHTML = '<p class="sub">正在并发测试，请稍候…</p>';
+  $("sum").style.display = "none";
+  $("cp").style.display = "none";
+  fetch("/api/diag").then(function(r){ return r.json(); }).then(function(j){
+    last = j; render(j);
+    b.disabled = false; b.textContent = "重新测试";
+  }).catch(function(e){
+    $("out").innerHTML = '<p class="err">请求失败：' + esc(e) + '</p>';
+    b.disabled = false; b.textContent = "重试";
+  });
+};
+function render(j){
+  $("sum").style.display = "block";
+  $("sum").innerHTML = "✅ 通 " + j.ok + " 个 · ❌ 挂 " + j.fail + " 个 · 共 " + j.total + " 个 · 耗时 " + j.ms + "ms";
+  var g = {}, order = [];
+  j.results.forEach(function(r){
+    if(!g[r.cat]){ g[r.cat] = []; order.push(r.cat); }
+    g[r.cat].push(r);
+  });
+  var h = "";
+  order.forEach(function(c){
+    var list = g[c], oks = 0;
+    list.forEach(function(x){ if(x.ok) oks++; });
+    h += '<div class="grp"><h2>' + esc(c) + ' （' + oks + '/' + list.length + ' 通）</h2>';
+    list.forEach(function(r){
+      h += '<div class="row' + (r.ok ? '' : ' bad') + '">';
+      h += '<span class="nm">' + esc(r.name) + '</span>';
+      h += '<span class="st">' + (r.ok ? '✅ 通' : '❌ 挂') + '</span>';
+      h += '<span class="val">' + (r.ok ? esc(r.extra ? r.extra : (r.value + ' USD')) : '') + '</span>';
+      h += '<span class="ms">' + r.ms + 'ms</span>';
+      if(r.ok && r.tip) h += '<div class="tip">' + esc(r.tip) + '</div>';
+      if(!r.ok && r.error) h += '<div class="err">' + esc(r.error) + '</div>';
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+  $("out").innerHTML = h;
+  $("cp").style.display = "block";
+}
+$("cp").onclick = function(){
+  var t = JSON.stringify(last, null, 2);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ alert("已复制，发给元宝"); });
+    return;
+  }
+  var ta = document.createElement("textarea");
+  ta.value = t; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand("copy"); alert("已复制，发给元宝"); }catch(e){ alert("复制失败，请手动选择"); }
+  document.body.removeChild(ta);
+};
+</script>
+</body></html>`;
+}

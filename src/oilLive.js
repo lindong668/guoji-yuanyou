@@ -21,9 +21,34 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
  *   ⚠️ 仓库若公开，请务必在平台侧配 SITE3_KEY，不要把密钥提交进 Git。
  * ---------------------------------------------------------------- */
 const SITE3_BASE = 'https://ss.wwok.eu.cc';
-const SITE3_KEY =
-  (typeof process !== 'undefined' && process.env && process.env.SITE3_KEY) ||
-  'lfwczh8pa4atakrpj7uwhybo2vexc76u';
+
+/* ★ 密钥分两层：
+ *   ① 运行时值 —— 由 index.js 在每次请求开头 setSite3Key(env) 注入，
+ *      来源是 CF 后台配置的 Secret（加密存储，不进代码、不进 Git）。
+ *   ② 内置兜底 —— 只有平台侧【没配】时才用，保证不停服。
+ *
+ * ⚠️ 为什么不能写 process.env.SITE3_KEY：
+ *    Cloudflare Workers 运行时根本没有 process / process.env，
+ *    所以原来那行代码恒为 false，导致「在后台配了变量也读不到」，
+ *    密钥实际上一直走内置值。必须走下面这条 env 注入链路。
+ */
+const SITE3_KEY_BUILTIN = ''; // 已清空：密钥改由平台侧 Secret 注入（SITE3_KEY），不再进 Git
+let SITE3_KEY_RT = '';
+
+/** 在每个请求开头调用一次，把平台侧 Secret 注入本模块。 */
+let CP_API_KEY_RT = '';
+export function setSite3Key(env) {
+  const v = env && (env.SITE3_KEY || env.SOURCE_ACCESS_KEY);
+  if (v) SITE3_KEY_RT = String(v);
+  /* 同一个坑：CommodityPriceAPI 的 key 原来也用 process.env 读，
+   * 在 CF 上恒为空 → 该源永远跳过。改用同一条注入链路。 */
+  const c = env && env.CP_API_KEY;
+  if (c) CP_API_KEY_RT = String(c);
+}
+/** 取当前生效的密钥：优先运行时注入值，没配才回退内置。 */
+export function site3Key() {
+  return SITE3_KEY_RT || SITE3_KEY_BUILTIN;
+}
 
 async function getJson(u, ms = 3000, headers = {}) {
   const ac = new AbortController();
@@ -179,7 +204,7 @@ async function srcTencentHf() {
  * ---------------------------------------------------------------- */
 async function srcSite3() {
   const j = await getJson(SITE3_BASE + '/data', 4000, {
-    'X-Access-Key': SITE3_KEY,
+    'X-Access-Key': site3Key(),
     'User-Agent': 'PriceScope/1.0 (+test)',
   });
   const oilRaw = j && (j['油'] || j.oil) || {};
@@ -388,7 +413,7 @@ async function srcOilPriceApiDemo() {
  *   key 通过环境变量 CP_API_KEY 注入，没配就跳过
  * ---------------------------------------------------------------- */
 async function srcCommodityPriceApi() {
-  const key = (typeof process !== 'undefined' && process.env && process.env.CP_API_KEY) || '';
+  const key = CP_API_KEY_RT || '';
   if (!key) throw new Error('未配置 CP_API_KEY，跳过');
   const one = async (sym) => {
     const j = await getJson(
