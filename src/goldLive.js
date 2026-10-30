@@ -157,14 +157,30 @@ async function srcStooqGold() {
   return { usdOz: p, note: 'Stooq XAUUSD' };
 }
 
+/* ★★ 源顺序重排 —— 实时链路不再首选 3 号
+ *
+ * 原顺序把 site3live（3号 /gold/live 现抓）排在第一位，
+ * 于是 2 号每 15 秒一次的实时请求，都会触发 3 号【当场真抓三个源 + 写一次 KV】。
+ * 页面开着几小时就是上千次写入 → 免费版 1,000 次/天的额度当天见底，
+ * 之后所有 KV 写入 429 失败，3 号被拖慢到超时，金价反而拿不到。
+ *
+ * 职责划分（重要）：
+ *   3 号 —— 只负责【定时抓取 + 存历史】，产出报表/走势用的历史数据。
+ *           它的 /gold/live 是"现抓"端点，成本极高，不该被实时链路高频调用。
+ *   2 号 —— 实时跳动走【自己服务端直连】的外部源（CF 海外节点出网，稳定）。
+ *
+ * 新顺序：先用自己的源，全挂了才碰 3 号；
+ *   且 3 号内部已有 60 秒缓存 + 每日真抓上限两层节流，不会再放大。
+ */
 export const GOLD_PROVIDERS = [
-  { id: 'site3live', label: '3号后端 /gold/live（现抓，自有 CF 源）', fn: srcSite3Live },
   { id: 'biquote',   label: 'biquote XAUUSD（券商 MT5，免 key）',     fn: srcBiquote },
   { id: 'xaus',      label: 'xaus.com 现货（免 key，带新鲜度标记）',   fn: srcXaus },
   { id: 'goldapi',   label: 'gold-api.com（免 key）',                 fn: srcGoldApi },
-  { id: 'site3data', label: '3号后端 /data（读已存值）',              fn: srcSite3Data },
   { id: 'yahoogold', label: 'Yahoo 黄金期货 GC=F（备用）',            fn: srcYahooGold },
   { id: 'stooqgold', label: 'Stooq XAUUSD（备用）',                   fn: srcStooqGold },
+  /* ↓ 以下两个是 3 号兜底，只在上面全部失败时才走到 */
+  { id: 'site3data', label: '3号后端 /data（读已存值，只读不写）',     fn: srcSite3Data },
+  { id: 'site3live', label: '3号后端 /gold/live（现抓，最后兜底）',    fn: srcSite3Live },
 ];
 
 /* ------------------------------------------------------------------
