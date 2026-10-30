@@ -370,16 +370,87 @@ function parseFx(raw) {
   return { base: 'USD', date, rates };
 }
 
+/* ------------------------------------------------------------------
+ * ★ 新浪外汇实时源
+ * --------------------------------------------------------------------
+ * 问题：er-api（现用的主源）每天 00:00 UTC 才刷一次，
+ *       所以页面那张汇率表实际显示的是【昨日价】。
+ *       新浪这条是实时的 —— 探针 P11 实测 6.6538（价龄 41s，均 8ms）。
+ *
+ * 报文（与期货字段顺序不同，别混用）：
+ *   var hq_str_fx_susdcny="21:04:01,6.6526,6.6531,6.6612,...,2026-10-30";
+ *   p[0]=HH:MM:SS   p[1]=现价   （期货是 p[0]=现价 p[6]=时间）
+ *
+ * ★ 设计原则：只【覆盖】能取到的那几个币种，绝不整表替换。
+ *   新浪的币种代码若写错，只是那个币种取不到、继续用 er-api 的值，
+ *   不会把整张汇率表弄坏。
+ * ---------------------------------------------------------------- */
+const FX_SINA_CODES = {
+  CNY: 'fx_susdcny',
+  HKD: 'fx_susdhkd',
+  EUR: 'fx_susdeur',
+  JPY: 'fx_susdjpy',
+};
+
+async function sinaFxOverrides() {
+  const codes = Object.values(FX_SINA_CODES);
+  const ac = new AbortController();
+  const t = setTimeout(() => ac.abort(), 2500);
+  let txt = '';
+  try {
+    const r = await fetch('https://hq.sinajs.cn/list=' + codes.join(','), {
+      signal: ac.signal,
+      cache: 'no-store',
+      headers: {
+        'User-Agent': 'PriceScope/1.0 (+https://you.piccalc.com)',
+        Referer: 'https://finance.sina.com.cn',
+      },
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    txt = await r.text();
+  } catch (e) {
+    return null;                    /* 新浪取不到就用原表，不影响主流程 */
+  } finally { clearTimeout(t); }
+
+  const out = {};
+  const re = /var\s+hq_str_([A-Za-z0-9_]+)="([^"]*)"/g;
+  let m;
+  while ((m = re.exec(txt))) {
+    const p = String(m[2] || '').split(',');
+    const v = Number(p[1]);
+    if (!Number.isFinite(v) || v <= 0) continue;
+    const cur = Object.keys(FX_SINA_CODES)
+      .find(k => FX_SINA_CODES[k] === m[1]);
+    if (cur) out[cur] = v;
+  }
+  return Object.keys(out).length ? out : null;
+}
+
+/* 把新浪取到的实时汇率覆盖到基准表上。
+ * ★ 只在取到时覆盖，取不到原样返回 —— 新浪挂了汇率表照常工作。
+ *   覆盖后把 date 更新为今天，页面上才不会继续显示昨天的日期。 */
+async function applySinaFx(base) {
+  if (!base || !base.rates) return base;
+  const ov = await sinaFxOverrides();
+  if (!ov) return base;
+  return {
+    ...base,
+    rates: { ...base.rates, ...ov },
+    date: new Date().toISOString().slice(0, 10),
+    fxRealTime: true,
+  };
+}
+
 export async function getFx() {
   const ttl = secondsUntilDailyRefresh(REFRESH_SCHEDULE.fx.h, REFRESH_SCHEDULE.fx.m);
   // once per day, at 09:30 Asia/Shanghai (right after the ~00:00 UTC refresh)
   try {
     const p = parseFx(await fetchCached(FX_ENDPOINT, ttl));
-    if (p) { lastFx = p; return lastFx; }
+    if (p) { lastFx = await applySinaFx(p); return lastFx; }
   } catch (e) { /* try fallback */ }
   try {
     const p = parseFx(await fetchCached(FX_FALLBACK, ttl));
-    if (p) { lastFx = p; return lastFx; }
+    if (p) { lastFx = await applySinaFx(p); return lastFx; }
   } catch (e) { /* keep last good value */ }
   return lastFx;
 }

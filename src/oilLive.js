@@ -198,6 +198,98 @@ async function srcTencentHf() {
 }
 
 /* ------------------------------------------------------------------
+ * 源 S2：新浪 http 通道（★ 本次新增，实测依据）
+ * --------------------------------------------------------------------
+ * 与源 S 是【同一域名、不同协议】。探针 P11 实测：
+ *   新浪 http通道  104.198（价龄 1s，真·实时 ✓，均 13ms）
+ *
+ * 价值：https 那条路若被中间设备干扰 / 证书异常 / TLS 握手失败，
+ *       http 通道仍可能通。属于"同厂商的半独立备份"。
+ * ---------------------------------------------------------------- */
+async function srcSinaHfHttp() {
+  const txt = await getText('http://hq.sinajs.cn/list=hf_OIL,hf_CL', 2500, {
+    Referer: 'https://finance.sina.com.cn',
+  });
+  const map = parseHfMap(txt);
+  const b = hfPick(map, 'hf_OIL', HF_RANGE);
+  const w = hfPick(map, 'hf_CL', HF_RANGE);
+  if (!b && !w) throw new Error('新浪 http 通道两个符号都没价');
+  return {
+    brent: b ? b.v : 0,
+    wti: w ? w.v : 0,
+    asOf: new Date(Math.max(b ? b.ts : 0, w ? w.ts : 0) || Date.now()).toISOString(),
+    note: '新浪外盘期货 http 通道（秒级实时）',
+  };
+}
+
+/* ------------------------------------------------------------------
+ * 源 T2：腾讯备用域名 sqt.gtimg.cn（★ 本次新增，实测依据）
+ * --------------------------------------------------------------------
+ * 探针 P11 实测：113.63（价龄 22s，真·实时 ✓，均 440ms）
+ *
+ * 与源 T（qt.gtimg.cn）是【同一数据、不同域名】，独立性比 http 通道更高：
+ *   qt 域名挂了，sqt 往往还活着。
+ *
+ * ★ 排除的三个腾讯域名（P11 实测全死，别再试）：
+ *   proxy.finance.gtimg.cn  HTTP 404
+ *   data.gtimg.cn           HTTP 404（根本不是行情接口）
+ *   ifzq.gtimg.cn           bad params（kline 接口参数不对）
+ *   web.ifzq.gtimg.cn       URL illeagal
+ *
+ * ⚠️ 裸访问 sqt.gtimg.cn 会看到 "bad request" —— 那是没带 ?q= 参数，
+ *    带上参数就是好的，别被裸访问的返回误导。
+ * ---------------------------------------------------------------- */
+async function srcTencentSqt() {
+  const txt = await getText('https://sqt.gtimg.cn/q=hf_OIL,hf_CL', 3000);
+  const map = parseHfMap(txt);
+  const b = hfPick(map, 'hf_OIL', HF_RANGE);
+  const w = hfPick(map, 'hf_CL', HF_RANGE);
+  if (!b && !w) throw new Error('腾讯 sqt 两个符号都没价');
+  return {
+    brent: b ? b.v : 0,
+    wti: w ? w.v : 0,
+    asOf: new Date(Math.max(b ? b.ts : 0, w ? w.ts : 0) || Date.now()).toISOString(),
+    note: '腾讯备用域名 sqt.gtimg.cn（秒级）',
+  };
+}
+
+/* ------------------------------------------------------------------
+ * 源 X：straits.live —— ★ 唯一的非新浪/腾讯独立源（最终兜底）
+ * --------------------------------------------------------------------
+ * 用户指定：排在所有源之后，只有每一个源都拿不到才轮到它。
+ *
+ * 实测（P11）：
+ *   brent 117.32（价龄 546s）  Yahoo 参照 113.12 → 差 4.20（3.7%）
+ *   wti   103.64（价龄 549s）  Yahoo 参照 103.70 → 差 0.06（0.1%）
+ *   ⚠️ WTI 很准，但布伦特系统性偏高约 3.7%，所以只能当兜底。
+ *
+ * 为什么还留它：底层虽也是 Yahoo 系（约 10 分钟），
+ *   但它是【完全独立的服务与域名】 —— 新浪 + 腾讯同时抽风时的第三条路。
+ *
+ * 返回两种形态都兼容：{ points:[{iso,brent,wti}] } 或 { brent,wti,asOf }
+ * ---------------------------------------------------------------- */
+async function srcStraits() {
+  const j = await getJson('https://straits.live/api/v1/oil?limit=1', 4000);
+  const pickOne = (o, key) => {
+    const v = Number(o && o[key]);
+    return Number.isFinite(v) && v >= HF_RANGE[0] && v <= HF_RANGE[1] ? v : 0;
+  };
+  let brent = 0, wti = 0, asOf = '';
+  const ps = j && Array.isArray(j.points) ? j.points : null;
+  if (ps && ps.length) {
+    const last = ps[ps.length - 1];
+    brent = pickOne(last, 'brent');
+    wti = pickOne(last, 'wti');
+    asOf = String((last && last.iso) || '');
+  }
+  if (!brent) brent = pickOne(j, 'brent');
+  if (!wti) wti = pickOne(j, 'wti');
+  if (!asOf) asOf = String((j && j.asOf) || '');
+  if (!brent && !wti) throw new Error('straits.live 未解析出布伦特/WTI');
+  return { brent, wti, asOf, note: 'straits.live 独立源（约 10 分钟，最终兜底）' };
+}
+
+/* ------------------------------------------------------------------
  * 源 A：3 号后端 /data —— 用户自有基础设施（★ 本次新增）
  *   走服务端带 X-Access-Key，密钥不会出现在浏览器里。
  *   若返回体带 stale/asOf，一并带出，便于在 /probe 判断数据新旧。
@@ -437,14 +529,24 @@ async function srcCommodityPriceApi() {
  *
  * 现在：5 个自有源跑完都没结果，才会轮到 3 号。 */
 export const OIL_PROVIDERS = [
-  /* ★ 新浪 / 腾讯排最前：实测价龄 0~46s，是真·实时；
-   *   Yahoo 是 615s 的延迟行情，降级为兜底。 */
-  { id: 'sinahf',   label: '新浪外盘期货 hf_OIL/hf_CL（秒级，无需 key）', fn: srcSinaHf },
-  { id: 'txhf',     label: '腾讯外盘行情 hf_OIL/hf_CL（秒级，无需 key）', fn: srcTencentHf },
+  /* ★ 新浪 / 腾讯的四条通道排最前：实测价龄 1~66s，是真·实时；
+   *   Yahoo 是 615s 的延迟行情，降级为兜底。
+   *
+   * 四条通道的分工（独立性从低到高）：
+   *   sinahf     https://hq.sinajs.cn   价龄 1~8s  ← 最快，主源
+   *   sinahfhttp http://hq.sinajs.cn    价龄 1~2s  ← 同域名不同协议
+   *   txsqt      https://sqt.gtimg.cn   价龄 22s   ← 腾讯，与 qt 不同域名
+   *   txhf       https://qt.gtimg.cn    价龄 23s   ← 腾讯主域名
+   */
+  { id: 'sinahf',     label: '新浪外盘期货 hf_OIL/hf_CL（秒级，无需 key）', fn: srcSinaHf },
+  { id: 'sinahfhttp', label: '新浪外盘期货 http 通道（同域名不同协议）',     fn: srcSinaHfHttp },
+  { id: 'txsqt',      label: '腾讯备用域名 sqt.gtimg.cn（秒级，无需 key）',  fn: srcTencentSqt },
+  { id: 'txhf',       label: '腾讯外盘行情 qt.gtimg.cn（秒级，无需 key）',   fn: srcTencentHf },
   { id: 'biquote',  label: 'biquote 券商链路（与黄金同源，无需 key）', fn: srcBiquote },
   { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key，约 10 分钟延迟）', fn: srcYahoo },
   { id: 'yahoo2',   label: 'Yahoo 备用域名 query2（无需 key）',         fn: srcYahoo2 },
   { id: 'spark',    label: 'Yahoo spark 轻量接口（无需 key）',         fn: srcYahooSpark },
+  { id: 'straits',  label: 'straits.live 独立源（约 10 分钟，最终兜底）', fn: srcStraits },
   { id: 'stooq',    label: 'Stooq 免费 CSV（无需 key）',               fn: srcStooq },
   { id: 'oilwatch', label: 'AmericasOilWatch（无需 key，5 分钟缓存）',  fn: srcOilWatch },
   { id: 'site3',    label: '3号后端 ss.wwok.eu.cc（读已存值，兜底）',   fn: srcSite3 },
@@ -538,9 +640,11 @@ export function fillFromFallback(oilVal, fb) {
  * 留下的三个都是实测 50~130ms 就能拿到值的：yahoo / yahoo2 / spark。
  * 效果：并发批耗时从 2500ms 降到 ~130ms。
  */
-/* 第 1 批（真·实时）：新浪 + 腾讯，实测 9~16ms、价龄 0~46s。
- * 两个一起并发 = 2 个子请求，任一成功即可，失败才进下一批。 */
-const BATCH_FAST = ['sinahf', 'txhf'];
+/* 第 1 批（真·实时）：新浪 2 条 + 腾讯 2 条，实测 6~440ms、价龄 1~66s。
+ * 四条一起并发 = 4 个子请求，任一成功即可，失败才进下一批。
+ * ★ 子请求从 2 涨到 4，但总耗时 = 最慢那一个（并发不累加），
+ *   实测最慢的 sqt 约 440ms，仍在预算内。 */
+const BATCH_FAST = ['sinahf', 'sinahfhttp', 'txsqt', 'txhf'];
 /* 第 2 批（延迟兜底）：Yahoo 三兄弟，实测价龄约 620s，
  * 但通断最稳（57~250ms），新浪/腾讯同时抽风时靠它们兜住。 */
 const BATCH_SLOW = ['yahoo', 'yahoo2', 'spark'];
@@ -549,7 +653,10 @@ const BATCH_SLOW = ['yahoo', 'yahoo2', 'spark'];
  *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
  *     所以让它"永远排在最后被采用"，而不是禁用 —— 禁用会在慢网下
  *     多一轮串行往返，实测反而撞满 8 秒预算、连 WTI 都被拖慢。） */
-const BATCH_MORE = [];
+/* 串行补缺口：straits.live 是唯一非新浪/腾讯的独立源，
+ * 用户指定它做【最终兜底】—— 前面 7 条（新浪4 + Yahoo3）全拿不到才试它。
+ * 之所以串行且放这里：它布伦特系统性偏高约 3.7%，不该被高频采用。 */
+const BATCH_MORE = ['straits'];
 
 export async function getOilLive(order) {
   const tried = [];
