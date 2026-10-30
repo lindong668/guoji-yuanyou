@@ -106,9 +106,12 @@ async function srcSite3() {
  *   返回形如 { bid, ask, mid }，取买卖中值
  * ---------------------------------------------------------------- */
 async function srcBiquote() {
+  /* ★ 两个符号分开容错：以前用 Promise.all，只要布伦特那一路挂了，
+   *   连已经拿到的 WTI 也一起丢掉（整源判失败）。
+   *   现在各带 catch，能拿到几个算几个，缺的那个由后面的源补上。 */
   const [w, b] = await Promise.all([
-    getJson('https://biquote.io/api/XTIUSD'),
-    getJson('https://biquote.io/api/XBRUSD'),
+    getJson('https://biquote.io/api/XTIUSD').catch(() => null),
+    getJson('https://biquote.io/api/XBRUSD').catch(() => null),
   ]);
   const mid = (j) => {
     const bid = Number(j && j.bid), ask = Number(j && j.ask);
@@ -134,7 +137,12 @@ async function srcYahoo() {
     if (!p) throw new Error('Yahoo ' + sym + ' 无价');
     return p;
   };
-  const [wti, brent] = await Promise.all([one('CL=F'), one('BZ=F')]);
+  /* ★ 同上：BZ=F 偶发抽风时，别把已经拿到的 CL=F 一起丢掉 */
+  const [wti, brent] = await Promise.all([
+    one('CL=F').catch(() => 0),
+    one('BZ=F').catch(() => 0),
+  ]);
+  if (!wti && !brent) throw new Error('Yahoo 两个合约都没价');
   return { brent, wti, note: 'Yahoo 期货，盘中实时' };
 }
 
@@ -151,7 +159,12 @@ async function srcYahoo2() {
     if (!p) throw new Error('Yahoo2 ' + sym + ' 无价');
     return p;
   };
-  const [wti, brent] = await Promise.all([one('CL=F'), one('BZ=F')]);
+  /* ★ 同上：两个合约分开容错 */
+  const [wti, brent] = await Promise.all([
+    one('CL=F').catch(() => 0),
+    one('BZ=F').catch(() => 0),
+  ]);
+  if (!wti && !brent) throw new Error('Yahoo2 两个合约都没价');
   return { brent, wti, note: 'Yahoo 备用域名 query2' };
 }
 
@@ -275,19 +288,58 @@ export async function getOilLive(order) {
     ids = [stickyProvider, ...ids.filter(x => x !== stickyProvider)];
   }
   const tried = [];
+  /* ★ 合流缓冲区：某个源只给了【一半】（例如只有 WTI、Brent 没给），
+   *   以前会当场返回，于是 brent=0 被写进缓存 —— 前端布伦特卡片拿到 0
+   *   判定为"取数失败"，秒数一直涨 → 看起来就是【布伦特比 WTI 慢好几拍】。
+   *   现在：先把这一半存起来，继续问下一个源，把缺的那一半补上再返回。 */
+  let merged = null;
+  const push = (r, p) => {
+    const b = Number(r && r.brent) || 0, w = Number(r && r.wti) || 0;
+    if (!b && !w) return false;
+    const prev = merged;          /* ★ 必须先存旧引用，否则下面一覆盖就丢了 providers */
+    merged = {
+      brent: (prev && prev.brent) || b,
+      wti:   (prev && prev.wti)   || w,
+      note:  (prev && prev.note) || (r && r.note) || '',
+      asOf:  (prev && prev.asOf) || (r && r.asOf) || '',
+      stale: !!(prev && prev.stale) && !!(r && r.stale),
+      providers: [...((prev && prev.providers) || []), p.id],
+    };
+    return true;
+  };
+
   for (const id of ids) {
     const p = OIL_PROVIDERS.find(x => x.id === id);
     if (!p) continue;
     try {
       const r = await p.fn();
-      if (r && (r.brent || r.wti)) {
-        stickyProvider = p.id;      /* ★ 记住这次成功的源，下次优先复用 */
-        return { ...r, provider: p.id, providerLabel: p.label, tried };
+      if (push(r, p)) {
+        /* 两个都齐了才收工；缺一个就继续问下一个源 */
+        if (merged.brent && merged.wti) {
+          stickyProvider = p.id;    /* ★ 记住这次成功的源，下次优先复用 */
+          return {
+            ...merged,
+            provider: merged.providers.join('+'),
+            providerLabel: p.label,
+            tried,
+          };
+        }
+        tried.push({ id: p.id, ok: true, error: '只有一半（继续补另一个）' });
+        continue;
       }
       tried.push({ id: p.id, ok: false, error: '返回为空' });
     } catch (e) {
       tried.push({ id: p.id, ok: false, error: String(e && e.message || e) });
     }
+  }
+  if (merged && (merged.brent || merged.wti)) {
+    return {
+      ...merged,
+      provider: merged.providers.join('+'),
+      providerLabel: '部分源仅返回其中一种原油',
+      partial: !!(merged.brent && merged.wti) === false,
+      tried,
+    };
   }
   return { brent: 0, wti: 0, provider: null, providerLabel: '全部源均失败', tried };
 }

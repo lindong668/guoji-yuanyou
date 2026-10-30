@@ -184,6 +184,18 @@ async function doRefresh(now) {
   if (!oilVal || (!oilVal.brent && !oilVal.wti)) {
     oilVal = (await oilFallback()) || liveCache.oil;
   }
+  /* ★ 补齐缺口：本次只拿到其中一种原油时，另一种【沿用上一次的值】，
+   *   绝不让 brent/wti 变成 0 —— 0 会让前端判定"取数失败"，
+   *   表现就是布伦特那一格迟迟不更新、甚至显示连接中断。 */
+  if (oilVal && (o && (o.brent || o.wti))) {
+    const prev = liveCache.oil || {};
+    const nb = +oilVal.brent || 0, nw = +oilVal.wti || 0;
+    if (!nb || !nw) {
+      oilVal = { ...oilVal,
+                 brent: nb || +prev.brent || 0,
+                 wti:   nw || +prev.wti   || 0 };
+    }
+  }
   const mine = {
     at: Date.now(),
     oil: oilVal,
@@ -426,36 +438,49 @@ export default {
 
     // ---------- robots.txt ----------
     if (url.pathname === '/robots.txt') {
+      /* ★ 屏蔽 /api/ 与 /probe 的理由（收录 + AdSense 相关）：
+       *   /api/*  是给前端 JS 取实时价的 JSON 接口，不是给人看的页面。
+       *          让它被抓取只会白白消耗抓取预算，还可能被当成"空内容页"。
+       *          ★ 关键：屏蔽它【不影响收录】，因为价格是服务端渲染进 HTML 的，
+       *            爬虫不看 JS 也能拿到真实价格。
+       *   /probe  是早期遗留的数据源调试面板，会列出每个源的成败耗时，
+       *          属于内部工具页。被抓到会显得站点像半成品，对 AdSense 审核不利。
+       *   ★ ads.txt / sitemap.xml / BingSiteAuth / google 验证文件全部保持放行 ——
+       *     AdSense 必须能抓 ads.txt，否则会影响广告投放。
+       *   ★ Disallow 只管爬虫，真实浏览器完全不受影响，实时跳动照常。 */
+      const DENY = `Disallow: /api/
+Disallow: /probe
+`;
       const body = `User-agent: Mediapartners-Google
 Allow: /
-
+${DENY}
 User-agent: Googlebot
 Allow: /
-
+${DENY}
 User-agent: Bingbot
 Allow: /
-
+${DENY}
 # Applebot：支撑 Spotlight / Siri / Safari 搜索
 # （若 robots 未提 Applebot，它会沿用 Googlebot 的规则；显式声明更稳妥）
 User-agent: Applebot
 Allow: /
-
+${DENY}
 # AI 搜索爬虫：允许抓取，让内容可被 AI 回答引用
 User-agent: GPTBot
 Allow: /
-
+${DENY}
 User-agent: ChatGPT-User
 Allow: /
-
+${DENY}
 User-agent: ClaudeBot
 Allow: /
-
+${DENY}
 User-agent: PerplexityBot
 Allow: /
-
+${DENY}
 User-agent: *
 Allow: /
-
+${DENY}
 Sitemap: ${SITE.domain}/sitemap.xml
 `;
       return new Response(body, {
