@@ -105,6 +105,39 @@ async function srcSite3() {
  *   原油符号：XTIUSD = WTI，XBRUSD = 布伦特
  *   返回形如 { bid, ask, mid }，取买卖中值
  * ---------------------------------------------------------------- */
+/* ------------------------------------------------------------------
+ * ★★ Yahoo 取值：优先【最后一根 1 分钟 K 线的 close】，而不是
+ *     meta.regularMarketPrice
+ * --------------------------------------------------------------------
+ * 实测证据（CF HKG 节点，两次探针相隔 4 分钟）：
+ *   chart  BZ=F   111.85 → 111.85   ← meta 里的价 4 分钟纹丝不动
+ *   spark  BZ=F   111.85 → 111.77   ← 同期真实成交价已经变了
+ *   chart  CL=F   102.77 → 102.85   ← WTI 的 meta 倒是跟着动
+ *
+ * 结论：meta.regularMarketPrice 是 Yahoo 侧的【缓存快照】，
+ *       对 BZ=F 这类合约更新极慢。这就是"布伦特好几轮不动、
+ *       WTI 一直在跳"的根因 —— 不是源挂了，是取的字段不对。
+ *
+ * 修法：range=1d&interval=1m 的响应里带着当天每一分钟的 K 线，
+ *       取最后一根非空 close = 最新成交价。取不到才回退 meta。
+ * ---------------------------------------------------------------- */
+export function yahooFresh(j) {
+  const r = j && j.chart && j.chart.result && j.chart.result[0];
+  if (r) {
+    const q = r.indicators && r.indicators.quote && r.indicators.quote[0];
+    const arr = q && q.close;
+    if (Array.isArray(arr)) {
+      for (let i = arr.length - 1; i >= 0; i--) {
+        const v = Number(arr[i]);
+        if (Number.isFinite(v) && v > 0) return v;   /* 跳过尾部 null */
+      }
+    }
+  }
+  const m = r && r.meta;
+  const v = Number(m && (m.regularMarketPrice || m.previousClose));
+  return Number.isFinite(v) && v > 0 ? v : 0;
+}
+
 async function srcBiquote() {
   /* ★ 两个符号分开容错：以前用 Promise.all，只要布伦特那一路挂了，
    *   连已经拿到的 WTI 也一起丢掉（整源判失败）。
@@ -132,8 +165,7 @@ async function srcYahoo() {
   const one = async (sym) => {
     const j = await getJson(
       `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`, 2500);
-    const meta = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-    const p = Number(meta && (meta.regularMarketPrice || meta.previousClose));
+    const p = yahooFresh(j);
     if (!p) throw new Error('Yahoo ' + sym + ' 无价');
     return p;
   };
@@ -154,8 +186,7 @@ async function srcYahoo2() {
   const one = async (sym) => {
     const j = await getJson(
       `https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`, 2500);
-    const meta = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-    const p = Number(meta && (meta.regularMarketPrice || meta.previousClose));
+    const p = yahooFresh(j);
     if (!p) throw new Error('Yahoo2 ' + sym + ' 无价');
     return p;
   };
@@ -166,6 +197,30 @@ async function srcYahoo2() {
   ]);
   if (!wti && !brent) throw new Error('Yahoo2 两个合约都没价');
   return { brent, wti, note: 'Yahoo 备用域名 query2' };
+}
+
+/* ------------------------------------------------------------------
+ * 源 2c：Yahoo spark —— 轻量接口（★ 本次新增，实测依据）
+ *   探针实测：52~130ms 通；且【BZ=F 的值确实会变】
+ *   （chart 的 meta 是缓存快照不爱动，spark 的 meta 是新鲜的）。
+ *   与 chart 互为备份：一个口径出问题，另一个仍能顶上。
+ * ---------------------------------------------------------------- */
+async function srcYahooSpark() {
+  const one = async (sym) => {
+    const j = await getJson(
+      `https://query1.finance.yahoo.com/v7/finance/spark?symbols=${sym}&range=1d&interval=1m`, 2500);
+    const r = j && j.spark && j.spark.result && j.spark.result[0];
+    const m = r && r.response && r.response[0] && r.response[0].meta;
+    const p = Number(m && (m.regularMarketPrice || m.previousClose));
+    if (!p) throw new Error('spark ' + sym + ' 无价');
+    return p;
+  };
+  const [wti, brent] = await Promise.all([
+    one('CL%3DF').catch(() => 0),
+    one('BZ%3DF').catch(() => 0),
+  ]);
+  if (!wti && !brent) throw new Error('Yahoo spark 两个合约都没价');
+  return { brent, wti, note: 'Yahoo spark 轻量接口' };
 }
 
 /* ------------------------------------------------------------------
@@ -263,6 +318,7 @@ export const OIL_PROVIDERS = [
   { id: 'biquote',  label: 'biquote 券商链路（与黄金同源，无需 key）', fn: srcBiquote },
   { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key）',           fn: srcYahoo },
   { id: 'yahoo2',   label: 'Yahoo 备用域名 query2（无需 key）',         fn: srcYahoo2 },
+  { id: 'spark',    label: 'Yahoo spark 轻量接口（无需 key）',         fn: srcYahooSpark },
   { id: 'stooq',    label: 'Stooq 免费 CSV（无需 key）',               fn: srcStooq },
   { id: 'oilwatch', label: 'AmericasOilWatch（无需 key，5 分钟缓存）',  fn: srcOilWatch },
   { id: 'site3',    label: '3号后端 ss.wwok.eu.cc（读已存值，兜底）',   fn: srcSite3 },
@@ -342,7 +398,21 @@ export function fillFromFallback(oilVal, fb) {
  *   ★ 为什么不做"5 个源全并发"：那样一次要同时发 10 个子请求，
  *     在 CF 上会排队、总耗时反而上升，还可能撞并发上限。
  *     现在是"小步快跑 + 按需补齐"，峰值只有 4 个子请求。 */
-const BATCH_FAST = ['biquote', 'yahoo', 'yahoo2', 'stooq', 'oilwatch'];
+/*
+ * ★★ 快批重排 —— 依据探针实测，只留【真的能拿到价】的源
+ * ------------------------------------------------------------------
+ * 移出的三个，都是实测必失败、只会白白拖慢的：
+ *   biquote  原油两个符号都 HTTP 404（该站实际只有 XAUUSD 黄金），
+ *            每次白等 ~250ms 才失败。
+ *   stooq    HKG 节点 100% 超时（探针给 8000ms 都没回来），
+ *            ★ 它是最大的拖累：并发批耗时 = 最慢那个，
+ *              等于每一轮都白等满 2.5 秒超时。
+ *   oilwatch 返回 200 但解析不出 price/value/close，等于没有。
+ *
+ * 留下的三个都是实测 50~130ms 就能拿到值的：yahoo / yahoo2 / spark。
+ * 效果：并发批耗时从 2500ms 降到 ~130ms。
+ */
+const BATCH_FAST = ['yahoo', 'yahoo2', 'spark'];
 /* ★ 并发 5 个源，但【合流严格按优先级】：biquote 给了布伦特就用 biquote 的，
  *   只有排在它前面的源都没给，才会采用 oilwatch 的值。
  *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
