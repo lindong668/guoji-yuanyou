@@ -5,7 +5,7 @@
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
 import { getMarket, getFx, fetchGoldLive } from './data.js';
-import { getOilLive, probeAll as probeOil, OIL_PROVIDERS } from './oilLive.js';
+import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback } from './oilLive.js';
 import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 /* ------------------------------------------------------------
@@ -103,6 +103,9 @@ const SSR_LIVE_BUDGET = 2500;
  * 页面渲染仍用 2.5 秒，因为浏览器在等，快最重要。 */
 const API_LIVE_BUDGET = 8000;
 
+/* 单品种旧值最多沿用多久（毫秒）。
+ * brent/wti 各自独立计时，超时就作废，防止"永远不动的假数字"。 */
+
 /* ------------------------------------------------------------------
  * ★★★★ 并发闸门 —— 防止"访问量一大就把 KV 写爆"
  * --------------------------------------------------------------------
@@ -181,20 +184,20 @@ async function doRefresh(now) {
   ]);
   /* 原油：自有源全失败 → 回落到 3 号（黄金前端有浏览器直连兜底，不需要） */
   let oilVal = (o && (o.brent || o.wti)) ? o : liveCache.oil;
+  /* ① 只有【自有源一个都没给】时才找 3 号兜底。
+   *   ★ 这里曾经写成"缺任意一个品种就找 3 号补"，那是错的：
+   *     3 号是定时抓取的旧值，拿来填实时缺口等于把几分钟前的数字
+   *     当成实时价显示。实时链路就该用自己的源，3 号只做断线兜底。 */
   if (!oilVal || (!oilVal.brent && !oilVal.wti)) {
     oilVal = (await oilFallback()) || liveCache.oil;
   }
-  /* ★ 补齐缺口：本次只拿到其中一种原油时，另一种【沿用上一次的值】，
-   *   绝不让 brent/wti 变成 0 —— 0 会让前端判定"取数失败"，
-   *   表现就是布伦特那一格迟迟不更新、甚至显示连接中断。 */
-  if (oilVal && (o && (o.brent || o.wti))) {
-    const prev = liveCache.oil || {};
-    const nb = +oilVal.brent || 0, nw = +oilVal.wti || 0;
-    if (!nb || !nw) {
-      oilVal = { ...oilVal,
-                 brent: nb || +prev.brent || 0,
-                 wti:   nw || +prev.wti   || 0 };
-    }
+  /* ② 缺的那一半沿用上一次的值，带时效（真代码在 oilLive.js，可被测试直接调用） */
+  oilVal = applyStaleKeep(oilVal, liveCache.oil);
+  /* ③ 走到这里还缺 = 自有源拿不到、缓存里的旧值也过期作废了。
+   *   这时才让 3 号兜底，避免前端那一格直接显示"连接中断"。
+   *   ★ 顺序是【自己的源 → 短期沿用 → 3 号】，3 号永远不是优先项。 */
+  if (oilVal && (!oilVal.brent || !oilVal.wti)) {
+    oilVal = fillFromFallback(oilVal, await oilFallback());
   }
   const mine = {
     at: Date.now(),

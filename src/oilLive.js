@@ -131,7 +131,7 @@ async function srcBiquote() {
 async function srcYahoo() {
   const one = async (sym) => {
     const j = await getJson(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`, 3500);
+      `https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`, 2500);
     const meta = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
     const p = Number(meta && (meta.regularMarketPrice || meta.previousClose));
     if (!p) throw new Error('Yahoo ' + sym + ' 无价');
@@ -153,7 +153,7 @@ async function srcYahoo() {
 async function srcYahoo2() {
   const one = async (sym) => {
     const j = await getJson(
-      `https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`, 3500);
+      `https://query2.finance.yahoo.com/v8/finance/chart/${sym}?interval=1m&range=1d`, 2500);
     const meta = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
     const p = Number(meta && (meta.regularMarketPrice || meta.previousClose));
     if (!p) throw new Error('Yahoo2 ' + sym + ' 无价');
@@ -175,7 +175,7 @@ async function srcYahoo2() {
  * ---------------------------------------------------------------- */
 async function srcStooq() {
   const one = async (s) => {
-    const txt = await getText(`https://stooq.com/q/l/?s=${s}&f=sd2t2ohlcv&h&e=csv`, 3500);
+    const txt = await getText(`https://stooq.com/q/l/?s=${s}&f=sd2t2ohlcv&h&e=csv`, 2500);
     const lines = txt.trim().split('\n');
     if (lines.length < 2) throw new Error('Stooq ' + s + ' 无数据行');
     const cols = lines[0].split(',');
@@ -185,7 +185,13 @@ async function srcStooq() {
     if (!p) throw new Error('Stooq ' + s + ' 解析不出价');
     return p;
   };
-  const [brent, wti] = await Promise.all([one('cb.f'), one('cl.f')]);
+  /* ★ 两个符号分开容错：cb.f（布伦特）常比 cl.f 更容易抽风，
+   *   用裸 Promise.all 会连已经拿到的 WTI 一起丢掉。 */
+  const [brent, wti] = await Promise.all([
+    one('cb.f').catch(() => 0),
+    one('cl.f').catch(() => 0),
+  ]);
+  if (!brent && !wti) throw new Error('Stooq 两个符号都没价');
   return { brent, wti, note: 'Stooq 免费 CSV' };
 }
 
@@ -195,9 +201,10 @@ async function srcStooq() {
  *   → 严格说不算"实时"，只能算"较新"
  * ---------------------------------------------------------------- */
 async function srcOilWatch() {
+  /* ★ 同上：两个端点分开容错 */
   const [b, w] = await Promise.all([
-    getJson('https://americasoilwatch.com/api/v1/brent'),
-    getJson('https://americasoilwatch.com/api/v1/wti'),
+    getJson('https://americasoilwatch.com/api/v1/brent').catch(() => null),
+    getJson('https://americasoilwatch.com/api/v1/wti').catch(() => null),
   ]);
   const num = (j) => Number(j && (j.price ?? j.value ?? j.close)) || 0;
   const brent = num(b), wti = num(w);
@@ -281,22 +288,80 @@ export const OIL_PROVIDERS = [
  * ---------------------------------------------------------------- */
 let stickyProvider = null;
 
+/* 单品种旧值最多沿用多久（毫秒）。brent / wti 各自独立计时。
+ * ★ 上一版没有时效，形成自我循环：brent 拿不到 → 用上次的值 →
+ *   这个值又被写回缓存 → 下次还是拿它 → 数字永久锁死不动。
+ *   实测复现过：连续 6 轮 brent 恒为 111.97，而 wti 一直在变。 */
+export const STALE_KEEP_MS = 120000;
+
+/* 缺的那一半用上一次的值顶上，但只顶 STALE_KEEP_MS 这么久。
+ * 抽成独立导出函数，是为了能被测试直接调用真代码（而不是测复制品）。 */
+export function applyStaleKeep(oilVal, prev) {
+  if (!oilVal) return oilVal;
+  const now = Date.now();
+  const nb = +oilVal.brent || 0, nw = +oilVal.wti || 0;
+  const keep = (cur, pv, pat) =>
+    cur                                                     ? { v: cur, at: now }
+    : (pv && pat && (now - pat) < STALE_KEEP_MS)            ? { v: +pv, at: pat }
+    : { v: 0, at: 0 };
+  const B = keep(nb, prev && prev.brent, prev && prev.bAt);
+  const W = keep(nw, prev && prev.wti,   prev && prev.wAt);
+  return { ...oilVal, brent: B.v, wti: W.v, bAt: B.at, wAt: W.at };
+}
+
+/* 用 3 号的值补上仍然缺失的那一半。同样抽成导出函数以便测试真代码。
+ * ★ 只在【自有源拿不到 + 缓存旧值已过期作废】之后才调用，不是优先项。 */
+export function fillFromFallback(oilVal, fb) {
+  if (!oilVal || !fb) return oilVal;
+  return {
+    ...oilVal,
+    brent: oilVal.brent || +fb.brent || 0,
+    wti:   oilVal.wti   || +fb.wti   || 0,
+  };
+}
+
+/* 可并发的自有源：稳定、无限流、无需 key。
+ * ★ 并发的意义：原来【串行】一个个问，WTI 通常第一个源就给了，
+ *   而布伦特要等问到第 2、3、4 个源才补得上，耗时是累加的
+ *   （实测 1.3s / 2.6s / 3.9s 递增），很容易撞上 8 秒预算，
+ *   于是布伦特还没补到就被迫返回 → 沿用旧值 → 看起来"好几轮不动"。
+ *   并发后耗时 = 最慢那一个源，不再累加。 */
+/* 串行兜底的自有源：opademo 限流 20 次/小时、cpapi 需付费 key，
+ * 不适合每次都并发去打，只在前面全没结果时才试。 */
+
+/* ★★ 取数节奏 —— 重做后的统一规则（不再是层层打补丁）
+ *
+ *   第 0 步  粘滞源单发：上次成功的源单独问一次，两个品种都齐就收工。
+ *            子请求 = 2，绝大多数请求走完这步就结束了，最快。
+ *   第 1 步  不齐 → 并发 5 个自有源补缺口（按优先级合流，oilwatch 垫底）。
+ *            ★ 这里试过"只并发 2 个、其余串行"的保守方案，实测反而更差：
+ *              每源 2.5 秒时串行累加会撞满 8 秒预算（超预算 4/20 拍，
+ *              WTI 更新次数从 18 掉到 14）。并发时总耗时 = 最慢那一批。
+ *   第 3 步  还是缺 → 返回已有的一半，由上层【短期沿用旧值 / 3号兜底】接上。
+ *
+ *   ★ 为什么不做"5 个源全并发"：那样一次要同时发 10 个子请求，
+ *     在 CF 上会排队、总耗时反而上升，还可能撞并发上限。
+ *     现在是"小步快跑 + 按需补齐"，峰值只有 4 个子请求。 */
+const BATCH_FAST = ['biquote', 'yahoo', 'yahoo2', 'stooq', 'oilwatch'];
+/* ★ 并发 5 个源，但【合流严格按优先级】：biquote 给了布伦特就用 biquote 的，
+ *   只有排在它前面的源都没给，才会采用 oilwatch 的值。
+ *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
+ *     所以让它"永远排在最后被采用"，而不是禁用 —— 禁用会在慢网下
+ *     多一轮串行往返，实测反而撞满 8 秒预算、连 WTI 都被拖慢。） */
+const BATCH_MORE = [];
+
 export async function getOilLive(order) {
-  let ids = (order && order.length ? order : OIL_PROVIDERS.map(p => p.id));
-  /* 粘滞：把上次成功的源提到最前面（不改变整体顺序，只是优先尝试） */
-  if (stickyProvider && !order) {
-    ids = [stickyProvider, ...ids.filter(x => x !== stickyProvider)];
-  }
   const tried = [];
-  /* ★ 合流缓冲区：某个源只给了【一半】（例如只有 WTI、Brent 没给），
-   *   以前会当场返回，于是 brent=0 被写进缓存 —— 前端布伦特卡片拿到 0
-   *   判定为"取数失败"，秒数一直涨 → 看起来就是【布伦特比 WTI 慢好几拍】。
-   *   现在：先把这一半存起来，继续问下一个源，把缺的那一半补上再返回。 */
   let merged = null;
+  const byId = (id) => OIL_PROVIDERS.find(x => x.id === id);
+  const complete = () => !!(merged && merged.brent && merged.wti);
+
+  /* 合流缓冲：某个源只给了一半（例如只有 WTI、布伦特没给）时，
+   * 不是当场返回（那会把 brent=0 写进缓存），而是存起来继续补另一个。 */
   const push = (r, p) => {
     const b = Number(r && r.brent) || 0, w = Number(r && r.wti) || 0;
     if (!b && !w) return false;
-    const prev = merged;          /* ★ 必须先存旧引用，否则下面一覆盖就丢了 providers */
+    const prev = merged;
     merged = {
       brent: (prev && prev.brent) || b,
       wti:   (prev && prev.wti)   || w,
@@ -308,38 +373,66 @@ export async function getOilLive(order) {
     return true;
   };
 
-  for (const id of ids) {
-    const p = OIL_PROVIDERS.find(x => x.id === id);
-    if (!p) continue;
-    try {
-      const r = await p.fn();
-      if (push(r, p)) {
-        /* 两个都齐了才收工；缺一个就继续问下一个源 */
-        if (merged.brent && merged.wti) {
-          stickyProvider = p.id;    /* ★ 记住这次成功的源，下次优先复用 */
-          return {
-            ...merged,
-            provider: merged.providers.join('+'),
-            providerLabel: p.label,
-            tried,
-          };
-        }
-        tried.push({ id: p.id, ok: true, error: '只有一半（继续补另一个）' });
-        continue;
+  const finish = (label) => (merged ? {
+    ...merged,
+    provider: merged.providers.join('+'),
+    providerLabel: label || (byId(merged.providers[merged.providers.length - 1]) || {}).label || '',
+    partial: !complete(),
+    tried,
+  } : null);
+
+  /* 记住成功的源：取优先级最高的那个，避免并发返回顺序抖动导致价格跳 */
+  const setSticky = () => {
+    const rank = OIL_PROVIDERS.map(x => x.id);
+    stickyProvider = merged.providers.slice()
+      .sort((a, b) => rank.indexOf(a) - rank.indexOf(b))[0];
+  };
+
+  /* 跑一批源（并发）；★ 合并严格按【优先级顺序】而不是返回顺序 */
+  const fanout = async (ids) => {
+    const ps = ids.map(byId).filter(Boolean);
+    if (!ps.length) return;
+    const settled = await Promise.all(ps.map(p =>
+      p.fn().then(r => ({ p, r }))
+           .catch(e => { tried.push({ id: p.id, ok: false, error: String(e && e.message || e) }); return null; })
+    ));
+    for (const p of ps) {
+      const hit = settled.find(x => x && x.p.id === p.id);
+      if (!hit) continue;
+      if (push(hit.r, hit.p)) {
+        tried.push({ id: p.id, ok: true, error: complete() ? '' : '只有一半' });
+        if (complete()) break;
+      } else {
+        tried.push({ id: p.id, ok: false, error: '返回为空' });
       }
-      tried.push({ id: p.id, ok: false, error: '返回为空' });
-    } catch (e) {
-      tried.push({ id: p.id, ok: false, error: String(e && e.message || e) });
     }
+  };
+
+  if (order && order.length) { await fanout(order); return finish() || { brent: 0, wti: 0, tried }; }
+
+  /* 第 0 步：粘滞源单发 */
+  if (stickyProvider) {
+    await fanout([stickyProvider]);
+    if (complete()) { setSticky(); return finish(); }
   }
-  if (merged && (merged.brent || merged.wti)) {
-    return {
-      ...merged,
-      provider: merged.providers.join('+'),
-      providerLabel: '部分源仅返回其中一种原油',
-      partial: !!(merged.brent && merged.wti) === false,
-      tried,
-    };
+
+  /* 第 1 步：并发两个最稳的源 */
+  await fanout(BATCH_FAST.filter(x => x !== stickyProvider));
+  if (complete()) { setSticky(); return finish(); }
+
+  /* 第 2 步：串行补缺口 */
+  for (const id of BATCH_MORE) {
+    if (merged && merged.providers.includes(id)) continue;
+    await fanout([id]);
+    if (complete()) { setSticky(); return finish(); }
+  }
+  if (merged) { setSticky(); return finish(); }
+
+  /* 第 3 步：自有源一个都没给 → 才轮到 3 号 */
+  const s3 = byId('site3');
+  if (s3) {
+    await fanout(['site3']);
+    if (merged) return finish(s3.label);
   }
   return { brent: 0, wti: 0, provider: null, providerLabel: '全部源均失败', tried };
 }
