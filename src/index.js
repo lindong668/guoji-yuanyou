@@ -103,6 +103,10 @@ const SSR_LIVE_BUDGET = 2500;
  * 页面渲染仍用 2.5 秒，因为浏览器在等，快最重要。 */
 const API_LIVE_BUDGET = 8000;
 
+/* 单品种旧值最多沿用多久（毫秒）。
+ * brent/wti 各自独立计时，超时就作废，防止"永远不动的假数字"。 */
+const STALE_KEEP_MS = 120000;
+
 /* ------------------------------------------------------------------
  * ★★★★ 并发闸门 —— 防止"访问量一大就把 KV 写爆"
  * --------------------------------------------------------------------
@@ -181,20 +185,32 @@ async function doRefresh(now) {
   ]);
   /* 原油：自有源全失败 → 回落到 3 号（黄金前端有浏览器直连兜底，不需要） */
   let oilVal = (o && (o.brent || o.wti)) ? o : liveCache.oil;
+  /* ① 缺任意一个 → 先找 3 号补（3 号的值随定时抓取更新，不会自我锁死） */
+  if (oilVal && !(+oilVal.brent && +oilVal.wti)) {
+    const fb = await oilFallback();
+    if (fb && (+fb.brent || +fb.wti)) {
+      oilVal = { ...oilVal,
+                 brent: +oilVal.brent || +fb.brent || 0,
+                 wti:   +oilVal.wti   || +fb.wti   || 0 };
+    }
+  }
   if (!oilVal || (!oilVal.brent && !oilVal.wti)) {
     oilVal = (await oilFallback()) || liveCache.oil;
   }
-  /* ★ 补齐缺口：本次只拿到其中一种原油时，另一种【沿用上一次的值】，
-   *   绝不让 brent/wti 变成 0 —— 0 会让前端判定"取数失败"，
-   *   表现就是布伦特那一格迟迟不更新、甚至显示连接中断。 */
-  if (oilVal && (o && (o.brent || o.wti))) {
-    const prev = liveCache.oil || {};
+  /* ② 最后才沿用上一次的值，且【带 2 分钟时效】。
+   *   ★ 上一版没有时效，形成自我循环：brent 拿不到 → 用上次的值 →
+   *     这个值又被写回缓存 → 下次还是拿它 → 永久锁死。
+   *     实测复现：连续 6 轮 brent 恒为 111.97，而 wti 一直在变。
+   *     现在超过时效就作废，宁可让前端如实提示，也不给永远不动的假数字。 */
+  if (oilVal) {
+    const prev = liveCache.oil || {}, now = Date.now();
     const nb = +oilVal.brent || 0, nw = +oilVal.wti || 0;
-    if (!nb || !nw) {
-      oilVal = { ...oilVal,
-                 brent: nb || +prev.brent || 0,
-                 wti:   nw || +prev.wti   || 0 };
-    }
+    const keep = (cur, pv, pat) =>
+      cur ? { v: cur, at: now }
+          : (pv && pat && (now - pat) < STALE_KEEP_MS) ? { v: +pv, at: pat }
+          : { v: 0, at: 0 };
+    const B = keep(nb, prev.brent, prev.bAt), W = keep(nw, prev.wti, prev.wAt);
+    oilVal = { ...oilVal, brent: B.v, wti: W.v, bAt: B.at, wAt: W.at };
   }
   const mine = {
     at: Date.now(),
