@@ -90,5 +90,44 @@ console.log('\n[场景三：API 真断了 —— 必须照样报连接中断，�
   ok('真实断链仍报连接中断（未被宽限吃掉）', /连接中断/.test(after||''));
   console.log('    断链后徽标: '+after);
 }
+
+console.log('\n[场景四：切回前台必须【立刻补一拍】，不能干等定时器（秒数僵住的根因）]');
+{
+  SRV_STATE=null;
+  const shared=mkstore();
+  const h=await boot(shared);
+  await sleep(1500);
+  const n0=h.bag.fetches.filter(u=>u.indexOf('/api/oil-live')>=0).length;
+  h.setHidden(true);
+  NOW += 3*60*1000; await sleep(1500);
+  const nBack=h.bag.fetches.filter(u=>u.indexOf('/api/oil-live')>=0).length;
+  ok('后台期间确实没抓取（tick 被 hidden 拦住）', nBack===n0);
+  h.setHidden(false);
+  h.win.document.dispatchEvent(new h.win.Event('visibilitychange'));
+  await sleep(1200);                     /* 只给 1.2 秒 */
+  const n1=h.bag.fetches.filter(u=>u.indexOf('/api/oil-live')>=0).length;
+  ok('切回前台 1.2 秒内就补了新的一拍', n1>nBack);
+  console.log('    后台前='+n0+' 后台后='+nBack+' 切回后='+n1);
+  const after=badge(h.win);
+  ok('切回后秒数已刷新（不再僵在旧值）', !/3m/.test(after||''));
+  console.log('    切回后徽标: '+after);
+}
+
+console.log('\n[场景五：秒数僵住时长不能超过 2 秒]');
+{
+  const shared=mkstore();
+  const h=await boot(shared);
+  await sleep(1500);
+  h.setHidden(true);
+  NOW += 5*60*1000; await sleep(1500);
+  h.setHidden(false);
+  h.win.document.dispatchEvent(new h.win.Event('visibilitychange'));
+  await sleep(2000);
+  const after=badge(h.win);
+  const mm=/(\d+)m/.exec(after||'');
+  ok('2 秒内秒数已归位（不再是 5m 前）', !mm);
+  console.log('    切回后徽标: '+after);
+}
+
 console.log('\n通过 '+pass+' 项，失败 '+fail+' 项');
 process.exit(fail?1:0);
