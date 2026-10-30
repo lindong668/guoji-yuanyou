@@ -76,6 +76,103 @@ function pickNum(obj, keys) {
 }
 
 /* ------------------------------------------------------------------
+ * 源 S：新浪外盘期货 hf_OIL / hf_CL（★ 本次新增，实测依据）
+ * --------------------------------------------------------------------
+ * 实测（CF HKG 节点，探针 P5「测候选源」）：
+ *   新浪 hf_OIL  113.008 → 112.975 → 113.02  3 秒 3 个不同值，均 16ms
+ *                源自带时间戳，价龄 0s
+ *   新浪 hf_CL   103.877 → 103.868 → 103.904 3 秒 3 个不同值，均 9ms
+ *                源自带时间戳，价龄 2s
+ *   Yahoo 参照   BZ=F 113.07 / CL=F 103.95，差值 0.05（0.0%）
+ *
+ * 对照：Yahoo 免费源实测价龄 615~624s（约 10 分钟），
+ *       是 CME/ICE 授权导致的延迟行情，换字段改不出来。
+ *       新浪这条是【真·实时】，且无需 key、无限流。
+ *
+ * 报文（GBK，但数字与时间都是 ASCII，按 UTF-8 读不影响取值）：
+ *   var hq_str_hf_OIL="113.008,2.32,113.28,...,20:52:56,...,2026-10-30,布伦特原油";
+ *   第 0 段当前价 / 第 6 段 HH:MM:SS / 第 12 段 YYYY-MM-DD（北京时间）
+ *
+ * ★ 两个符号用【一次】请求取回（list=hf_OIL,hf_CL），
+ *   只花 1 个子请求，不是 2 个。
+ * ---------------------------------------------------------------- */
+export function parseHfMap(text) {
+  const out = {};
+  /* 新浪：var hq_str_hf_OIL="..."   腾讯：v_hf_OIL="..." */
+  const re = /(?:var\s+hq_str_|v_)([A-Za-z0-9_]+)="([^"]*)"/g;
+  let m;
+  while ((m = re.exec(String(text || '')))) out[m[1]] = m[2];
+  return out;
+}
+
+/* 从一条 hf_ 记录里取出【价 + 自带时间戳】。
+ * range 必须传：这是防止字段错位的最后一道闸
+ * （例如把日期段 2026 当成价格取走）。 */
+export function hfPick(map, sym, range) {
+  const raw = map && map[sym];
+  if (!raw) return null;
+  const p = String(raw).split(',');
+  const v = Number(p[0]);
+  if (!Number.isFinite(v) || v < range[0] || v > range[1]) return null;
+  const t = String(p[6] || '').trim();
+  const d = String(p[12] || '').trim();
+  let ts = 0;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d) && /^\d{1,2}:\d{2}:\d{2}$/.test(t)) {
+    /* 新浪/腾讯给的是北京时间 */
+    const ms = Date.parse(d + 'T' + t + '+08:00');
+    if (Number.isFinite(ms)) ts = ms;
+  }
+  return { v, ts };
+}
+
+const HF_RANGE = [10, 400];   /* 布伦特 / WTI 合理区间，美元/桶 */
+
+async function srcSinaHf() {
+  const txt = await getText('https://hq.sinajs.cn/list=hf_OIL,hf_CL', 2500, {
+    Referer: 'https://finance.sina.com.cn',
+  });
+  const map = parseHfMap(txt);
+  const b = hfPick(map, 'hf_OIL', HF_RANGE);
+  const w = hfPick(map, 'hf_CL', HF_RANGE);
+  if (!b && !w) throw new Error('新浪 hf 两个符号都没价');
+  return {
+    brent: b ? b.v : 0,
+    wti: w ? w.v : 0,
+    /* 取两个里更新的那个作为数据时间 */
+    asOf: new Date(Math.max(b ? b.ts : 0, w ? w.ts : 0) || Date.now()).toISOString(),
+    note: '新浪外盘期货（秒级实时）',
+  };
+}
+
+/* ------------------------------------------------------------------
+ * 源 T：腾讯外盘行情 qt.gtimg.cn（★ 本次新增）
+ * --------------------------------------------------------------------
+ * 实测价龄 44~46s，同样远新于 Yahoo 的 615s。
+ *
+ * ⚠️ 探针曾把它误判成"与 Yahoo 同为慢速源"：
+ *    判据是"连打 3 次（跨 3 秒）值有没有变"，腾讯恰好这 3 秒没跳。
+ *    但看【自带时间戳】就知道它价龄只有 44s —— 那是真·实时，
+ *    只是刷新节奏比新浪慢一点，不是 10 分钟延迟。
+ *    所以这里照常启用，只是排在新浪后面。
+ *
+ * 报文同样是逗号分隔（早期我按 ~ 解析，一直报"解析不到价格"，已修）：
+ *   v_hf_OIL="113.37,2.32,113.28,113.29,114.07,111.03,20:52:56,...,2026-10-30,布伦特原油";
+ * ---------------------------------------------------------------- */
+async function srcTencentHf() {
+  const txt = await getText('https://qt.gtimg.cn/q=hf_OIL,hf_CL', 2500);
+  const map = parseHfMap(txt);
+  const b = hfPick(map, 'hf_OIL', HF_RANGE);
+  const w = hfPick(map, 'hf_CL', HF_RANGE);
+  if (!b && !w) throw new Error('腾讯 hf 两个符号都没价');
+  return {
+    brent: b ? b.v : 0,
+    wti: w ? w.v : 0,
+    asOf: new Date(Math.max(b ? b.ts : 0, w ? w.ts : 0) || Date.now()).toISOString(),
+    note: '腾讯外盘行情（秒级）',
+  };
+}
+
+/* ------------------------------------------------------------------
  * 源 A：3 号后端 /data —— 用户自有基础设施（★ 本次新增）
  *   走服务端带 X-Access-Key，密钥不会出现在浏览器里。
  *   若返回体带 stale/asOf，一并带出，便于在 /probe 判断数据新旧。
@@ -315,8 +412,12 @@ async function srcCommodityPriceApi() {
  *
  * 现在：5 个自有源跑完都没结果，才会轮到 3 号。 */
 export const OIL_PROVIDERS = [
+  /* ★ 新浪 / 腾讯排最前：实测价龄 0~46s，是真·实时；
+   *   Yahoo 是 615s 的延迟行情，降级为兜底。 */
+  { id: 'sinahf',   label: '新浪外盘期货 hf_OIL/hf_CL（秒级，无需 key）', fn: srcSinaHf },
+  { id: 'txhf',     label: '腾讯外盘行情 hf_OIL/hf_CL（秒级，无需 key）', fn: srcTencentHf },
   { id: 'biquote',  label: 'biquote 券商链路（与黄金同源，无需 key）', fn: srcBiquote },
-  { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key）',           fn: srcYahoo },
+  { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key，约 10 分钟延迟）', fn: srcYahoo },
   { id: 'yahoo2',   label: 'Yahoo 备用域名 query2（无需 key）',         fn: srcYahoo2 },
   { id: 'spark',    label: 'Yahoo spark 轻量接口（无需 key）',         fn: srcYahooSpark },
   { id: 'stooq',    label: 'Stooq 免费 CSV（无需 key）',               fn: srcStooq },
@@ -412,7 +513,12 @@ export function fillFromFallback(oilVal, fb) {
  * 留下的三个都是实测 50~130ms 就能拿到值的：yahoo / yahoo2 / spark。
  * 效果：并发批耗时从 2500ms 降到 ~130ms。
  */
-const BATCH_FAST = ['yahoo', 'yahoo2', 'spark'];
+/* 第 1 批（真·实时）：新浪 + 腾讯，实测 9~16ms、价龄 0~46s。
+ * 两个一起并发 = 2 个子请求，任一成功即可，失败才进下一批。 */
+const BATCH_FAST = ['sinahf', 'txhf'];
+/* 第 2 批（延迟兜底）：Yahoo 三兄弟，实测价龄约 620s，
+ * 但通断最稳（57~250ms），新浪/腾讯同时抽风时靠它们兜住。 */
+const BATCH_SLOW = ['yahoo', 'yahoo2', 'spark'];
 /* ★ 并发 5 个源，但【合流严格按优先级】：biquote 给了布伦特就用 biquote 的，
  *   只有排在它前面的源都没给，才会采用 oilwatch 的值。
  *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
@@ -437,7 +543,11 @@ export async function getOilLive(order) {
       wti:   (prev && prev.wti)   || w,
       note:  (prev && prev.note) || (r && r.note) || '',
       asOf:  (prev && prev.asOf) || (r && r.asOf) || '',
-      stale: !!(prev && prev.stale) && !!(r && r.stale),
+      /* ★ 原来写成 (prev&&prev.stale) && (r&&r.stale)：
+       *   首次合流时 prev 为 null，整个表达式恒为 false，
+       *   于是 3 号返回的 stale:true（"我这是旧值"）被静默吞掉，
+       *   上层永远不知道自己在用旧价。改成 || 才会真正往上冒。 */
+      stale: !!(r && r.stale) || !!(prev && prev.stale),
       providers: [...((prev && prev.providers) || []), p.id],
     };
     return true;
@@ -490,7 +600,12 @@ export async function getOilLive(order) {
   await fanout(BATCH_FAST.filter(x => x !== stickyProvider));
   if (complete()) { setSticky(); return finish(); }
 
-  /* 第 2 步：串行补缺口 */
+  /* 第 2 步：新浪/腾讯都没给齐 → 并发 Yahoo 三兄弟补缺口
+   * （它们通断最稳，虽然价龄约 620s，但总比没有强） */
+  await fanout(BATCH_SLOW.filter(x => x !== stickyProvider));
+  if (complete()) { setSticky(); return finish(); }
+
+  /* 第 3 步：串行补缺口（保留原扩展点，当前为空） */
   for (const id of BATCH_MORE) {
     if (merged && merged.providers.includes(id)) continue;
     await fanout([id]);
