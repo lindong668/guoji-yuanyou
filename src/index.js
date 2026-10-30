@@ -79,6 +79,24 @@ async function kvPut(v) {
  * ---------------------------------------------------------------- */
 const KV_SHARE_TTL = 180000;   /* 3 分钟 —— 想更实时可改小，注意额度 */
 
+/* ★ 服务端渲染的"耐心上限"：为取实时价最多等这么久（毫秒）。
+ *
+ * 为什么必须有：
+ *   手机把浏览器挂后台很久再回来刷新，往往会打到一个【冷实例】——
+ *   实例内存缓存已空、共享缓存也没绑定，服务端必须把 8 个原油源 +
+ *   7 个黄金源依次跑一遍。实测（所有源都慢到超时时）TTFB 高达 24.5 秒。
+ *   这期间浏览器一直转圈，Safari 最终报「连接错误 / 白屏」，
+ *   而网络其实是好的 —— 用户会以为站挂了。
+ *
+ * 加了预算之后：
+ *   超过上限就先用【旧值】（哪怕过期几分钟）把页面渲染出来，页面立刻可见；
+ *   抓取在后台继续跑完并写进缓存，下一次刷新就是新价。
+ *   页面永远出得来，比"等 24 秒然后白屏"好得多。
+ *
+ * 2.5 秒的取舍：够第一个源（券商 MT5，实测通常 300~800ms）跑完拿到价，
+ *   又不至于让谷歌爬虫或用户干等。想更快可改小，但太小会经常拿不到价。 */
+const SSR_LIVE_BUDGET = 2500;
+
 /* ------------------------------------------------------------------
  * ★★★★ 并发闸门 —— 防止"访问量一大就把 KV 写爆"
  * --------------------------------------------------------------------
@@ -95,7 +113,7 @@ const KV_SHARE_TTL = 180000;   /* 3 分钟 —— 想更实时可改小，注意
  * ---------------------------------------------------------------- */
 let inflight = null;
 
-async function liveOverlay() {
+async function liveOverlay(budgetMs = SSR_LIVE_BUDGET) {
   const now = Date.now();
   /* 有效期：有 KV 时用共享周期，没 KV 时用原来的 15 秒 */
   const ttl = KV ? KV_SHARE_TTL : LIVE_TTL;
@@ -107,10 +125,23 @@ async function liveOverlay() {
     liveCache = shared;   /* ★ 保留 shared.at（真实抓取时刻），否则永远不更新 */
     return liveCache;
   }
-  /* ③ 闸门①：本实例已有刷新在跑 → 直接等它，不重复抓 */
-  if (inflight) return inflight;
-  inflight = doRefresh(now);
-  try { return await inflight; } finally { inflight = null; }
+  /* ③ 闸门①：本实例已有刷新在跑 → 共享同一次抓取，不重复抓 */
+  if (!inflight) {
+    inflight = doRefresh(now);
+    /* 跑完就清空闸门；catch 防止 rejection 没人接变成 unhandled */
+    inflight.then(() => { inflight = null; }, () => { inflight = null; });
+  }
+  /* ★ 预算：服务端最多为取价等 budgetMs 毫秒。
+   *   超时就先拿旧值（哪怕已过期）把页面渲染出来 —— 页面永远出得来；
+   *   抓取在后台跑完会写进 liveCache，用户下一次刷新就是新值。
+   *   没有这道预算时，冷实例 + 全部源慢 = 实测 TTFB 24.5 秒，
+   *   手机浏览器会一直转圈，最后报"连接错误 / 白屏"。 */
+  const res = await Promise.race([
+    inflight.catch(() => null),
+    new Promise(r => setTimeout(() => r('__BUDGET__'), budgetMs)),
+  ]);
+  if (res === '__BUDGET__') return liveCache.at ? liveCache : null;
+  return res;
 }
 
 async function doRefresh(now) {
