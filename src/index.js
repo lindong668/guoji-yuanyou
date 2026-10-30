@@ -5,7 +5,7 @@
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
 import { getMarket, getFx, fetchGoldLive } from './data.js';
-import { getOilLive, probeAll as probeOil, OIL_PROVIDERS } from './oilLive.js';
+import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback } from './oilLive.js';
 import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 /* ------------------------------------------------------------
@@ -105,7 +105,6 @@ const API_LIVE_BUDGET = 8000;
 
 /* 单品种旧值最多沿用多久（毫秒）。
  * brent/wti 各自独立计时，超时就作废，防止"永远不动的假数字"。 */
-const STALE_KEEP_MS = 120000;
 
 /* ------------------------------------------------------------------
  * ★★★★ 并发闸门 —— 防止"访问量一大就把 KV 写爆"
@@ -185,32 +184,20 @@ async function doRefresh(now) {
   ]);
   /* 原油：自有源全失败 → 回落到 3 号（黄金前端有浏览器直连兜底，不需要） */
   let oilVal = (o && (o.brent || o.wti)) ? o : liveCache.oil;
-  /* ① 缺任意一个 → 先找 3 号补（3 号的值随定时抓取更新，不会自我锁死） */
-  if (oilVal && !(+oilVal.brent && +oilVal.wti)) {
-    const fb = await oilFallback();
-    if (fb && (+fb.brent || +fb.wti)) {
-      oilVal = { ...oilVal,
-                 brent: +oilVal.brent || +fb.brent || 0,
-                 wti:   +oilVal.wti   || +fb.wti   || 0 };
-    }
-  }
+  /* ① 只有【自有源一个都没给】时才找 3 号兜底。
+   *   ★ 这里曾经写成"缺任意一个品种就找 3 号补"，那是错的：
+   *     3 号是定时抓取的旧值，拿来填实时缺口等于把几分钟前的数字
+   *     当成实时价显示。实时链路就该用自己的源，3 号只做断线兜底。 */
   if (!oilVal || (!oilVal.brent && !oilVal.wti)) {
     oilVal = (await oilFallback()) || liveCache.oil;
   }
-  /* ② 最后才沿用上一次的值，且【带 2 分钟时效】。
-   *   ★ 上一版没有时效，形成自我循环：brent 拿不到 → 用上次的值 →
-   *     这个值又被写回缓存 → 下次还是拿它 → 永久锁死。
-   *     实测复现：连续 6 轮 brent 恒为 111.97，而 wti 一直在变。
-   *     现在超过时效就作废，宁可让前端如实提示，也不给永远不动的假数字。 */
-  if (oilVal) {
-    const prev = liveCache.oil || {}, now = Date.now();
-    const nb = +oilVal.brent || 0, nw = +oilVal.wti || 0;
-    const keep = (cur, pv, pat) =>
-      cur ? { v: cur, at: now }
-          : (pv && pat && (now - pat) < STALE_KEEP_MS) ? { v: +pv, at: pat }
-          : { v: 0, at: 0 };
-    const B = keep(nb, prev.brent, prev.bAt), W = keep(nw, prev.wti, prev.wAt);
-    oilVal = { ...oilVal, brent: B.v, wti: W.v, bAt: B.at, wAt: W.at };
+  /* ② 缺的那一半沿用上一次的值，带时效（真代码在 oilLive.js，可被测试直接调用） */
+  oilVal = applyStaleKeep(oilVal, liveCache.oil);
+  /* ③ 走到这里还缺 = 自有源拿不到、缓存里的旧值也过期作废了。
+   *   这时才让 3 号兜底，避免前端那一格直接显示"连接中断"。
+   *   ★ 顺序是【自己的源 → 短期沿用 → 3 号】，3 号永远不是优先项。 */
+  if (oilVal && (!oilVal.brent || !oilVal.wti)) {
+    oilVal = fillFromFallback(oilVal, await oilFallback());
   }
   const mine = {
     at: Date.now(),
