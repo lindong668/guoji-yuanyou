@@ -76,25 +76,7 @@ const BEAT_CORE = `
         if(o&&typeof o.t==='number'&&o.t&&(now-o.t)>DEAD){ o.w=now; sessionStorage.setItem(k,JSON.stringify(o)); }
       }
     }catch(e){}
-    /* ★ 切回前台必须【先重读服务端状态再补拍】。
-     *   为什么：页面最小化期间本地节拍停了（ok 不再累计），
-     *   这期间服务端 Cron 可能已经判出休市；如果直接补拍，
-     *   本地要再累计满 20 分钟才会显示休市 —— 用户切回来看到的是"实时"。
-     *   先重读一次服务端结论，休市就能立刻显示，不必再等一轮。 */
-    /* 最多补两拍：① 600ms 兜底先动起来（不让用户干等）
-     *            ② 服务端状态回来后再补一拍（用正确结论覆盖）
-     *   只补一次的话，srvLoad 慢时会僵住；只等 srvLoad 又可能白等。 */
-    var n=0;
-    var fire=function(){
-      if(n>=2) return; n++;
-      for(var j=0;j<WAKE_CB.length;j++){ try{ WAKE_CB[j](); }catch(e2){} }
-    };
-    try{
-      var pr=srvLoad();
-      if(pr&&typeof pr.then==='function') pr.then(fire,fire);
-      else fire();
-    }catch(e3){ fire(); }
-    setTimeout(fire,600);     /* 兜底：600 毫秒内必定动起来 */
+    for(var j=0;j<WAKE_CB.length;j++){ try{ WAKE_CB[j](); }catch(e2){} }
   }
   try{ document.addEventListener('visibilitychange',function(){ if(!document.hidden) bWakeAll(); }); }catch(e){}
 
@@ -139,9 +121,8 @@ const BEAT_CORE = `
       SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null; }
   }catch(err){} })();
   function srvClosed(k){ return SRV[k]==='closed'; }
-  /* 返回 Promise：切回前台时要等它落地再重绘，否则读到的还是旧状态 */
   function srvLoad(){
-    return fetch('/api/market-state',{cache:'no-store'})
+    fetch('/api/market-state',{cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){
         if(!j) return;
@@ -155,7 +136,6 @@ const BEAT_CORE = `
       /* 从未成功过：已失败够久就如实报断线，不能拿 SSR 旧数字假装实时 */
       var f=(o&&o.f)||0;
       if(f && (now-f)>DEAD) return {s:'lost',ago:Math.floor((now-f)/1000),t:f};
-
       /* ★ 全新会话（手机首次打开）本来会一律显示"实时"，服务端已确认的休市
        *   就被无视了 —— 这正是"电脑休市、手机却显示实时"的根因。 */
       if(srvClosed(k)) return {s:'closed',ago:0,t:now};
