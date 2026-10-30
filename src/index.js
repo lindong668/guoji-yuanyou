@@ -97,6 +97,12 @@ const KV_SHARE_TTL = 180000;   /* 3 分钟 —— 想更实时可改小，注意
  *   又不至于让谷歌爬虫或用户干等。想更快可改小，但太小会经常拿不到价。 */
 const SSR_LIVE_BUDGET = 2500;
 
+/* 接口轮询（/api/oil-live、/api/gold-live）用的预算：8 秒。
+ * 与页面渲染不同 —— 接口没人干等（前端只是这一拍拿不到，下一拍再来），
+ * 所以给它更长时间，更可能【真的抓到价】而不是退回旧值。
+ * 页面渲染仍用 2.5 秒，因为浏览器在等，快最重要。 */
+const API_LIVE_BUDGET = 8000;
+
 /* ------------------------------------------------------------------
  * ★★★★ 并发闸门 —— 防止"访问量一大就把 KV 写爆"
  * --------------------------------------------------------------------
@@ -140,8 +146,31 @@ async function liveOverlay(budgetMs = SSR_LIVE_BUDGET) {
     inflight.catch(() => null),
     new Promise(r => setTimeout(() => r('__BUDGET__'), budgetMs)),
   ]);
-  if (res === '__BUDGET__') return liveCache.at ? liveCache : null;
-  return res;
+  /* ★★ 绝不返回 null —— 调用方写的是 (await liveOverlay()).oil，
+   *   返回 null 会当场 TypeError → 接口 500 → 前端显示"连接中断"。
+   *   预算到点或抓取失败时，一律退回 liveCache（哪怕是空的 {oil:null}），
+   *   由调用方 .oil || {} 兜底，绝不抛异常。 */
+  if (res === '__BUDGET__') return liveCache;
+  return res || liveCache;
+}
+
+/* 原油兜底：自己的源全失败时，回落到 3 号 /data（只读 KV，不消耗配额）。
+ * 黄金前端已有浏览器直连兜底，所以这里只需要补原油。 */
+async function oilFallback() {
+  try {
+    const m = await getMarket();
+    const b = m && m.oil && +m.oil.price || 0;
+    const w = m && m.wti && +m.wti.price || 0;
+    if (b || w) {
+      return {
+        brent: b, wti: w,
+        provider: 'site3',
+        providerLabel: '3号后端（自有源全部失败时兜底）',
+        stale: true,
+      };
+    }
+  } catch (e) { /* 3 号也挂了就返回 null，由调用方保留旧值 */ }
+  return null;
 }
 
 async function doRefresh(now) {
@@ -150,9 +179,14 @@ async function doRefresh(now) {
     getOilLive().catch(() => null),
     getGoldLive().catch(() => null),
   ]);
+  /* 原油：自有源全失败 → 回落到 3 号（黄金前端有浏览器直连兜底，不需要） */
+  let oilVal = (o && (o.brent || o.wti)) ? o : liveCache.oil;
+  if (!oilVal || (!oilVal.brent && !oilVal.wti)) {
+    oilVal = (await oilFallback()) || liveCache.oil;
+  }
   const mine = {
     at: Date.now(),
-    oil: (o && (o.brent || o.wti)) ? o : liveCache.oil,
+    oil: oilVal,
     gold: (g && g.usdOz && !g.stale) ? g : liveCache.gold,
   };
   /* ④ 闸门②：写之前再确认一次 —— 别人已经写了更新的就采用别人的 */
@@ -524,7 +558,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
        *   现在：不带 ?src= 时统一走 liveOverlay()（与 SSR 同一份缓存）；
        *   只有探针显式指定 ?src= 才绕过缓存直连（那是排查用的，要新鲜值）。 */
       const r = (order.length || deep) ? await getGoldLive(order)
-                             : (await liveOverlay()).gold || {};
+                             : (await liveOverlay(API_LIVE_BUDGET)).gold || {};
       // 字段契约保持与旧版一致（前端读 priceUsdPerOz / live），
       // 额外带出 provider / stale / tried，便于排查到底走的哪条链路。
       return Response.json({
@@ -546,7 +580,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
       const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
       /* ★★ 同上：不带 ?src= 时走 liveOverlay()，保证与 SSR 同一份值 */
       const r = order.length ? await getOilLive(order)
-                             : (await liveOverlay()).oil || {};
+                             : (await liveOverlay(API_LIVE_BUDGET)).oil || {};
       return Response.json(r, { headers: { 'cache-control': 'no-store' } });
     }
 
