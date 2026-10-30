@@ -540,8 +540,8 @@ export const OIL_PROVIDERS = [
    */
   { id: 'sinahf',     label: '新浪外盘期货 hf_OIL/hf_CL（秒级，无需 key）', fn: srcSinaHf },
   { id: 'sinahfhttp', label: '新浪外盘期货 http 通道（同域名不同协议）',     fn: srcSinaHfHttp },
-  { id: 'txsqt',      label: '腾讯备用域名 sqt.gtimg.cn（秒级，无需 key）',  fn: srcTencentSqt },
   { id: 'txhf',       label: '腾讯外盘行情 qt.gtimg.cn（秒级，无需 key）',   fn: srcTencentHf },
+  { id: 'txsqt',      label: '腾讯备用域名 sqt.gtimg.cn（秒级，无需 key）',  fn: srcTencentSqt },
   { id: 'biquote',  label: 'biquote 券商链路（与黄金同源，无需 key）', fn: srcBiquote },
   { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key，约 10 分钟延迟）', fn: srcYahoo },
   { id: 'yahoo2',   label: 'Yahoo 备用域名 query2（无需 key）',         fn: srcYahoo2 },
@@ -558,19 +558,69 @@ export const OIL_PROVIDERS = [
  * getOilLive() —— 生产链路：按序尝试，拿到就停
  * ---------------------------------------------------------------- */
 /* ------------------------------------------------------------------
- * ★★ Sticky Provider（源粘滞）—— 解决"首页 102.03、点进去 102.02"
+ * ★★ 取源策略：每次都取【最快的可用源】
  * --------------------------------------------------------------------
- * 问题：原来每次请求都从头按序尝试，一旦 biquote 偶尔慢/超时，
- *   这次就落到 yahoo，下次又回到 biquote —— 两个源口径略有差异，
- *   于是用户看到"点进去价格跳一下、点出来又跳一下"。
+ * 原设计（已废弃）：记住上次成功的源，下次优先复用它（粘滞锁）。
+ *   副作用是：新浪恢复后也不会切回来，页面一直用着慢源的值。
  *
- * 修法：记住上次成功的源，下次【优先复用】它；只有它失败了才换下一个。
- *   这样同一时间窗口内，首页 / 详情页 / 连续刷新 拿到的都是同一个源的值。
- *
- * 说明：CF Worker 同一 isolate 内可复用该变量（与 liveCache 同理）。
- *   不同 isolate 各自维护，冷启动第一次会重新选源，属于可接受范围。
+ * 现在：并发 BATCH_FAST 四条，【合流严格按速度优先级】
+ *   sinahf(6~47ms) → sinahfhttp(13ms) → txhf(25ms) → txsqt(440ms)。
+ *   只要最快的那家在，每次刷新拿到的就是它的值；它挂了才顺延到次快的。
+ *   并发不累加耗时（总耗时 = 最慢那条 ~440ms），所以"每次都问四条"
+ *   比"先单问粘滞源、失败再问"更稳，也永远取到最快的。
  * ---------------------------------------------------------------- */
-let stickyProvider = null;
+
+/* ------------------------------------------------------------------
+ * ★★ 异常跳变保护（Jump Guard）—— 只挡"暴跳"，不挡正常波动
+ * --------------------------------------------------------------------
+ * 诉求：每次刷新都取最快源的值，微小波动无所谓（价格本来就在跳），
+ *   但源出错导致的【暴跳】不能出现在页面上。
+ *
+ * 判据：相对上一次采纳值，跳变 > JUMP_GUARD_PCT（5%）视为异常。
+ *   - 正常切源（新浪↔腾讯）口径差只有 0.2~0.5，约 0.3%，够不着 5%
+ *   - 源返回错值、单位错（例如把美分当美元）才会成倍跳
+ *
+ * ★ 为什么不一拒了之：若市场真的大幅波动（地缘冲突等），
+ *   一味拒绝会把价格永久锁死在旧值上 —— 那是更严重的事故。
+ *   所以加【连续确认】：连续 JUMP_GUARD_STREAK 拍都判定异常，
+ *   就认定"市场真的变了"，放行新值并重置计数。
+ * ---------------------------------------------------------------- */
+export const JUMP_GUARD_PCT = 0.05;   /* 5%：远高于切源口径差，远低于真异常 */
+export const JUMP_GUARD_STREAK = 3;   /* 连续 3 拍（约 45 秒）确认后才放行 */
+
+let lastOilVal = null;   /* 上一次采纳的值 { brent, wti } */
+let jumpStreak = 0;      /* 连续异常计数 */
+
+/* 仅供测试：重置跳变保护状态（生产链路不会调用） */
+export function __resetJumpGuard() { lastOilVal = null; jumpStreak = 0; }
+
+/* 抽成独立导出函数，便于测试直接调真代码（而不是测复制品） */
+export function applyJumpGuard(oilVal) {
+  if (!oilVal) return oilVal;
+  const nb = +oilVal.brent || 0, nw = +oilVal.wti || 0;
+  if (!nb || !nw) return oilVal;                  /* 缺一半不参与判定 */
+  const p = lastOilVal;
+  if (!p || !p.brent || !p.wti) {                 /* 冷启动 / 首次：直接采纳 */
+    lastOilVal = { brent: nb, wti: nw };
+    jumpStreak = 0;
+    return oilVal;
+  }
+  const bJ = Math.abs(nb - p.brent) / p.brent;
+  const wJ = Math.abs(nw - p.wti) / p.wti;
+  if (bJ <= JUMP_GUARD_PCT && wJ <= JUMP_GUARD_PCT) {   /* 正常：采纳并记住 */
+    lastOilVal = { brent: nb, wti: nw };
+    jumpStreak = 0;
+    return oilVal;
+  }
+  jumpStreak++;
+  if (jumpStreak >= JUMP_GUARD_STREAK) {          /* 连续异常：市场真变了，放行 */
+    lastOilVal = { brent: nb, wti: nw };
+    jumpStreak = 0;
+    return { ...oilVal, guarded: true };
+  }
+  /* 单次异常：沿用上次值，并标记 guarded（页面上可知情） */
+  return { ...oilVal, brent: p.brent, wti: p.wti, guarded: true, guardPct: Math.max(bJ, wJ) };
+}
 
 /* 单品种旧值最多沿用多久（毫秒）。brent / wti 各自独立计时。
  * ★ 上一版没有时效，形成自我循环：brent 拿不到 → 用上次的值 →
@@ -615,17 +665,18 @@ export function fillFromFallback(oilVal, fb) {
 
 /* ★★ 取数节奏 —— 重做后的统一规则（不再是层层打补丁）
  *
- *   第 0 步  粘滞源单发：上次成功的源单独问一次，两个品种都齐就收工。
- *            子请求 = 2，绝大多数请求走完这步就结束了，最快。
- *   第 1 步  不齐 → 并发 5 个自有源补缺口（按优先级合流，oilwatch 垫底）。
+ *   第 1 步  并发 4 条真·实时源，【按速度优先级合流】
+ *            sinahf → sinahfhttp → txhf → txsqt。
+ *            最快的那家给了值就一定采用它 → 每次刷新都是最快源的值，
+ *            且新浪恢复后自动切回（不再有粘滞锁）。
+ *            ★ 这里试过"只并发 2 个、其余串行"的保守方案，实测反而更差：
  *            ★ 这里试过"只并发 2 个、其余串行"的保守方案，实测反而更差：
  *              每源 2.5 秒时串行累加会撞满 8 秒预算（超预算 4/20 拍，
  *              WTI 更新次数从 18 掉到 14）。并发时总耗时 = 最慢那一批。
  *   第 3 步  还是缺 → 返回已有的一半，由上层【短期沿用旧值 / 3号兜底】接上。
  *
- *   ★ 为什么不做"5 个源全并发"：那样一次要同时发 10 个子请求，
- *     在 CF 上会排队、总耗时反而上升，还可能撞并发上限。
- *     现在是"小步快跑 + 按需补齐"，峰值只有 4 个子请求。 */
+ *   ★ 快批只放 4 条：每条 1 个子请求，4 条并发仍在 CF 预算内（上限 50），
+ *     且总耗时 = 最慢那条（约 440ms），不会因并发过多而排队。 */
 /*
  * ★★ 快批重排 —— 依据探针实测，只留【真的能拿到价】的源
  * ------------------------------------------------------------------
@@ -643,8 +694,13 @@ export function fillFromFallback(oilVal, fb) {
 /* 第 1 批（真·实时）：新浪 2 条 + 腾讯 2 条，实测 6~440ms、价龄 1~66s。
  * 四条一起并发 = 4 个子请求，任一成功即可，失败才进下一批。
  * ★ 子请求从 2 涨到 4，但总耗时 = 最慢那一个（并发不累加），
- *   实测最慢的 sqt 约 440ms，仍在预算内。 */
-const BATCH_FAST = ['sinahf', 'sinahfhttp', 'txsqt', 'txhf'];
+ *   实测最慢的 sqt 约 440ms，仍在预算内。
+ * ★ 顺序 = 实测速度（快→慢），并发合流时也按这个顺序采用：
+ *   sinahf(6~47ms，价龄 1~8s) → sinahfhttp(13~18ms，价龄 1~2s)
+ *   → txhf(25~32ms，价龄 23~66s) → txsqt(440~657ms，价龄 22~56s)。
+ *   txhf 比 txsqt 快约 17 倍、价龄相近，所以 txhf 排在 txsqt 前面，
+ *   保证"快的那家"的值优先被采用，而不是被慢源盖掉。 */
+const BATCH_FAST = ['sinahf', 'sinahfhttp', 'txhf', 'txsqt'];
 /* 第 2 批（延迟兜底）：Yahoo 三兄弟，实测价龄约 620s，
  * 但通断最稳（57~250ms），新浪/腾讯同时抽风时靠它们兜住。 */
 const BATCH_SLOW = ['yahoo', 'yahoo2', 'spark'];
@@ -685,19 +741,17 @@ export async function getOilLive(order) {
     return true;
   };
 
-  const finish = (label) => (merged ? {
-    ...merged,
-    provider: merged.providers.join('+'),
-    providerLabel: label || (byId(merged.providers[merged.providers.length - 1]) || {}).label || '',
-    partial: !complete(),
-    tried,
-  } : null);
-
-  /* 记住成功的源：取优先级最高的那个，避免并发返回顺序抖动导致价格跳 */
-  const setSticky = () => {
-    const rank = OIL_PROVIDERS.map(x => x.id);
-    stickyProvider = merged.providers.slice()
-      .sort((a, b) => rank.indexOf(a) - rank.indexOf(b))[0];
+  /* guard=true 时套用异常跳变保护；探针（order 模式）走 guard=false */
+  const finish = (label, guard = true) => {
+    if (!merged) return null;
+    const out = {
+      ...merged,
+      provider: merged.providers.join('+'),
+      providerLabel: label || (byId(merged.providers[merged.providers.length - 1]) || {}).label || '',
+      partial: !complete(),
+      tried,
+    };
+    return guard ? applyJumpGuard(out) : out;
   };
 
   /* 跑一批源（并发）；★ 合并严格按【优先级顺序】而不是返回顺序 */
@@ -720,30 +774,25 @@ export async function getOilLive(order) {
     }
   };
 
-  if (order && order.length) { await fanout(order); return finish() || { brent: 0, wti: 0, tried }; }
+  if (order && order.length) { await fanout(order); return finish(null, false) || { brent: 0, wti: 0, tried }; }
 
-  /* 第 0 步：粘滞源单发 */
-  if (stickyProvider) {
-    await fanout([stickyProvider]);
-    if (complete()) { setSticky(); return finish(); }
-  }
-
-  /* 第 1 步：并发两个最稳的源 */
-  await fanout(BATCH_FAST.filter(x => x !== stickyProvider));
-  if (complete()) { setSticky(); return finish(); }
+  /* 第 1 步：并发 4 条真·实时源，按【速度优先级】合流
+   *   → 最快的那家只要给了值，就一定被采用（新浪恢复即自动切回） */
+  await fanout(BATCH_FAST);
+  if (complete()) return finish();
 
   /* 第 2 步：新浪/腾讯都没给齐 → 并发 Yahoo 三兄弟补缺口
    * （它们通断最稳，虽然价龄约 620s，但总比没有强） */
-  await fanout(BATCH_SLOW.filter(x => x !== stickyProvider));
-  if (complete()) { setSticky(); return finish(); }
+  await fanout(BATCH_SLOW);
+  if (complete()) return finish();
 
   /* 第 3 步：串行补缺口（保留原扩展点，当前为空） */
   for (const id of BATCH_MORE) {
     if (merged && merged.providers.includes(id)) continue;
     await fanout([id]);
-    if (complete()) { setSticky(); return finish(); }
+    if (complete()) return finish();
   }
-  if (merged) { setSticky(); return finish(); }
+  if (merged) return finish();
 
   /* 第 3 步：自有源一个都没给 → 才轮到 3 号 */
   const s3 = byId('site3');
