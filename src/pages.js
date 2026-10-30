@@ -76,7 +76,25 @@ const BEAT_CORE = `
         if(o&&typeof o.t==='number'&&o.t&&(now-o.t)>DEAD){ o.w=now; sessionStorage.setItem(k,JSON.stringify(o)); }
       }
     }catch(e){}
-    for(var j=0;j<WAKE_CB.length;j++){ try{ WAKE_CB[j](); }catch(e2){} }
+    /* ★ 切回前台必须【先重读服务端状态再补拍】。
+     *   为什么：页面最小化期间本地节拍停了（ok 不再累计），
+     *   这期间服务端 Cron 可能已经判出休市；如果直接补拍，
+     *   本地要再累计满 20 分钟才会显示休市 —— 用户切回来看到的是"实时"。
+     *   先重读一次服务端结论，休市就能立刻显示，不必再等一轮。 */
+    /* 最多补两拍：① 600ms 兜底先动起来（不让用户干等）
+     *            ② 服务端状态回来后再补一拍（用正确结论覆盖）
+     *   只补一次的话，srvLoad 慢时会僵住；只等 srvLoad 又可能白等。 */
+    var n=0;
+    var fire=function(){
+      if(n>=2) return; n++;
+      for(var j=0;j<WAKE_CB.length;j++){ try{ WAKE_CB[j](); }catch(e2){} }
+    };
+    try{
+      var pr=srvLoad();
+      if(pr&&typeof pr.then==='function') pr.then(fire,fire);
+      else fire();
+    }catch(e3){ fire(); }
+    setTimeout(fire,600);     /* 兜底：600 毫秒内必定动起来 */
   }
   try{ document.addEventListener('visibilitychange',function(){ if(!document.hidden) bWakeAll(); }); }catch(e){}
 
@@ -121,8 +139,9 @@ const BEAT_CORE = `
       SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null; }
   }catch(err){} })();
   function srvClosed(k){ return SRV[k]==='closed'; }
+  /* 返回 Promise：切回前台时要等它落地再重绘，否则读到的还是旧状态 */
   function srvLoad(){
-    fetch('/api/market-state',{cache:'no-store'})
+    return fetch('/api/market-state',{cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){
         if(!j) return;
@@ -136,6 +155,7 @@ const BEAT_CORE = `
       /* 从未成功过：已失败够久就如实报断线，不能拿 SSR 旧数字假装实时 */
       var f=(o&&o.f)||0;
       if(f && (now-f)>DEAD) return {s:'lost',ago:Math.floor((now-f)/1000),t:f};
+
       /* ★ 全新会话（手机首次打开）本来会一律显示"实时"，服务端已确认的休市
        *   就被无视了 —— 这正是"电脑休市、手机却显示实时"的根因。 */
       if(srvClosed(k)) return {s:'closed',ago:0,t:now};
@@ -370,8 +390,32 @@ const GOLD_LIVE_JS = `
       },function(){ i++; step(); });
     })();
   }
+  /* ★ 第三条路：服务端 deep 兜底
+   *   ① 服务端常规（15秒缓存）→ ② 浏览器直连 → ③ 服务端绕缓存全源重试
+   *   服务端在 CF 海外节点出网，能连的源比浏览器多；浏览器直连国外源
+   *   在国内常常连不上，所以最后必须回头再问一次服务端。
+   *   带 60 秒节流：服务端持续挂时不会每 15 秒触发一次全源重试。 */
+  var _deepAt=0;
+  function askBackendDeep(cb){
+    var now=Date.now();
+    if(now-_deepAt<60000){ cb(false); return; }      /* 60 秒内不重复 */
+    _deepAt=now;
+    fetch('/api/gold-live?deep=1',{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var v=+(j&&j.priceUsdPerOz)||0;
+        if(v){ usdOz=v; paint(); cb(true); return; }
+        cb(false);
+      }).catch(function(){ cb(false); });
+  }
   function fetchOnce(cb){
-    askBackend(function(ok){ if(ok) cb(true); else passDirect(cb); });
+    askBackend(function(ok){
+      if(ok){ cb(true); return; }
+      passDirect(function(ok2){
+        if(ok2){ cb(true); return; }
+        askBackendDeep(cb);                          /* ③ 两条都断 → 服务端全源重试 */
+      });
+    });
   }
 
   /* ★ 一拍：没到节拍就沿用快照（不请求），到点了才真抓 */
@@ -900,14 +944,37 @@ const HOME_LIVE_JS = `
         cb(ok);
       }).catch(function(){ bFail('brent'); bFail('wti'); cb(false); });
   }
+  /* ★ 首页黄金原先【没有任何兜底】：服务端返回 0 就直接报断线。
+   *   现在补一条 deep：让服务端绕开 15 秒缓存、用全部 7 个源再试一轮。
+   *   首页不做浏览器直连（保持请求数不膨胀），服务端在海外更可能连得上。
+   *   同样带 60 秒节流。 */
+  var _gDeepAt=0;
+  function pullGoldDeep(cb){
+    var now=Date.now();
+    if(now-_gDeepAt<60000){ cb(false); return; }
+    _gDeepAt=now;
+    fetch('/api/gold-live?deep=1',{cache:'no-store'})
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var v=+(j&&j.priceUsdPerOz)||0;
+        if(v&&gold){ showVal(gold,v); bNote('gold',v); cb(true); return; }
+        cb(false);
+      }).catch(function(){ cb(false); });
+  }
   function pullGold(cb){
     fetch('/api/gold-live',{cache:'no-store'})
       .then(function(r){ return r.json(); })
       .then(function(j){
         var v=+j.priceUsdPerOz||0;
         if(v&&gold){ showVal(gold,v); bNote('gold',v); cb(true); return; }
+        pullGoldDeep(function(ok){
+          if(ok){ cb(true); return; }
+          bFail('gold'); cb(false);
+        });
+      }).catch(function(){ pullGoldDeep(function(ok){
+        if(ok){ cb(true); return; }
         bFail('gold'); cb(false);
-      }).catch(function(){ bFail('gold'); cb(false); });
+      }); });
   }
   /* 没到节拍 → 沿用快照，一个请求都不发 */
   function tickOil(){

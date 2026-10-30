@@ -476,12 +476,23 @@ Sitemap: ${SITE.domain}/sitemap.xml
      * 同源（/api/...），因此没有 CORS 问题。 */
     if (url.pathname === '/api/gold-live') {
       const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
+      /* ★★ deep 兜底（★ 前端两条路都断了之后的第三条路）
+       *
+       * 背景：服务端在 CF 海外节点出网，能连的源比浏览器多。
+       *   但服务端结果有 15 秒缓存；若缓存那一拍恰好全挂，返回的 priceUsdPerOz=0，
+       *   前端就只能【浏览器直连】国外源 —— 国内访问常常连不上 → 一直"连接中断"。
+       *   这就是"服务端明明拿得到、页面却一直断"的兜底缺口。
+       *
+       * ?deep=1 的作用：绕开 15 秒缓存，让服务端【立刻重新遍历全部 7 个源】
+       *   （含最后的 3 号兜底）。只在前端两条路都失败时才调用，频率极低。
+       *   3 号那头已有 60 秒缓存 + 每日真抓上限，不会被放大。 */
+      const deep = url.searchParams.get('deep') === '1';
       /* ★★ 根因修复：原来这里【直接调 getGoldLive()，绕过 15 秒缓存】，
        *   于是 SSR（走缓存）与前端轮询（现抓）取到的不是同一份值 ——
        *   用户看到"点进去一个数、点出来又一个数"。
        *   现在：不带 ?src= 时统一走 liveOverlay()（与 SSR 同一份缓存）；
        *   只有探针显式指定 ?src= 才绕过缓存直连（那是排查用的，要新鲜值）。 */
-      const r = order.length ? await getGoldLive(order)
+      const r = (order.length || deep) ? await getGoldLive(order)
                              : (await liveOverlay()).gold || {};
       // 字段契约保持与旧版一致（前端读 priceUsdPerOz / live），
       // 额外带出 provider / stale / tried，便于排查到底走的哪条链路。
@@ -493,6 +504,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
         stale: !!r.stale,
         note: r.note || '',
         tried: r.tried || [],
+        deep: deep ? true : undefined,
       }, { headers: { 'cache-control': 'no-store' } });
     }
 
