@@ -224,6 +224,10 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card .meta{margin-top:12px;font-size:.76rem;color:var(--dim);
   display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:10px}
 .card .go{display:inline-block;color:var(--gold2);white-space:nowrap;transition:.22s}
+/* ★ 卡片 meta 里只有「查看全部」时（布伦特/WTI），space-between 会把它顶到左边，
+   跟黄金/油价/汇率那几张（左侧有说明文字、go 靠右）不齐。
+   用 margin-left:auto 把它推到右下角，五张卡统一。 */
+.card .meta>.go:first-child{margin-left:auto}
 .card:hover .go{transform:translateX(3px)}
 .card.gold{--c:rgba(245,179,1,.2)} .card.oil{--c:rgba(255,122,69,.2)}
 .card.cn{--c:rgba(34,211,238,.2)}  .card.fx{--c:rgba(167,139,250,.2)}
