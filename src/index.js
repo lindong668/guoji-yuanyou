@@ -3,7 +3,8 @@
 // Deploy target: https://you.piccalc.com
 // Data source:   https://ss.wwok.eu.cc/data  (your existing Worker)
 //
-// ★★ 版本号：A49（A45 基线 → A46 停服 → A48 私有密钥 → A49 自用偏好 + 实时修复）
+// ★★ 版本号：A50（A49 + 恢复 MKT_STATE_KV 读写；A49 全部修复保留）
+//    A49（A45 基线 → A46 停服 → A48 私有密钥 → A49 自用偏好 + 实时修复）
 //    A45（2026-10-30 基线，10-31 归档纠正编号）
 //    ★ 曾误标 A27 造成编号倒退，实际是 A44 之后的产物，现正式定号 A45
 //    版本序列：… A22p → A26 → A44 → 【A45 本轮】
@@ -371,9 +372,22 @@ async function mktWrite(env, obj) {
  * 为什么需要：前端 srvLoad() 是异步 fetch，首屏 paint 时还没回来，
  *   周末用户会先看到「实时」再闪成「休市中」。写进 HTML 就零闪烁。 */
 async function mktInject(env) {
-  /* ★ A49：直接按交易时段注入，不再读 MKT_STATE_KV。
-     重部署后 KV 残留的 closed 不会再造成「盘中却显示休市」。 */
-  const o = sessionState();
+  /* ★ A50：恢复【读 MKT_STATE_KV】—— 周末/休市时段一打开就显示休市，
+   *   不必等前端从零观察 15 分钟（这是 A45 起就有的体验，用户明确要求保留）。
+   *   同时保留 A49 的时段判定作为防护：
+   *     开市时段一律注入 live，KV 里停服残留 / Cron 延迟的 closed 不再误报；
+   *     休市时段才采纳 KV 里已确认的 closed，KV 为空时用 sessionState() 兜底。 */
+  const kv = mktKV(env);
+  let o;
+  if (!kv) o = sessionState();
+  else {
+    const s = await mktRead(env);
+    o = s ? { brent: (s.brent && s.brent.st) || null,
+              wti:   (s.wti   && s.wti.st)   || null,
+              gold:  (s.gold  && s.gold.st)  || null }
+          : sessionState();
+  }
+  if (sessionOpenAt()) o = { brent: 'live', wti: 'live', gold: 'live' };
   return '<script type="application/json" id="ps-mkt">'
        + JSON.stringify(o).replace(/</g, '\\u003c')
        + '<\/script>';
@@ -454,9 +468,13 @@ function lockedPage() {
 export default {
   /* Cron：每 10 分钟独立判定一次休市并记进 KV（不依赖用户打开页面） */
   async scheduled(controller, env, ctx) {
-    /* ★ A49：休市改由 sessionState() 实时判定，Cron 不再写 KV。
-       原 mktTick 会把历史状态留在 MKT_STATE_KV；停服期间残留的 closed
-       会在下次部署后被 SSR 读到，造成盘中误报休市，同时白耗 KV 写入额度。 */
+    /* ★ A50：恢复 A45/A48 原有的 Cron → mktTick() → MKT_STATE_KV 写入。
+       key 仍是 ps2_market_state、绑定仍是 MKT_STATE_KV（复用 3号 namespace）、
+       节流仍是「只在价变 / 状态翻转时写」→ 开市约 144 次/天、周末近 0。
+       mktStep / mktNeedWrite 原函数一字未动，写入结构与停服前完全一致。
+       A49 的时段判定继续在 mktInject + /api/market-state 侧挡残留 closed，
+       所以 Cron 恢复后不会重现「刚进来布伦特就显示休市」。 */
+    try { await mktTick(env); } catch (e) { /* Cron 失败不影响站点 */ }
   },
   async fetch(request, env, ctx) {
     bindKV(env);          /* ★ 绑定 KV（未配置则自动降级为模块级缓存） */
@@ -658,13 +676,21 @@ Sitemap: ${SITE.domain}/sitemap.xml
     /* ★ 服务端 Cron 判定的休市状态。前端首屏读一次，若服务端早已确认休市，
      *   就【立刻】显示休市中，不必自己从零等满 15 分钟（这是周末体验的关键）。 */
     if (url.pathname === '/api/market-state') {
+      /* ★ A50：恢复读 KV，前端 srvLoad() 拿到的仍是停服前那份结构；
+         开市时段一律 live（挡残留 closed），休市时段采纳 KV 的 closed。 */
+      const kv = mktKV(env);
+      const s = kv ? ((await mktRead(env)) || {}) : {};
       const st = sessionState();
+      const open = sessionOpenAt();
       return Response.json({
         ok: true,
-        at: Date.now(),
-        brent: st.brent, wti: st.wti, gold: st.gold,
-        session: true,          /* ★ A49：时段判定，非 KV 历史状态 */
-        hasKV: !!mktKV(env),
+        at: s.at || Date.now(),
+        brent: open ? 'live' : ((s.brent && s.brent.st) || st.brent),
+        wti:   open ? 'live' : ((s.wti   && s.wti.st)   || st.wti),
+        gold:  open ? 'live' : ((s.gold  && s.gold.st)  || st.gold),
+        session: true,
+        hasKV: !!kv,
+        kvHit: !!s.at,          /* 本次是否真读到 KV 记录 */
       }, { headers: { 'cache-control': 'no-store' } });
     }
 
