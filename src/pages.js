@@ -143,15 +143,21 @@ const BEAT_CORE = `
     if(h>=21 && h<22) return false;
     return true;
   }
-  var SRV={brent:null,wti:null,gold:null};
+  var SRV={brent:null,wti:null,gold:null,fresh:false};
   /* ★ 首屏零闪烁：直接读 SSR 写进 HTML 的状态，不等异步 fetch */
   (function(){ try{
     var e=document.getElementById('ps-mkt');
     if(e){ var j=JSON.parse(e.textContent)||{};
-      SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null; }
+      SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null;
+      SRV.fresh=!!j.fresh; }
   }catch(err){} })();
-  /* ★ A49：开市时一律不采纳历史 closed 标记（KV 残留 / Cron 延迟都不再误报） */
-  function srvClosed(k){ return sessionOpen() ? false : SRV[k]==='closed'; }
+  /* ★ A51：休市标准与服务端 mktInject / /api/market-state 完全同一套：
+   *   时段休市 → 必休市；开市时段只认【30 分钟内 Cron 刚写的】closed
+   *   （节假日 / 临时休市），停服残留的旧记录一律不认。 */
+  function srvClosed(k){
+    if(!sessionOpen()) return true;
+    return SRV.fresh && SRV[k]==='closed';
+  }
   /* 返回 Promise：切回前台时要等它落地再重绘，否则读到的还是旧状态 */
   function srvLoad(){
     return fetch('/api/market-state',{cache:'no-store'})
@@ -159,6 +165,7 @@ const BEAT_CORE = `
       .then(function(j){
         if(!j) return;
         SRV.brent=j.brent||null; SRV.wti=j.wti||null; SRV.gold=j.gold||null;
+        SRV.fresh=!!j.kvFresh;
       }).catch(function(){});   /* 读不到就当没有，本地兜底照常工作 */
   }
 
@@ -186,11 +193,13 @@ const BEAT_CORE = `
       return {s:'hold',ago:ago,t:o.t};
     }
     if(now-o.t>DEAD) return {s:'lost',ago:ago,t:o.t};
+    /* ★ A51：服务端【新鲜】closed 优先（节假日 / 临时休市），
+     *   挡在「本地近期见过价格变动」之前，避免被 o.moved 盖掉。 */
+    if(srvClosed(k)) return {s:'closed',ago:ago,t:o.t};
     /* ① 本地近期【真的】看到价格动过 → 一定开市（优先于服务端标记，
      *    因为服务端 Cron 最多有 10 分钟延迟，而开市必须是即时的） */
     if(o.moved && (now-(o.mv||o.t))<CLOSED_MS) return {s:'live',ago:ago,t:o.t};
-    /* ② 服务端 Cron 早已确认休市 → 立刻显示，不用本地等满 15 分钟 */
-    if(srvClosed(k)) return {s:'closed',ago:ago,t:o.t};
+    /* ② 服务端 Cron 休市已在上面判过 */
     /* ③ 本地兜底：服务端不可用（没绑 KV / Cron 没跑）时自己累计 15 分钟 */
     /* ★ A49：开市时本地「价格冻结」兜底不再判休市 */
     return {s:'live',ago:ago,t:o.t};

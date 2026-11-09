@@ -113,6 +113,26 @@ const SSR_LIVE_BUDGET = 2500;
  * 页面渲染仍用 2.5 秒，因为浏览器在等，快最重要。 */
 const API_LIVE_BUDGET = 8000;
 
+/* ★ A51：/api/oil-live 自己的上一拍结果（只用于「缺一半时短期沿用」）。
+ *   原来拿 SSR 的 liveCache.oil 当 prev —— 那是 180 秒共享缓存，
+ *   把 3 分钟前的旧值当实时顶上来，正是「布伦特好几轮不动」的放大器。 */
+let apiPrev = null;
+function withTimeout(p, ms) {
+  return Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+}
+/* 3 号当前显示值：只在 ?debug=1 时取，不占用每一拍的耗时 */
+async function site3Now(env) {
+  try {
+    const j = await withTimeout(fetch(SOURCE_WORKER, { headers: {
+      'X-Access-Key': env.SITE3_KEY || SOURCE_ACCESS_KEY_FALLBACK,
+      'Accept': 'application/json',
+    } }).then(x => x.ok ? x.json() : null).catch(() => null), 700);
+    if (!j) return null;
+    const b = j['油'] || j.oil || {}, w = j.wti || {};
+    return { brent: +(b.price || 0) || null, wti: +(w.price || 0) || null };
+  } catch (e) { return null; }
+}
+
 /* 单品种旧值最多沿用多久（毫秒）。
  * brent/wti 各自独立计时，超时就作废，防止"永远不动的假数字"。 */
 
@@ -338,6 +358,14 @@ function sessionState() {
 }
 export { sessionOpenAt, sessionState };
 
+/* ★ A51：区分「Cron 刚判的休市」与「停服期间残留的旧记录」。
+ *   Cron 每 10 分钟一拍，30 分钟窗口覆盖 3 拍；A46 停服 9 天的旧 closed
+ *   自动过期作废，不会再出现「刚进来布伦特显示休市」。
+ *   但节假日 / 特殊休市时，Cron 写下的新鲜 closed 仍然优先于 UTC 时段表。 */
+const KV_FRESH_MS = 30 * 60 * 1000;
+function kvFresh(s) { return !!(s && s.at && (Date.now() - s.at) < KV_FRESH_MS); }
+function kvClosed(s, k) { return kvFresh(s) && !!(s[k] && s[k].st === 'closed'); }
+
 function mktKV(env) { return (env && env.MKT_STATE_KV) ? env.MKT_STATE_KV : null; }
 
 /* 判定单个品种：喂进新价，返回 { v 上次价, mv 上次变动时刻, st 状态 } */
@@ -372,24 +400,27 @@ async function mktWrite(env, obj) {
  * 为什么需要：前端 srvLoad() 是异步 fetch，首屏 paint 时还没回来，
  *   周末用户会先看到「实时」再闪成「休市中」。写进 HTML 就零闪烁。 */
 async function mktInject(env) {
-  /* ★ A50：恢复【读 MKT_STATE_KV】—— 周末/休市时段一打开就显示休市，
-   *   不必等前端从零观察 15 分钟（这是 A45 起就有的体验，用户明确要求保留）。
-   *   同时保留 A49 的时段判定作为防护：
-   *     开市时段一律注入 live，KV 里停服残留 / Cron 延迟的 closed 不再误报；
-   *     休市时段才采纳 KV 里已确认的 closed，KV 为空时用 sessionState() 兜底。 */
+  /* ★ A51 休市标准（与「之前一模一样」对齐，且更严）：
+   *   ① 休市时段（UTC 周六 / 周日 22:00 前 / 周五 21:00 后 / 每日 21–22 结算）
+   *      → 一律 closed，绝不挂一个旧数字装实时。
+   *   ② 开市时段 → 默认 live；只有 KV 里【30 分钟内 Cron 刚写下的】
+   *      closed 才采纳（节假日 / 临时休市），否则一律挡掉停服残留。
+   *   ③ 读 KV 做首屏零闪烁；KV 没绑 / 为空时用 UTC 时段兜底。 */
   const kv = mktKV(env);
+  const st = await (kv ? mktRead(env) : null);
+  const fresh = kvFresh(st);
   let o;
-  if (!kv) o = sessionState();
-  else {
-    const s = await mktRead(env);
-    o = s ? { brent: (s.brent && s.brent.st) || null,
-              wti:   (s.wti   && s.wti.st)   || null,
-              gold:  (s.gold  && s.gold.st)  || null }
-          : sessionState();
+  if (!sessionOpenAt()) {
+    o = { brent: 'closed', wti: 'closed', gold: 'closed' };
+  } else {
+    o = {
+      brent: kvClosed(st, 'brent') ? 'closed' : 'live',
+      wti:   kvClosed(st, 'wti')   ? 'closed' : 'live',
+      gold:  kvClosed(st, 'gold')  ? 'closed' : 'live',
+    };
   }
-  if (sessionOpenAt()) o = { brent: 'live', wti: 'live', gold: 'live' };
   return '<script type="application/json" id="ps-mkt">'
-       + JSON.stringify(o).replace(/</g, '\\u003c')
+       + JSON.stringify({ ...o, fresh }).replace(/</g, '\\u003c')
        + '<\/script>';
 }
 
@@ -676,21 +707,23 @@ Sitemap: ${SITE.domain}/sitemap.xml
     /* ★ 服务端 Cron 判定的休市状态。前端首屏读一次，若服务端早已确认休市，
      *   就【立刻】显示休市中，不必自己从零等满 15 分钟（这是周末体验的关键）。 */
     if (url.pathname === '/api/market-state') {
-      /* ★ A50：恢复读 KV，前端 srvLoad() 拿到的仍是停服前那份结构；
-         开市时段一律 live（挡残留 closed），休市时段采纳 KV 的 closed。 */
+      /* ★ A51：与 mktInject 同一套标准，服务端 / 前端零分歧。
+       *   休市时段一律 closed；开市时段只认 30 分钟内 Cron 刚写的 closed。 */
       const kv = mktKV(env);
-      const s = kv ? ((await mktRead(env)) || {}) : {};
-      const st = sessionState();
+      const st = kv ? ((await mktRead(env)) || {}) : {};
+      const fresh = kvFresh(st);
       const open = sessionOpenAt();
+      const state = (k) => open ? (kvClosed(st, k) ? 'closed' : 'live') : 'closed';
       return Response.json({
         ok: true,
-        at: s.at || Date.now(),
-        brent: open ? 'live' : ((s.brent && s.brent.st) || st.brent),
-        wti:   open ? 'live' : ((s.wti   && s.wti.st)   || st.wti),
-        gold:  open ? 'live' : ((s.gold  && s.gold.st)  || st.gold),
+        at: st.at || Date.now(),
+        brent: state('brent'),
+        wti:   state('wti'),
+        gold:  state('gold'),
         session: true,
+        kvFresh: fresh,
         hasKV: !!kv,
-        kvHit: !!s.at,          /* 本次是否真读到 KV 记录 */
+        kvHit: !!st.at,
       }, { headers: { 'cache-control': 'no-store' } });
     }
 
@@ -740,30 +773,36 @@ Sitemap: ${SITE.domain}/sitemap.xml
      * ★ 不写 KV：共享缓存只留给 SSR 首屏，KV 写入额度不受影响。
      * ?src=site3 可手动对齐 3 号口径（它读的是定时抓的旧值，不是最快）。 */
     if (url.pathname === '/api/oil-live') {
+      /* ★ A51：保留 A49 的「每拍现抓」，但把我上一版加进去的三处拖慢去掉：
+       *   ① 每拍都打 3 号做对照（700ms）→ 改成只有 ?debug=1 才取；
+       *   ② 缺任一半就问 3 号（4 秒超时）→ 改成两个品种全缺才问，且 1.2 秒超时；
+       *   ③ prev 用 SSR 的 180 秒共享缓存 → 改成接口自己的上一拍，
+       *      沿用上限仍是 oilLive.js 里 A45 原版的 STALE_KEEP_MS = 2 分钟。
+       *   源模块（oilLive.js / goldLive.js / data.js）一个字没动，仍是 8 源 / 7 源现抓。 */
+      const debug = url.searchParams.get('debug') === '1';
       const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
+      const prevB = apiPrev && apiPrev.prevBrent;   /* 上一拍的布伦特，必须先存 */
       let r = await getOilLive(order);
       if (!order.length) {
-        r = applyStaleKeep(r, liveCache.oil);
-        if (r && (!r.brent || !r.wti)) r = fillFromFallback(r, await oilFallback());
-      }
-      /* ★ 顺带带回 3 号当前显示值，一眼看清两边差在哪；
-         700ms 超时即放弃，绝不拖慢主链路。 */
-      let site3 = null;
-      try {
-        const j = await Promise.race([
-          fetch(SOURCE_WORKER, { headers: {
-            'X-Access-Key': env.SITE3_KEY || SOURCE_ACCESS_KEY_FALLBACK,
-            'Accept': 'application/json',
-          } }).then(x => x.ok ? x.json() : null).catch(() => null),
-          new Promise(res => setTimeout(() => res(null), 700)),
-        ]);
-        if (j) {
-          const b = j['油'] || j.oil || {}, w = j.wti || {};
-          site3 = { brent: +(b.price || 0) || null, wti: +(w.price || 0) || null };
+        r = applyStaleKeep(r, apiPrev);
+        if (!r || (!r.brent && !r.wti)) {
+          const fb = await withTimeout(oilFallback(), 1200);
+          r = fillFromFallback(r, fb);
         }
-      } catch (e) {}
-      return Response.json({ ...(r || {}), site3, realtime: !order.length },
-        { headers: { 'cache-control': 'no-store' } });
+        apiPrev = r ? { ...(apiPrev || {}), ...r, at: Date.now() } : apiPrev;
+      }
+      const out = {
+        ...(r || {}),
+        beatAt: Date.now(),
+        changed: !!(r && r.brent && prevB && Math.abs(r.brent - prevB) > 1e-9),
+        realtime: !order.length,
+      };
+      if (r && r.brent) apiPrev = { ...(apiPrev || {}), prevBrent: r.brent };
+      if (debug) {
+        out.site3 = await site3Now(env);
+        out.apiPrevAt = apiPrev && apiPrev.at || 0;
+      }
+      return Response.json(out, { headers: { 'cache-control': 'no-store' } });
     }
 
     /* ★★ 数据源体检（可视化、可点按钮）
