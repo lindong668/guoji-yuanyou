@@ -333,11 +333,6 @@ export async function getMarket() {
   return lastMarket;
 }
 
-/* ★ A54：SSR 预算超时时用的「上一次真值」快照（只读，不触发外网请求）。
- *   冷实例返回 null，调用方会完整等待，保证首屏 HTML 与爬虫永远有真数字。 */
-export function marketSnapshot() { return lastMarket; }
-export function fxSnapshot() { return lastFx; }
-
 // Accepts either upstream shape:
 //   er-api      -> { result, time_last_update_utc, rates }
 //   frankfurter -> { date, rates }

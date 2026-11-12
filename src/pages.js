@@ -45,12 +45,11 @@ const BEAT_CORE = `
    *   ② 价格冻结 ≥20 分钟 且 连续成功 ≥80 次 → 休市中（链路通，市场真没动）
    *   ③ 其他                                → 实时
    *
-   * ★ 多源在【后端】：/api/oil-live 常态按优先级取价，
-   *   A55 起连续 9 拍价格完全不变会自动并发全部 9 个源复检；brent 独立源已进常态链路。
+   * ★ 多源在哪？在【后端】：/api/oil-live 已按序试 8 个源，拿到就返回。
    *   前端不再自己探测一遍 —— 那正是复杂度和 bug 的温床。
    * ================================================================ */
-  var BEAT=5000;         /* ★ A55：退回 5 秒（刷新更快不会让源更快出数；A53/A54 的 3 秒撤销） */
-  var DEAD=4500;         /* 1.5 拍没拿到数据 = 漏拍 */
+  var BEAT=5000;         /* ★ A49：5 秒一拍（原 15 秒；配合后端现抓才是真·近秒级） */
+  var DEAD=7500;         /* 1.5 拍没拿到数据 = 漏拍 */
   var CLOSED_MS=1200000; /* 价格冻结 20 分钟（仅作兜底，开市时不再据此判休市） */
   var CLOSED_OK=240;     /* 240 × 5s = 20 分钟，与 CLOSED_MS 同步 */
   var WAKE=8000;         /* 后台切回来的宽限窗口（8 秒） */
@@ -1016,9 +1015,7 @@ const HOME_LIVE_JS = `
       if(c&&c.v!=null&&wti) showVal(wti,c.v);
       return;
     }
-    if(_oilBusy) return;
-    _oilBusy=true; setTimeout(function(){ _oilBusy=false; },6000);
-    pullOil(function(){ _oilBusy=false; renderAll(); });
+    pullOil(function(){ renderAll(); });
   }
   function tickGold(){
     if(document.hidden) return;
@@ -1027,14 +1024,9 @@ const HOME_LIVE_JS = `
       if(a&&a.v!=null&&gold) showVal(gold,a.v);
       return;
     }
-    if(_goldBusy) return;
-    _goldBusy=true; setTimeout(function(){ _goldBusy=false; },6000);
-    pullGold(function(){ _goldBusy=false; renderAll(); });
+    pullGold(function(){ renderAll(); });
   }
-  /* ★ A54：进卡片→返回会同时触发 pageshow / visibilitychange / 首拍，
-   *   三条路都调 tickOil 会并发发请求。单飞保证同时只有一拍在飞，
-   *   6 秒兜底释放防止某个 fetch 永远 pending 把节拍锁死。 */
-  var _oilBusy=false, _goldBusy=false, firstOil=true, firstGold=true;
+  var firstOil=true, firstGold=true;
   function schedOil(){
     var d=firstOil?0:bDelay('brent');
     if(!firstOil&&d<=0) d=BEAT;      /* 取数失败 → 退避一整拍，不疯狂重试 */

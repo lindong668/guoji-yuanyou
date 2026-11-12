@@ -412,28 +412,13 @@ export function fillFromFallback(oilVal, fb) {
  * 留下的三个都是实测 50~130ms 就能拿到值的：yahoo / yahoo2 / spark。
  * 效果：并发批耗时从 2500ms 降到 ~130ms。
  */
-/* ★ A54：把当年被探针结论砍掉的【独立源】接回生产链路。
- *   A45~A53 的 BATCH_FAST 只有 yahoo / yahoo2 / spark —— 全是 Yahoo 一家；
- *   BATCH_MORE = [] 让其余 6 个源从未进入过任何一拍。结果 brent 单吊
- *   Yahoo BZ=F（更新最慢），WTI 有 CL=F（较快）→ 正是「布伦特特别不爱动、
- *   WTI 好一点」。用户找来的 biquote XBRUSD/XTIUSD、stooq cb.f/cl.f、
- *   oilwatch /api/v1/brent|wti 端点在源码里全都有，只是没被调用。
- *   A54 把 biquote 放回快批首位（券商秒级链路），其余源进 BATCH_MORE 按需串行。 */
-const BATCH_FAST = ['biquote', 'yahoo', 'spark', 'yahoo2'];
-/* brent 独立源：给 brent 时优先于 Yahoo 同源三接口（见 push 合流规则） */
-const BRENT_INDEPENDENT = new Set(['biquote', 'stooq', 'oilwatch', 'opademo', 'cpapi', 'site3']);
-const YAHOO_IDS = new Set(['yahoo', 'yahoo2', 'spark']);
-const BRENT_CROSS = ['biquote', 'stooq', 'oilwatch'];
-export const BATCH_FAST_IDS = BATCH_FAST.slice();
+const BATCH_FAST = ['yahoo', 'yahoo2', 'spark'];
 /* ★ 并发 5 个源，但【合流严格按优先级】：biquote 给了布伦特就用 biquote 的，
  *   只有排在它前面的源都没给，才会采用 oilwatch 的值。
  *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
  *     所以让它"永远排在最后被采用"，而不是禁用 —— 禁用会在慢网下
  *     多一轮串行往返，实测反而撞满 8 秒预算、连 WTI 都被拖慢。） */
-/* ★ A54：不再为空。快批没给全、或 brent 仍只来自 Yahoo 系时，
- *   这些源按序串行补缺口（限流源/付费源只在按需路径，不打每拍）。 */
-const BATCH_MORE = ['stooq', 'oilwatch', 'site3', 'opademo', 'cpapi'];
-export const BATCH_MORE_IDS = BATCH_MORE.slice();
+const BATCH_MORE = [];
 
 export async function getOilLive(order) {
   const tried = [];
@@ -447,21 +432,9 @@ export async function getOilLive(order) {
     const b = Number(r && r.brent) || 0, w = Number(r && r.wti) || 0;
     if (!b && !w) return false;
     const prev = merged;
-    /* ★ A54：逐品种记录来源；brent 若来自 Yahoo 同源三接口，
-     *   后续独立源（biquote 券商 / stooq / oilwatch）给出不同 brent 时覆盖采用。
-     *   这是「布伦特别不爱动」的代码根因修复，不改节拍、不改缓存。 */
-    let nb = (prev && prev.brent) || b;
-    let nw = (prev && prev.wti)   || w;
-    let bs = b ? p.id : ((prev && prev.bSrc) || '');
-    let ws = w ? p.id : ((prev && prev.wSrc) || '');
-    if (b && BRENT_INDEPENDENT.has(p.id) && prev && YAHOO_IDS.has(prev.bSrc)) {
-      nb = b; bs = p.id;
-    }
     merged = {
-      brent: nb,
-      wti:   nw,
-      bSrc:  bs,
-      wSrc:  ws,
+      brent: (prev && prev.brent) || b,
+      wti:   (prev && prev.wti)   || w,
       note:  (prev && prev.note) || (r && r.note) || '',
       asOf:  (prev && prev.asOf) || (r && r.asOf) || '',
       stale: !!(prev && prev.stale) && !!(r && r.stale),
@@ -513,14 +486,8 @@ export async function getOilLive(order) {
     if (complete()) { setSticky(); return finish(); }
   }
 
-  /* 第 1 步：并发跨家快批（A54 起 biquote 券商源排首位） */
+  /* 第 1 步：并发两个最稳的源 */
   await fanout(BATCH_FAST.filter(x => x !== stickyProvider));
-  /* ★ A54：brent 交叉补强。若这一拍 brent 仍只来自 Yahoo 一家，
-   *   再并发问一次独立源（去重、失败不重试），避免「粘在 BZ=F 冻结值上」。 */
-  if (merged && merged.brent && YAHOO_IDS.has(merged.bSrc)) {
-    const cross = BRENT_CROSS.filter(id => !tried.some(t => t.id === id));
-    if (cross.length) await fanout(cross);
-  }
   if (complete()) { setSticky(); return finish(); }
 
   /* 第 2 步：串行补缺口 */
@@ -570,76 +537,5 @@ export async function probeAll() {
     results: out,
     okCount: out.filter(x => x.ok).length,
     total: out.length,
-  };
-}
-
-/* ------------------------------------------------------------------
- * ★★ A53：冻结破局 —— 把「名义 9 源」真正用起来
- * --------------------------------------------------------------------
- * A52 的生产链路实际只跑 BATCH_FAST = yahoo / yahoo2 / spark（同一家），
- * 且 stickyProvider 一旦粘住并给出 brent+wti 就立即 return，永远不会
- * 再问其它源。若粘住的那个源返回的是日线收盘值 / 冻结值，前端就会
- * 连续十几分钟显示同一个数 —— 这是代码根因，不是「免费源 1 分钟 K 线」，
- * 也不是浏览器缓存。
- *
- * 常态仍走 getOilLive()（快、SSR 与 API 同值），本函数只在
- * /api/oil-live 连续 N 拍检测到价格完全不变时才被调用：
- *   ① 并发 OIL_PROVIDERS 全部 9 个源（每个源自带 3 秒超时）；
- *   ② 逐品种优先选【与冻结值不同】的候选；
- *   ③ 全部源给同一个数 → 标记 frozenConfirmed（市场/源确实一样，不是卡死）。
- * 调用频率由上层限流（至少间隔 30 秒），不会把限流源打爆。
- * ---------------------------------------------------------------- */
-export function resetSticky() { stickyProvider = null; }
-export function stickyNow() { return stickyProvider; }
-export const OIL_ALL_IDS = OIL_PROVIDERS.map(p => p.id);
-export { BRENT_INDEPENDENT, YAHOO_IDS, BRENT_CROSS };
-
-function pickFresh(cands, key, frozenVal) {
-  const usable = cands.filter(x => x[key] > 0);
-  if (!usable.length) return { v: 0, id: null, moved: false, allSame: false };
-  if (!frozenVal) {
-    return { v: usable[0][key], id: usable[0].id, moved: false, allSame: false };
-  }
-  const diff = usable.find(x => Math.abs(x[key] - frozenVal) > 1e-9);
-  const chosen = diff || usable[0];
-  return {
-    v: chosen[key], id: chosen.id, moved: !!diff,
-    allSame: usable.every(x => Math.abs(x[key] - frozenVal) <= 1e-9),
-  };
-}
-
-export async function getOilLiveDeep(frozen) {
-  const t0 = Date.now();
-  const settled = await Promise.all(OIL_PROVIDERS.map(async (p) => {
-    const s = Date.now();
-    try {
-      const r = await p.fn();
-      const b = Number(r && r.brent) || 0, w = Number(r && r.wti) || 0;
-      return { id: p.id, brent: b, wti: w, ok: !!(b || w),
-               ms: Date.now() - s, err: (b || w) ? '' : '返回为空' };
-    } catch (e) {
-      return { id: p.id, brent: 0, wti: 0, ok: false,
-               ms: Date.now() - s, err: String(e && e.message || e) };
-    }
-  }));
-  const cands = settled.filter(x => x.ok);
-  const B = pickFresh(cands, 'brent', frozen && frozen.brent);
-  const W = pickFresh(cands, 'wti',   frozen && frozen.wti);
-  const moved = !!(B.v && W.v) && (B.moved || W.moved);
-  if (moved) stickyProvider = null;   /* 下一拍重新选源，不回到粘滞的坏源 */
-  const now = Date.now();
-  return {
-    brent: B.v, wti: W.v,
-    bAt: B.v ? now : 0, wAt: W.v ? now : 0,
-    provider: [B.id, W.id].filter(Boolean).join('+') || null,
-    providerLabel: 'A53 全源冻结复检',
-    providers: cands.map(x => x.id),
-    movedFromFrozen: moved,
-    frozenConfirmed: !moved && !!(B.v && W.v),
-    allSame: !!(B.v && W.v) && !!B.allSame && !!W.allSame,
-    tried: settled.map(x => ({ id: x.id, ok: x.ok, ms: x.ms,
-                               brent: x.brent, wti: x.wti, error: x.err })),
-    ms: now - t0,
-    at: now,
   };
 }
