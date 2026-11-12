@@ -30,6 +30,12 @@ const BEAT_CORE = `
      On a swipe-back the SSR numbers are already on screen; defer all
      fetches / interval boots so the restore frame stays responsive. */
   var PS_BACK = !!(window.__psBack);
+  /* ★ A61：整页导航头 2.5 秒的「断线宽限」。
+   * iOS Safari 点卡片 / 左滑返回都重建整份文档；sessionStorage 里上一页的
+   * 心跳快照可能已超过 DEAD(7.5s)，首帧 bState() 就判 lost -> 闪一下
+   * 「连接中断」，一两秒后首拍回来又变好。宽限期内保持 SSR 那一帧
+   * （休市仍立刻显示），首拍落地后照常判定，不掩盖真断线。 */
+  var NAV_AT=Date.now(), NAV_GRACE=2500;
   /* ================================================================
    * ★★★ 行情节拍核心（三个页面共用，唯一真相来源）
    * ---------------------------------------------------------------
@@ -184,6 +190,12 @@ const BEAT_CORE = `
     /* ★ A49：休市时段直接显示休市中；开市时段绝不因「价格没动」误判休市，
        也不会把休市时段的一次取数失败报成连接中断。 */
     if(!sessionOpen()) return {s:'closed',ago:0,t:Date.now()};
+    /* A61: hold the SSR frame during the first 2.5s of a full nav. */
+    if(Date.now()-NAV_AT<NAV_GRACE){
+      var _n=Date.now();
+      if(srvClosed(k)) return {s:'closed',ago:0,t:_n};
+      return {s:'hold',ago:0,t:_n};
+    }
     var o=bGet(k), now=Date.now();
     if(!o||!o.t){
       /* 从未成功过：已失败够久就如实报断线，不能拿 SSR 旧数字假装实时 */

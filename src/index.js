@@ -720,7 +720,8 @@ Sitemap: ${SITE.domain}/sitemap.xml
       let html = renderHome(langR, applyLive(mR, lvR), fxR, tz);
       /* ★ 首屏零闪烁：与 render() 同款注入（这个分支不走 render 包装） */
       try {
-        const inj = await mktInject(env);
+        /* A61: never let a slow KV read hold the whole HTML response. */
+        const inj = await withTimeout(mktInject(env), 250);
         if (inj && html.indexOf('</head>') > 0) html = html.replace('</head>', inj + '</head>');
       } catch (e) {}
       return new Response(html, {
@@ -737,7 +738,9 @@ Sitemap: ${SITE.domain}/sitemap.xml
           // without another SSR round-trip; language lives in the URL path
           // (and is varied by cookie) so nothing leaks between locales.
           // APIs / diag / probe keep their own no-store headers.
-          'cache-control': 'private, max-age=60',
+          /* A61: stale-while-revalidate lets a re-tapped card paint an
+             old copy instantly while the browser revalidates in background. */
+          'cache-control': 'private, max-age=60, stale-while-revalidate=300',
           'vary': 'Cookie',
           'x-content-type-options': 'nosniff',
         },
@@ -1004,7 +1007,8 @@ ${goldRows}
       let html = fn(lang, { m: applyLive(m, lv), fx }, tz);
       /* ★ 首屏零闪烁：服务端已确认的休市状态直接写进 HTML */
       try {
-        const inj = await mktInject(env);
+        /* A61: never let a slow KV read hold the whole HTML response. */
+        const inj = await withTimeout(mktInject(env), 250);
         if (inj && html.indexOf('</head>') > 0) html = html.replace('</head>', inj + '</head>');
       } catch (e) { /* 注入失败不影响页面 */ }
       return new Response(html, {
@@ -1028,7 +1032,9 @@ ${goldRows}
           // without another SSR round-trip; language lives in the URL path
           // (and is varied by cookie) so nothing leaks between locales.
           // APIs / diag / probe keep their own no-store headers.
-          'cache-control': 'private, max-age=60',
+          /* A61: stale-while-revalidate lets a re-tapped card paint an
+             old copy instantly while the browser revalidates in background. */
+          'cache-control': 'private, max-age=60, stale-while-revalidate=300',
           'vary': 'Cookie',
           'x-content-type-options': 'nosniff',
         },
