@@ -683,6 +683,18 @@ document.addEventListener('click',function(e){
   }
   function run(){
     var els=document.querySelectorAll('time[data-ts]');
+    /* ★ A58：原来在循环里逐个元素 new Intl.DateTimeFormat（构造很贵），
+     *   首页几十上百个时间戳时会占住主线程 1~2 秒，滑不动。
+     *   这里只建两个实例，循环内复用，输出行为完全一致。 */
+    var fmtDay=null, fmtFull=null;
+    try{
+      var optDay={year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'};
+      var optFull={year:'numeric',month:'2-digit',day:'2-digit',
+                   hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'};
+      if(tz)optFull.timeZone=tz;
+      fmtDay=new Intl.DateTimeFormat(loc,optDay);
+      fmtFull=new Intl.DateTimeFormat(loc,optFull);
+    }catch(e){ return; }
     for(var i=0;i<els.length;i++){
       var el=els[i],d=new Date(el.getAttribute('data-ts'));
       if(isNaN(d))continue;
@@ -690,16 +702,19 @@ document.addEventListener('click',function(e){
       // shifted by timezone, or it silently jumps a day backwards.
       var dateOnly=el.getAttribute('data-date-only')==='1';
       try{
-        var opt=dateOnly
-          ? {year:'numeric',month:'2-digit',day:'2-digit',timeZone:'UTC'}
-          : {year:'numeric',month:'2-digit',day:'2-digit',
-             hour:'2-digit',minute:'2-digit',hour12:false,timeZoneName:'short'};
-        if(!dateOnly&&tz)opt.timeZone=tz;
-        el.textContent=new Intl.DateTimeFormat(loc,opt).format(d);
+        el.textContent=(dateOnly?fmtDay:fmtFull).format(d);
       }catch(e){/* keep the server-rendered value */}
     }
   }
-  function all(){ remember(); run(); }
+  /* ★ A58：pageshow 与 visibilitychange 会在「返回页面」时前后脚触发，
+   *   1 秒内只跑一次，避免两次全量重排把主线程占住 1~2 秒。 */
+  var _lastAll=0;
+  function all(){
+    var n=Date.now();
+    if(n-_lastAll<1000) return;
+    _lastAll=n;
+    remember(); run();
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',all);
   else all();
   // Back/forward (bfcache) restores the page WITHOUT re-running scripts,

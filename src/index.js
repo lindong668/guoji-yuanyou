@@ -14,7 +14,7 @@
 //    详见归档包 01_2号版本与当前基线.md
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
-import { getMarket, getFx, fetchGoldLive, SOURCE_WORKER } from './data.js';
+import { getMarket, getFx, fetchGoldLive, SOURCE_WORKER, marketSnapshot, fxSnapshot } from './data.js';
 import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback } from './oilLive.js';
 import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
@@ -106,6 +106,10 @@ const KV_SHARE_TTL = 180000;   /* 3 分钟 —— 想更实时可改小，注意
  * 2.5 秒的取舍：够第一个源（券商 MT5，实测通常 300~800ms）跑完拿到价，
  *   又不至于让谷歌爬虫或用户干等。想更快可改小，但太小会经常拿不到价。 */
 const SSR_LIVE_BUDGET = 2500;
+/* ★ A58：SSR 数据预算。热实例最多等 900ms，
+ *   超时用上一份真值快照；冷实例无快照则完整等待，
+ *   保证首屏 HTML 与 Googlebot 永远拿到真数字。 */
+const SSR_DATA_BUDGET = 900;
 
 /* 接口轮询（/api/oil-live、/api/gold-live）用的预算：8 秒。
  * 与页面渲染不同 —— 接口没人干等（前端只是这一拍拿不到，下一拍再来），
@@ -119,6 +123,32 @@ const API_LIVE_BUDGET = 8000;
 let apiPrev = null;
 function withTimeout(p, ms) {
   return Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+}
+
+/* ★ A58：把 SSR 两项数据抓取从「返回页面」关键路径上挪开。
+ *   no-store 禁用 bfcache，点卡片→返回会整页重新请求。
+ *   已有快照→最多等 900ms，超时用上一份真数字；
+ *   冷实例无快照→完整等待，不留空页、不差异对待爬虫。
+ *   无论哪种，刷新都挂 ctx.waitUntil 在响应后继统跑完。 */
+function ssrData(ctx, needM = true, needF = true) {
+  const pm = needM ? getMarket() : Promise.resolve(null);
+  const pf = needF ? getFx() : Promise.resolve(null);
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    try {
+      ctx.waitUntil(pm.catch(() => null));
+      ctx.waitUntil(pf.catch(() => null));
+    } catch (e) {}
+  }
+  const mSnap = marketSnapshot(), fSnap = fxSnapshot();
+  const take = (p, snap, budget, needed) => {
+    if (!needed) return Promise.resolve(null);
+    if (!snap) return p;                       /* 冷实例：完整等，保真数字 */
+    return withTimeout(p, budget).then(x => x || snap);
+  };
+  return Promise.all([
+    take(pm, mSnap, SSR_DATA_BUDGET, needM),
+    take(pf, fSnap, SSR_DATA_BUDGET, needF),
+  ]);
 }
 /* 3 号当前显示值：只在 ?debug=1 时取，不占用每一拍的耗时 */
 async function site3Now(env) {
@@ -152,7 +182,7 @@ async function site3Now(env) {
  * ---------------------------------------------------------------- */
 let inflight = null;
 
-async function liveOverlay(budgetMs = SSR_LIVE_BUDGET) {
+async function liveOverlay(budgetMs = SSR_LIVE_BUDGET, ctx = null) {
   const now = Date.now();
   /* 有效期：有 KV 时用共享周期，没 KV 时用原来的 15 秒 */
   const ttl = KV ? KV_SHARE_TTL : LIVE_TTL;
@@ -170,6 +200,15 @@ async function liveOverlay(budgetMs = SSR_LIVE_BUDGET) {
     /* 跑完就清空闸门；catch 防止 rejection 没人接变成 unhandled */
     inflight.then(() => { inflight = null; }, () => { inflight = null; });
   }
+  /* ★ A58：HTML 渲染不等外网源，刷新挂到响应之后继统跑。
+   *   热实例（缓存里已有真价）零等待；
+   *   冷实例无缓存时最多等 900ms 拿一次真值，
+   *   保证首屏与 Googlebot 拿到的不是空壳，也不被慢上游卡 1~3 秒。 */
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    try { ctx.waitUntil(inflight.catch(() => null)); } catch (e) {}
+  }
+  const eff = budgetMs <= 0 ? ((liveCache.oil || liveCache.gold) ? 0 : SSR_DATA_BUDGET) : budgetMs;
+  if (eff === 0) return liveCache;
   /* ★ 预算：服务端最多为取价等 budgetMs 毫秒。
    *   超时就先拿旧值（哪怕已过期）把页面渲染出来 —— 页面永远出得来；
    *   抓取在后台跑完会写进 liveCache，用户下一次刷新就是新值。
@@ -177,7 +216,7 @@ async function liveOverlay(budgetMs = SSR_LIVE_BUDGET) {
    *   手机浏览器会一直转圈，最后报"连接错误 / 白屏"。 */
   const res = await Promise.race([
     inflight.catch(() => null),
-    new Promise(r => setTimeout(() => r('__BUDGET__'), budgetMs)),
+    new Promise(r => setTimeout(() => r('__BUDGET__'), eff)),
   ]);
   /* ★★ 绝不返回 null —— 调用方写的是 (await liveOverlay()).oil，
    *   返回 null 会当场 TypeError → 接口 500 → 前端显示"连接中断"。
@@ -677,7 +716,7 @@ Sitemap: ${SITE.domain}/sitemap.xml
       // an unknown language segment is resolved from Accept-Language below.
       // 手动选过语言的访客按他选的渲染；新访客（无 cookie）仍是英文正门。
       const langR = langCookie || DEFAULT_LANG;
-      const [mR, fxR, lvR] = await Promise.all([getMarket(), getFx(), liveOverlay()]);
+      const [[mR, fxR], lvR] = await Promise.all([ssrData(ctx), liveOverlay(0, ctx)]);
       let html = renderHome(langR, applyLive(mR, lvR), fxR, tz);
       /* ★ 首屏零闪烁：与 render() 同款注入（这个分支不走 render 包装） */
       try {
@@ -951,10 +990,9 @@ ${goldRows}
     }
 
     const render = async (fn, needsMarket, needsFx) => {
-      const [m, fx, lv] = await Promise.all([
-        needsMarket ? getMarket() : Promise.resolve(null),
-        needsFx ? getFx() : Promise.resolve(null),
-        needsMarket ? liveOverlay() : Promise.resolve(null),
+      const [[m, fx], lv] = await Promise.all([
+        (needsMarket || needsFx) ? ssrData(ctx, needsMarket, needsFx) : Promise.resolve([null, null]),
+        needsMarket ? liveOverlay(0, ctx) : Promise.resolve(null),
       ]);
       let html = fn(lang, { m: applyLive(m, lv), fx }, tz);
       /* ★ 首屏零闪烁：服务端已确认的休市状态直接写进 HTML */

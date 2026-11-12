@@ -1015,7 +1015,9 @@ const HOME_LIVE_JS = `
       if(c&&c.v!=null&&wti) showVal(wti,c.v);
       return;
     }
-    pullOil(function(){ renderAll(); });
+    if(_oilBusy) return;
+    _oilBusy=true; setTimeout(function(){ _oilBusy=false; },6000);
+    pullOil(function(){ _oilBusy=false; renderAll(); });
   }
   function tickGold(){
     if(document.hidden) return;
@@ -1024,9 +1026,14 @@ const HOME_LIVE_JS = `
       if(a&&a.v!=null&&gold) showVal(gold,a.v);
       return;
     }
-    pullGold(function(){ renderAll(); });
+    if(_goldBusy) return;
+    _goldBusy=true; setTimeout(function(){ _goldBusy=false; },6000);
+    pullGold(function(){ _goldBusy=false; renderAll(); });
   }
-  var firstOil=true, firstGold=true;
+  /* ★ A58：进卡片→返回会同时触发 pageshow / visibilitychange / 首拍，
+   *   三条路都调 tickOil 会并发发请求。单飞保证同时只有一拍在飞，
+   *   6 秒兜底释放防止某个 fetch 永远 pending 把节拍锁死。 */
+  var _oilBusy=false, _goldBusy=false, firstOil=true, firstGold=true;
   function schedOil(){
     var d=firstOil?0:bDelay('brent');
     if(!firstOil&&d<=0) d=BEAT;      /* 取数失败 → 退避一整拍，不疯狂重试 */

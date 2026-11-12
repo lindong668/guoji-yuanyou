@@ -454,3 +454,7 @@ export async function fetchGoldLive() {
     return { ok: false, error: e.message };
   }
 }
+
+/* ★ A58：只读快照，供 SSR 预算超时回退（真数字，不触发外网请求）。 */
+export function marketSnapshot() { return lastMarket; }
+export function fxSnapshot() { return lastFx; }
