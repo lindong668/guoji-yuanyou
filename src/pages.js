@@ -190,6 +190,15 @@ const BEAT_CORE = `
     /* ★ A49：休市时段直接显示休市中；开市时段绝不因「价格没动」误判休市，
        也不会把休市时段的一次取数失败报成连接中断。 */
     if(!sessionOpen()) return {s:'closed',ago:0,t:Date.now()};
+    /* A62: during the back/forward transition frame never flash "lost".
+       The previous page's heartbeat is old by definition; reporting it as a
+       broken connection for 1-2s is exactly the flicker the user filmed. */
+    var _bf=document.documentElement&&document.documentElement.classList&&
+            document.documentElement.classList.contains('ps-bf');
+    if(_bf){
+      if(srvClosed(k)) return {s:'closed',ago:0,t:Date.now()};
+      return {s:'hold',ago:0,t:Date.now()};
+    }
     /* A61: hold the SSR frame during the first 2.5s of a full nav. */
     if(Date.now()-NAV_AT<NAV_GRACE){
       var _n=Date.now();

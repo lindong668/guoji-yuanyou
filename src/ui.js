@@ -209,10 +209,16 @@ section.blk{padding:46px 0}
 a.card{display:block;color:inherit;text-decoration:none;cursor:pointer;
   /* Was 'transparent' - iOS/Android then give ZERO visual feedback on tap,
      which reads as "the link is dead". A faint gold flash confirms the hit. */
-  -webkit-tap-highlight-color:rgba(245,179,1,.2);touch-action:manipulation;position:relative}
-a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+  /* A62: the gold system tap-highlight sticks for 1-2s after a swipe-back on
+     iOS Safari (the pressed card is composited into the transition snapshot).
+     Use :active instead - the browser clears it, and .ps-bf clears it too. */
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;position:relative}
+a.card:active{border-color:rgba(255,255,255,.26)}
 a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
-.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+@media (hover:hover) and (pointer:fine){
+  a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+  .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+}
 .card::after{content:"";position:absolute;inset:0;border-radius:18px;pointer-events:none;
   background:radial-gradient(420px 130px at 92% -12%,var(--c,rgba(255,255,255,.08)),transparent 70%)}
 .card>*{position:relative;z-index:1}
@@ -236,9 +242,21 @@ a.card:focus-visible{outline:2px solid var(--gold2);outline-offset:3px}
 .card .meta{margin-top:12px;font-size:.76rem;color:var(--dim);
   display:flex;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:10px}
 .card .go{display:inline-block;color:var(--gold2);white-space:nowrap;transition:.22s}
-.card:hover .go{transform:translateX(3px)}
 .card.gold{--c:rgba(245,179,1,.2)} .card.oil{--c:rgba(255,122,69,.2)}
 .card.cn{--c:rgba(34,211,238,.2)}  .card.fx{--c:rgba(167,139,250,.2)}
+/* ---- A62: back/forward transition frame -------------------------------
+   iOS Safari keeps :hover / :active / -webkit-tap-highlight alive across a
+   swipe-back and composites TWO document snapshots on top of each other.
+   Freezing every card for the first 1.2s removes the stuck gold card, the
+   3px hover shift and the extra transition that make the double image read
+   as "错位". Cleared by the boot script below; plain navigations never add
+   the class. The system-level two-snapshot animation itself is not JS. */
+.ps-bf, .ps-bf *{-webkit-tap-highlight-color:transparent!important}
+.ps-bf a.card,.ps-bf .card{transform:none!important;filter:none!important;
+  border-color:var(--line)!important;transition:none!important;box-shadow:none!important}
+.ps-bf .card .go{transform:none!important;transition:none!important}
+.ps-bf a.card:active{border-color:var(--line)!important}
+/* ---- end A62 --------------------------------------------------------- */
 
 /* ---------- ★ A22 黄金实时页 ---------- */
 /* 断线时：数字变灰 + 降透明度。不隐藏、不编造 —— 用户一眼看得出"这不是最新的"。 */
@@ -501,6 +519,11 @@ export function head({ lang, title, desc, path, noindex }) {
     }catch(e){}
     return false;
   })();
+  /* A62: tag the document at parse time, before the first frame is painted,
+     so a swipe-back NEVER paints a stuck gold/hovered card. */
+  if(window.__psBack){
+    try{ document.documentElement.classList.add('ps-bf'); }catch(e){}
+  }
   var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
 
   /* ★★ 切语言的核心：必须【替换】当前历史条目，绝不能新增。
@@ -757,6 +780,18 @@ document.addEventListener('click',function(e){
     if((e && e.persisted) || window.__psBack){ _restoredAt=Date.now(); return; }
     all();
   });
+  /* A62: release the frozen frame once the swipe-back transition has settled
+     (1.2s, same window as the A60 boot grace). Belt-and-braces at 2s so the
+     class can never be left stuck if an event is missed. */
+  (function(){
+    var root=document.documentElement;
+    function clearBf(){ try{ root.classList.remove('ps-bf'); }catch(e){} }
+    if(window.__psBack){
+      window.addEventListener('pageshow',function(){ setTimeout(clearBf,1200); });
+      setTimeout(clearBf,1200);
+    }
+    setTimeout(clearBf,2000);
+  })();
 
   /* ★★ A22h：这里原有的"客户端语言纠正"已删除。
    *
