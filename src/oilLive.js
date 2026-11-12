@@ -539,3 +539,73 @@ export async function probeAll() {
     total: out.length,
   };
 }
+
+/* ------------------------------------------------------------------
+ * ★★ A53：冻结破局 —— 把「名义 9 源」真正用起来
+ * --------------------------------------------------------------------
+ * A52 的生产链路实际只跑 BATCH_FAST = yahoo / yahoo2 / spark（同一家），
+ * 且 stickyProvider 一旦粘住并给出 brent+wti 就立即 return，永远不会
+ * 再问其它源。若粘住的那个源返回的是日线收盘值 / 冻结值，前端就会
+ * 连续十几分钟显示同一个数 —— 这是代码根因，不是「免费源 1 分钟 K 线」，
+ * 也不是浏览器缓存。
+ *
+ * 常态仍走 getOilLive()（快、SSR 与 API 同值），本函数只在
+ * /api/oil-live 连续 N 拍检测到价格完全不变时才被调用：
+ *   ① 并发 OIL_PROVIDERS 全部 9 个源（每个源自带 3 秒超时）；
+ *   ② 逐品种优先选【与冻结值不同】的候选；
+ *   ③ 全部源给同一个数 → 标记 frozenConfirmed（市场/源确实一样，不是卡死）。
+ * 调用频率由上层限流（至少间隔 30 秒），不会把限流源打爆。
+ * ---------------------------------------------------------------- */
+export function resetSticky() { stickyProvider = null; }
+export function stickyNow() { return stickyProvider; }
+export const OIL_ALL_IDS = OIL_PROVIDERS.map(p => p.id);
+
+function pickFresh(cands, key, frozenVal) {
+  const usable = cands.filter(x => x[key] > 0);
+  if (!usable.length) return { v: 0, id: null, moved: false, allSame: false };
+  if (!frozenVal) {
+    return { v: usable[0][key], id: usable[0].id, moved: false, allSame: false };
+  }
+  const diff = usable.find(x => Math.abs(x[key] - frozenVal) > 1e-9);
+  const chosen = diff || usable[0];
+  return {
+    v: chosen[key], id: chosen.id, moved: !!diff,
+    allSame: usable.every(x => Math.abs(x[key] - frozenVal) <= 1e-9),
+  };
+}
+
+export async function getOilLiveDeep(frozen) {
+  const t0 = Date.now();
+  const settled = await Promise.all(OIL_PROVIDERS.map(async (p) => {
+    const s = Date.now();
+    try {
+      const r = await p.fn();
+      const b = Number(r && r.brent) || 0, w = Number(r && r.wti) || 0;
+      return { id: p.id, brent: b, wti: w, ok: !!(b || w),
+               ms: Date.now() - s, err: (b || w) ? '' : '返回为空' };
+    } catch (e) {
+      return { id: p.id, brent: 0, wti: 0, ok: false,
+               ms: Date.now() - s, err: String(e && e.message || e) };
+    }
+  }));
+  const cands = settled.filter(x => x.ok);
+  const B = pickFresh(cands, 'brent', frozen && frozen.brent);
+  const W = pickFresh(cands, 'wti',   frozen && frozen.wti);
+  const moved = !!(B.v && W.v) && (B.moved || W.moved);
+  if (moved) stickyProvider = null;   /* 下一拍重新选源，不回到粘滞的坏源 */
+  const now = Date.now();
+  return {
+    brent: B.v, wti: W.v,
+    bAt: B.v ? now : 0, wAt: W.v ? now : 0,
+    provider: [B.id, W.id].filter(Boolean).join('+') || null,
+    providerLabel: 'A53 全源冻结复检',
+    providers: cands.map(x => x.id),
+    movedFromFrozen: moved,
+    frozenConfirmed: !moved && !!(B.v && W.v),
+    allSame: !!(B.v && W.v) && !!B.allSame && !!W.allSame,
+    tried: settled.map(x => ({ id: x.id, ok: x.ok, ms: x.ms,
+                               brent: x.brent, wti: x.wti, error: x.err })),
+    ms: now - t0,
+    at: now,
+  };
+}

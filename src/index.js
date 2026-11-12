@@ -15,7 +15,8 @@
 // ============================================================
 import { LANGS, DEFAULT_LANG, detectLang, SITE, t } from './i18n.js';
 import { getMarket, getFx, fetchGoldLive, SOURCE_WORKER } from './data.js';
-import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback } from './oilLive.js';
+import { getOilLive, probeAll as probeOil, OIL_PROVIDERS, applyStaleKeep, fillFromFallback,
+         getOilLiveDeep, resetSticky, stickyNow, OIL_ALL_IDS } from './oilLive.js';
 import { getGoldLive, probeAll as probeGold, GOLD_PROVIDERS } from './goldLive.js';
 import { page, esc, configure, adsTxtPublisher } from './ui.js';
 /* ------------------------------------------------------------
@@ -117,6 +118,16 @@ const API_LIVE_BUDGET = 8000;
  *   原来拿 SSR 的 liveCache.oil 当 prev —— 那是 180 秒共享缓存，
  *   把 3 分钟前的旧值当实时顶上来，正是「布伦特好几轮不动」的放大器。 */
 let apiPrev = null;
+
+/* ★ A53：冻结检测（只在 /api/oil-live 上，SSR 与 /api/gold-live 不受影响）
+ * 连续 FROZEN_TRIGGER 拍价格一丁点都没变 → 下一拍强制跑全 9 源复检。
+ * lastDeepAt 限流：复检至少间隔 30 秒，避免把限流源打爆。 */
+const FROZEN_TRIGGER = 9;
+const DEEP_MIN_GAP = 30000;
+let frozenBeats = 0;
+let lastDeepAt = 0;
+let lastChangeAt = Date.now();
+
 function withTimeout(p, ms) {
   return Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
 }
@@ -782,25 +793,69 @@ Sitemap: ${SITE.domain}/sitemap.xml
       const debug = url.searchParams.get('debug') === '1';
       const order = (url.searchParams.get('src') || '').split(',').filter(Boolean);
       const prevB = apiPrev && apiPrev.prevBrent;   /* 上一拍的布伦特，必须先存 */
-      let r = await getOilLive(order);
-      if (!order.length) {
-        r = applyStaleKeep(r, apiPrev);
-        if (!r || (!r.brent && !r.wti)) {
-          const fb = await withTimeout(oilFallback(), 1200);
-          r = fillFromFallback(r, fb);
+      const prevW = apiPrev && apiPrev.wti;
+      const now = Date.now();
+      /* ★ A53：粘滞源 + 只跑 yahoo 三个域名，会把一个冻结值一直顶在页面上。
+       * 连续 FROZEN_TRIGGER 拍一丁点没变 → 跳过粘滞，并发全部 9 源复检。
+       * 常态完全走原来的 getOilLive()，SSR 与 API 同值不变、子请求数不变。 */
+      const frozen = { brent: prevB, wti: prevW };
+      const canDeep = !order.length && frozenBeats >= FROZEN_TRIGGER
+                      && (now - lastDeepAt) >= DEEP_MIN_GAP;
+      let deepUsed = false, deepInfo = null;
+      let r;
+      if (canDeep) {
+        const stickyBefore = stickyNow();
+        r = await getOilLiveDeep(frozen);
+        lastDeepAt = now;
+        deepUsed = true;
+        deepInfo = {
+          stickyBefore, stickyAfter: stickyNow(),
+          movedFromFrozen: !!r.movedFromFrozen,
+          frozenConfirmed: !!r.frozenConfirmed,
+          allSame: !!r.allSame,
+          ms: r.ms,
+          sources: OIL_ALL_IDS.length,
+        };
+        if (r.movedFromFrozen) { frozenBeats = 0; lastChangeAt = now; resetSticky(); }
+        apiPrev = { ...(apiPrev || {}), ...r, at: now };
+      } else {
+        r = await getOilLive(order);
+        if (!order.length) {
+          r = applyStaleKeep(r, apiPrev);
+          if (!r || (!r.brent && !r.wti)) {
+            const fb = await withTimeout(oilFallback(), 1200);
+            r = fillFromFallback(r, fb);
+          }
+          apiPrev = r ? { ...(apiPrev || {}), ...r, at: now } : apiPrev;
         }
-        apiPrev = r ? { ...(apiPrev || {}), ...r, at: Date.now() } : apiPrev;
+      }
+      const changed = !!(r && r.brent && prevB && Math.abs(r.brent - prevB) > 1e-9)
+                   || !!(r && r.wti && prevW && Math.abs(r.wti - prevW) > 1e-9)
+                   || !!(deepInfo && deepInfo.movedFromFrozen);
+      if (!order.length) {
+        if (changed) { frozenBeats = 0; lastChangeAt = now; }
+        else frozenBeats++;
       }
       const out = {
         ...(r || {}),
-        beatAt: Date.now(),
-        changed: !!(r && r.brent && prevB && Math.abs(r.brent - prevB) > 1e-9),
+        beatAt: now,
+        changed,
         realtime: !order.length,
+        /* ★ A53 诊断字段：线上一条命令分清「代码卡死」还是「市场真没动」 */
+        frozenBeats,
+        frozenMs: now - lastChangeAt,
+        deepUsed,
+        deepInfo,
+        sourcesTotal: OIL_ALL_IDS.length,
+        sticky: stickyNow(),
       };
-      if (r && r.brent) apiPrev = { ...(apiPrev || {}), prevBrent: r.brent };
+      /* ★ A53：?src= 是探针，不写回 prevBrent —— 否则一次探针会把
+       * 下一拍的「变没变价」基准带偏，冻结计数被无端清零。 */
+      if (r && r.brent && !order.length) apiPrev = { ...(apiPrev || {}), prevBrent: r.brent };
       if (debug) {
         out.site3 = await site3Now(env);
         out.apiPrevAt = apiPrev && apiPrev.at || 0;
+        out.apiPrevBrent = apiPrev && apiPrev.prevBrent || 0;
       }
       return Response.json(out, { headers: { 'cache-control': 'no-store' } });
     }

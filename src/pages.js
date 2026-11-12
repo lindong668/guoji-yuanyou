@@ -45,13 +45,14 @@ const BEAT_CORE = `
    *   ② 价格冻结 ≥20 分钟 且 连续成功 ≥80 次 → 休市中（链路通，市场真没动）
    *   ③ 其他                                → 实时
    *
-   * ★ 多源在哪？在【后端】：/api/oil-live 已按序试 8 个源，拿到就返回。
+   * ★ 多源在【后端】：/api/oil-live 常态按优先级取价，
+   *   A53 起连续 9 拍价格完全不变会自动并发全部 9 个源复检。
    *   前端不再自己探测一遍 —— 那正是复杂度和 bug 的温床。
    * ================================================================ */
-  var BEAT=5000;         /* ★ A49：5 秒一拍（原 15 秒；配合后端现抓才是真·近秒级） */
-  var DEAD=7500;         /* 1.5 拍没拿到数据 = 漏拍 */
+  var BEAT=3000;         /* ★ A53：3 秒一拍（与 3 号秒级页对齐；原 A49 是 5 秒） */
+  var DEAD=4500;         /* 1.5 拍没拿到数据 = 漏拍 */
   var CLOSED_MS=1200000; /* 价格冻结 20 分钟（仅作兜底，开市时不再据此判休市） */
-  var CLOSED_OK=240;     /* 240 × 5s = 20 分钟，与 CLOSED_MS 同步 */
+  var CLOSED_OK=400;     /* 400 × 3s = 20 分钟，与 CLOSED_MS 同步 */
   var WAKE=8000;         /* 后台切回来的宽限窗口（8 秒） */
   /* ★ 页面被最小化 / 切到后台时 tick() 不抓取，快照会变旧。
    *   切回来的瞬间若直接按"超过 22.5 秒"判 lost，就会闪一下"连接中断"——
@@ -827,13 +828,13 @@ export function renderHome(lang, m, fx, tz) {
       <h3><span class="hd"><span class="swatch o"></span><span class="ttl">${esc(L.secOil)}</span></span><span id="home-oil-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-oil-price">${oilPrice != null ? '$' + fmt(oilPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span class="go">${esc(L.viewAll)} →</span></div>
+      <div class="meta"><span aria-hidden="true"></span><span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card oil" href="/${lang}/wti/">
       <h3><span class="hd"><span class="swatch w"></span><span class="ttl">${esc(L.nav.wti)}</span></span><span id="home-wti-chip" class="live-dot" hidden></span></h3>
       <div class="big" id="home-wti-price">${wtiPrice != null ? '$' + fmt(wtiPrice) : '—'}</div>
       <div class="unit">${esc(L.unitBarrel)}</div>
-      <div class="meta"><span class="go">${esc(L.viewAll)} →</span></div>
+      <div class="meta"><span aria-hidden="true"></span><span class="go">${esc(L.viewAll)} →</span></div>
     </a>
     <a class="card gold" href="/${lang}/gold/">
       <h3><span class="hd"><span class="swatch"></span><span class="ttl">${esc(L.secGold)}</span></span><span id="home-gold-chip" class="live-dot" hidden></span></h3>
