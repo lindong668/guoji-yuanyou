@@ -10,6 +10,14 @@
 //   2. 主源失败自动换下一个（链式回退），不阻塞页面
 //   3. 全部带超时，任何一个源卡住都不拖垮整页
 //   4. probeAll() 供 /probe 页面逐个实测，用哪个由实测结果决定
+//
+// ★ A57（2026-11-12）：只改本文件一个文件，index.js 一字未动。
+//   - 新增 sinahf：hq.sinajs.cn/list=hf_OIL,hf_CL 一条 URL 同批回两个品种；
+//     本机实测 10 秒内布伦特变价 3 次（91.851→91.861→91.866→91.888）。
+//   - 生产快批收窄为 ['sinahf','yahoo']，BATCH_MORE 保持空，
+//     A55 那种「9 源全并发」不再回来（那次拖出 Error 1101）。
+//   - 每拍前置单发快源 + 60 秒失败冷却；海外节点返空就自动回 A51 链路。
+//   - 5 秒节拍、SSR / 单飞 / 预算、右下角、SEO 与广告文件全部不碰。
 // ============================================================
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36';
@@ -97,6 +105,39 @@ async function srcSite3() {
     stale, asOf: String(asOf || ''),
     note: stale ? '3号后端（★ 标记为沿用旧值）' : '3号后端（自有 CF 数据源）',
   };
+}
+
+/* ------------------------------------------------------------------
+ * 源 0（A57 新增）：新浪外盘 hf_OIL / hf_CL —— 一条 URL 同批回两个品种
+ * --------------------------------------------------------------------
+ * 实测依据（2026-11-12 本机 cmd，带 Referer，隔 10 秒连打四次）：
+ *   hq_str_hf_OIL  91.851 → 91.861 → 91.866 → 91.888（成交笔数 10268→10277）
+ *   hq_str_hf_CL   85.601 → 85.610 → 85.610 → 85.610（同批一起回）
+ * 同期 /api/diag：布伦特 5 条里 4 条 404/解析失败，只剩 Yahoo BZ=F 91.67；
+ * WTI 有 Yahoo + Yahoo2 两条 85.62 顶着 —— 这就是「布伦特特别不爱动、
+ * WTI 好一点」的全部原因，不是分了源，是同一个符号的上游活跃度。
+ *
+ * 规则：
+ *   - 只解析引号内第一段（现价），不做任何沿用/缓存；
+ *   - 必须带 Referer，否则新浪返空；
+ *   - 两个品种同一次请求、同一套解析，不给布伦特单开小灶；
+ *   - 单次 fetch、2500ms 超时，不并发、不回灌其它源。
+ * ---------------------------------------------------------------- */
+async function srcSinaHf() {
+  const txt = await getText(
+    'https://hq.sinajs.cn/list=hf_OIL,hf_CL', 2500,
+    { Referer: 'https://finance.sina.com.cn' });
+  const pick = (name) => {
+    const m = txt.match(new RegExp('hq_str_' + name + '\\s*=\\s*"([^"]*)"'));
+    if (!m) return 0;
+    const p = Number(String(m[1]).split(',')[0]);
+    return Number.isFinite(p) && p > 0 ? p : 0;
+  };
+  /* ★ 两个符号分开容错：任意一个解析不出，另一个仍可用，
+   *   缺的那一半由后面的源补上，不整源判失败。 */
+  const brent = pick('hf_OIL'), wti = pick('hf_CL');
+  if (!brent && !wti) throw new Error('新浪 hf_OIL/hf_CL 未解析出价');
+  return { brent, wti, note: '新浪外盘 hf_OIL/hf_CL，秒级成交价' };
 }
 
 /* ------------------------------------------------------------------
@@ -315,6 +356,10 @@ async function srcCommodityPriceApi() {
  *
  * 现在：5 个自有源跑完都没结果，才会轮到 3 号。 */
 export const OIL_PROVIDERS = [
+  /* ★ A57：新浪 hf 排第 0 位，理由是它一条 URL 同批给 brent+wti，
+   *   且实测 10 秒内布伦特变价 3 次；setSticky() 按本数组排序取最高，
+   *   放首位才能让粘滞源自然落到它，而不是被 Yahoo 先粘住。 */
+  { id: 'sinahf',   label: '新浪外盘 hf_OIL/hf_CL（秒级，无需 key）',  fn: srcSinaHf },
   { id: 'biquote',  label: 'biquote 券商链路（与黄金同源，无需 key）', fn: srcBiquote },
   { id: 'yahoo',    label: 'Yahoo Finance 期货（无需 key）',           fn: srcYahoo },
   { id: 'yahoo2',   label: 'Yahoo 备用域名 query2（无需 key）',         fn: srcYahoo2 },
@@ -343,6 +388,12 @@ export const OIL_PROVIDERS = [
  *   不同 isolate 各自维护，冷启动第一次会重新选源，属于可接受范围。
  * ---------------------------------------------------------------- */
 let stickyProvider = null;
+
+/* ★ A57：快源失败冷却（只作用于 sinahf 这一个 URL，不影响其它源）。
+ * 本机实测通，但 CF Worker 是海外出口，新浪可能对海外 IP 返空。
+ * 若每拍都白等满 2.5 秒超时，会把「改善」变成「拖慢」。
+ * 失败一次就冷却 60 秒，期间直接走 A51 原有链路；到点自动重试。 */
+let hfCooldownUntil = 0;
 
 /* 单品种旧值最多沿用多久（毫秒）。brent / wti 各自独立计时。
  * ★ 上一版没有时效，形成自我循环：brent 拿不到 → 用上次的值 →
@@ -412,12 +463,18 @@ export function fillFromFallback(oilVal, fb) {
  * 留下的三个都是实测 50~130ms 就能拿到值的：yahoo / yahoo2 / spark。
  * 效果：并发批耗时从 2500ms 降到 ~130ms。
  */
-const BATCH_FAST = ['yahoo', 'yahoo2', 'spark'];
-/* ★ 并发 5 个源，但【合流严格按优先级】：biquote 给了布伦特就用 biquote 的，
- *   只有排在它前面的源都没给，才会采用 oilwatch 的值。
- *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
- *     所以让它"永远排在最后被采用"，而不是禁用 —— 禁用会在慢网下
- *     多一轮串行往返，实测反而撞满 8 秒预算、连 WTI 都被拖慢。） */
+/* ★★ A57 快批重排 —— 只留两路，且不加回任何失败源
+ * ------------------------------------------------------------------
+ * 依据 2026-11-12 /api/diag + 本机 hq.sinajs.cn 四次实测：
+ *   - sinahf  一条 URL 同批给 brent+wti，10 秒内布伦特变价 3 次（91.851→91.888）
+ *   - yahoo   BZ=F / CL=F 稳定有价，作 sinahf 不通时的兜底
+ *   - 404 / 301ms 的 biquote、stooq、oilwatch、opademo、cpapi、site3
+ *     一个都不回灌（A55 就是把 9 源全塞回快批，拖出 Error 1101）
+ *   - yahoo2 / spark 退出生产快批，但仍留在 OIL_PROVIDERS 供 /probe 实测
+ *
+ * 峰值子请求数从 A56 的 6 个降到 3 个（sinahf 1 + yahoo 2），
+ * 不并发多源、不串行累加，5 秒节拍一个字不动。 */
+const BATCH_FAST = ['sinahf', 'yahoo'];
 const BATCH_MORE = [];
 
 export async function getOilLive(order) {
@@ -435,6 +492,11 @@ export async function getOilLive(order) {
     merged = {
       brent: (prev && prev.brent) || b,
       wti:   (prev && prev.wti)   || w,
+      /* ★ A57：逐品种各记自己的来源。同一源一次回两个价，不能让
+       *   brent 的值把 wti 也锁死；管的是「同批里怎么取值」，
+       *   不是把两个品种拆成两条链路。纯诊断字段，index.js 不读。 */
+      brentSrc: (prev && prev.brent) ? ((prev && prev.brentSrc) || '') : (b ? p.id : ''),
+      wtiSrc:   (prev && prev.wti)   ? ((prev && prev.wtiSrc)   || '') : (w ? p.id : ''),
       note:  (prev && prev.note) || (r && r.note) || '',
       asOf:  (prev && prev.asOf) || (r && r.asOf) || '',
       stale: !!(prev && prev.stale) && !!(r && r.stale),
@@ -480,14 +542,32 @@ export async function getOilLive(order) {
 
   if (order && order.length) { await fanout(order); return finish() || { brent: 0, wti: 0, tried }; }
 
+  /* ★★ A57 第 -1 步：秒级快源每拍前置单发（只此一处，不并发多源）
+   * --------------------------------------------------------------
+   * 为什么落在这里、而不是改「第 0 步 sticky 早退判定」：
+   *   push() 是先到先占，若先让 Yahoo 给全、再放 sinahf 进来，
+   *   sinahf 的新 brent 会被已占位的旧值丢掉 —— 改早退反而拿不到新价。
+   *   现在每拍先问 sinahf 一次：一条 URL 同批回 brent+wti，
+   *   给全就收工（绝大多数拍走这步，只 1 个子请求）；
+   *   海外节点返空或只给一半，再按 A51 原有的 sticky / 快批 / site3
+   *   顺序走，行为与 A56 一致，不会断线、不会 1101。 */
+  if (Date.now() >= hfCooldownUntil) {
+    await fanout(['sinahf']);
+    if (complete()) { hfCooldownUntil = 0; setSticky(); return finish(); }
+    /* 只给一半也算成功（另一半由后面的源补上），不进冷却。 */
+    const gaveHalf = !!(merged &&
+      (merged.brentSrc === 'sinahf' || merged.wtiSrc === 'sinahf'));
+    hfCooldownUntil = gaveHalf ? 0 : Date.now() + 60000;
+  }
+
   /* 第 0 步：粘滞源单发 */
   if (stickyProvider) {
     await fanout([stickyProvider]);
     if (complete()) { setSticky(); return finish(); }
   }
 
-  /* 第 1 步：并发两个最稳的源 */
-  await fanout(BATCH_FAST.filter(x => x !== stickyProvider));
+  /* 第 1 步：快批补缺口。sinahf 本拍已问过，不再重复发一次。 */
+  await fanout(BATCH_FAST.filter(x => x !== stickyProvider && x !== 'sinahf'));
   if (complete()) { setSticky(); return finish(); }
 
   /* 第 2 步：串行补缺口 */
