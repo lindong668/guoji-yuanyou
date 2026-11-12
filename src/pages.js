@@ -96,7 +96,14 @@ const BEAT_CORE = `
     }catch(e3){ fire(); }
     setTimeout(fire,600);     /* 兜底：600 毫秒内必定动起来 */
   }
-  try{ document.addEventListener('visibilitychange',function(){ if(!document.hidden) bWakeAll(); }); }catch(e){}
+  /* ★ A59: a bfcache restore also fires visibilitychange. Waking the beat
+   * there fires two extra fetches on the very frame the user swipes back.
+   * Skip it for 1.5s after a persisted restore; the timers are still live. */
+  var _bfRestoredAt=0;
+  try{ window.addEventListener('pageshow',function(e){ if(e&&e.persisted) _bfRestoredAt=Date.now(); }); }catch(e){}
+  try{ document.addEventListener('visibilitychange',function(){
+    if(!document.hidden && Date.now()-_bfRestoredAt>1500) bWakeAll();
+  }); }catch(e){}
 
   function bKey(k){ return 'ps_beat_'+k; }
   function bGet(k){

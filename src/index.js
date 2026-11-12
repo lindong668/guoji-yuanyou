@@ -726,12 +726,13 @@ Sitemap: ${SITE.domain}/sitemap.xml
       return new Response(html, {
         headers: {
           'content-type': 'text/html; charset=utf-8',
-          // ★ A22g: no-store also keeps the page OUT of the browser's
-          // back/forward cache (bfcache). A bfcache restore replays the page
-          // from memory without asking the server, so the remembered
-          // language would never be applied. Every response here was already
-          // private/max-age=0, so request volume is unchanged.
-          'cache-control': 'no-store',
+          // ★ A59: no-store forbade the browser page cache / bfcache, so an
+          // iOS swipe-back had NO snapshot to restore -> black frame, then a
+          // full document re-request + SSR + script boot (1-3s freeze).
+          // no-cache keeps every NEW navigation revalidated (cookie language
+          // and timezone are still rendered server-side) while allowing a
+          // back/forward restore straight from memory. APIs stay no-store.
+          'cache-control': 'private, no-cache, max-age=0',
           'x-content-type-options': 'nosniff',
         },
       });
@@ -1010,12 +1011,13 @@ ${goldRows}
           // change takes effect immediately instead of being masked by a
           // 60-second local copy. Data itself is cached in Worker memory,
           // so re-rendering costs well under a millisecond.
-          // ★ A22g: no-store also keeps the page OUT of the browser's
-          // back/forward cache (bfcache). A bfcache restore replays the page
-          // from memory without asking the server, so the remembered
-          // language would never be applied. Every response here was already
-          // private/max-age=0, so request volume is unchanged.
-          'cache-control': 'no-store',
+          // ★ A59: no-store forbade the browser page cache / bfcache, so an
+          // iOS swipe-back had NO snapshot to restore -> black frame, then a
+          // full document re-request + SSR + script boot (1-3s freeze).
+          // no-cache keeps every NEW navigation revalidated (cookie language
+          // and timezone are still rendered server-side) while allowing a
+          // back/forward restore straight from memory. APIs stay no-store.
+          'cache-control': 'private, no-cache, max-age=0',
           'x-content-type-options': 'nosniff',
         },
       });

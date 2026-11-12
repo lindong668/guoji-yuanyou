@@ -708,19 +708,25 @@ document.addEventListener('click',function(e){
   }
   /* ★ A58：pageshow 与 visibilitychange 会在「返回页面」时前后脚触发，
    *   1 秒内只跑一次，避免两次全量重排把主线程占住 1~2 秒。 */
-  var _lastAll=0;
+  var _lastAll=0, _restoredAt=0;
   function all(){
     var n=Date.now();
     if(n-_lastAll<1000) return;
+    /* ★ A59: a back/forward restore already shows a fully rendered snapshot.
+     * Re-running the timestamp pass there only occupies the main thread. */
+    if(n-_restoredAt<1500) return;
     _lastAll=n;
     remember(); run();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',all);
   else all();
-  // Back/forward (bfcache) restores the page WITHOUT re-running scripts,
-  // and returning to a background tab may skip a re-render too — re-run in
-  // both cases so timestamps always match the browser's current zone.
-  window.addEventListener('pageshow',all);
+  /* ★ A59: persisted=true => the page came back from bfcache / page cache.
+   * Do NOT re-render, re-read cookies, or force a repaint. That extra work on
+   * the restore frame is exactly the "black frame then 1-3s freeze" on iOS. */
+  window.addEventListener('pageshow',function(e){
+    if(e && e.persisted){ _restoredAt=Date.now(); return; }
+    all();
+  });
 
   /* ★★ A22h：这里原有的"客户端语言纠正"已删除。
    *
