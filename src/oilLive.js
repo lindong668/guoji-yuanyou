@@ -412,13 +412,28 @@ export function fillFromFallback(oilVal, fb) {
  * 留下的三个都是实测 50~130ms 就能拿到值的：yahoo / yahoo2 / spark。
  * 效果：并发批耗时从 2500ms 降到 ~130ms。
  */
-const BATCH_FAST = ['yahoo', 'yahoo2', 'spark'];
+/* ★ A54：把当年被探针结论砍掉的【独立源】接回生产链路。
+ *   A45~A53 的 BATCH_FAST 只有 yahoo / yahoo2 / spark —— 全是 Yahoo 一家；
+ *   BATCH_MORE = [] 让其余 6 个源从未进入过任何一拍。结果 brent 单吊
+ *   Yahoo BZ=F（更新最慢），WTI 有 CL=F（较快）→ 正是「布伦特特别不爱动、
+ *   WTI 好一点」。用户找来的 biquote XBRUSD/XTIUSD、stooq cb.f/cl.f、
+ *   oilwatch /api/v1/brent|wti 端点在源码里全都有，只是没被调用。
+ *   A54 把 biquote 放回快批首位（券商秒级链路），其余源进 BATCH_MORE 按需串行。 */
+const BATCH_FAST = ['biquote', 'yahoo', 'spark', 'yahoo2'];
+/* brent 独立源：给 brent 时优先于 Yahoo 同源三接口（见 push 合流规则） */
+const BRENT_INDEPENDENT = new Set(['biquote', 'stooq', 'oilwatch', 'opademo', 'cpapi', 'site3']);
+const YAHOO_IDS = new Set(['yahoo', 'yahoo2', 'spark']);
+const BRENT_CROSS = ['biquote', 'stooq', 'oilwatch'];
+export const BATCH_FAST_IDS = BATCH_FAST.slice();
 /* ★ 并发 5 个源，但【合流严格按优先级】：biquote 给了布伦特就用 biquote 的，
  *   只有排在它前面的源都没给，才会采用 oilwatch 的值。
  *   （oilwatch 每天 06:00 UTC 更新一次 + CDN 缓存 5 分钟，非严格实时，
  *     所以让它"永远排在最后被采用"，而不是禁用 —— 禁用会在慢网下
  *     多一轮串行往返，实测反而撞满 8 秒预算、连 WTI 都被拖慢。） */
-const BATCH_MORE = [];
+/* ★ A54：不再为空。快批没给全、或 brent 仍只来自 Yahoo 系时，
+ *   这些源按序串行补缺口（限流源/付费源只在按需路径，不打每拍）。 */
+const BATCH_MORE = ['stooq', 'oilwatch', 'site3', 'opademo', 'cpapi'];
+export const BATCH_MORE_IDS = BATCH_MORE.slice();
 
 export async function getOilLive(order) {
   const tried = [];
@@ -432,9 +447,21 @@ export async function getOilLive(order) {
     const b = Number(r && r.brent) || 0, w = Number(r && r.wti) || 0;
     if (!b && !w) return false;
     const prev = merged;
+    /* ★ A54：逐品种记录来源；brent 若来自 Yahoo 同源三接口，
+     *   后续独立源（biquote 券商 / stooq / oilwatch）给出不同 brent 时覆盖采用。
+     *   这是「布伦特别不爱动」的代码根因修复，不改节拍、不改缓存。 */
+    let nb = (prev && prev.brent) || b;
+    let nw = (prev && prev.wti)   || w;
+    let bs = b ? p.id : ((prev && prev.bSrc) || '');
+    let ws = w ? p.id : ((prev && prev.wSrc) || '');
+    if (b && BRENT_INDEPENDENT.has(p.id) && prev && YAHOO_IDS.has(prev.bSrc)) {
+      nb = b; bs = p.id;
+    }
     merged = {
-      brent: (prev && prev.brent) || b,
-      wti:   (prev && prev.wti)   || w,
+      brent: nb,
+      wti:   nw,
+      bSrc:  bs,
+      wSrc:  ws,
       note:  (prev && prev.note) || (r && r.note) || '',
       asOf:  (prev && prev.asOf) || (r && r.asOf) || '',
       stale: !!(prev && prev.stale) && !!(r && r.stale),
@@ -486,8 +513,14 @@ export async function getOilLive(order) {
     if (complete()) { setSticky(); return finish(); }
   }
 
-  /* 第 1 步：并发两个最稳的源 */
+  /* 第 1 步：并发跨家快批（A54 起 biquote 券商源排首位） */
   await fanout(BATCH_FAST.filter(x => x !== stickyProvider));
+  /* ★ A54：brent 交叉补强。若这一拍 brent 仍只来自 Yahoo 一家，
+   *   再并发问一次独立源（去重、失败不重试），避免「粘在 BZ=F 冻结值上」。 */
+  if (merged && merged.brent && YAHOO_IDS.has(merged.bSrc)) {
+    const cross = BRENT_CROSS.filter(id => !tried.some(t => t.id === id));
+    if (cross.length) await fanout(cross);
+  }
   if (complete()) { setSticky(); return finish(); }
 
   /* 第 2 步：串行补缺口 */
@@ -559,6 +592,7 @@ export async function probeAll() {
 export function resetSticky() { stickyProvider = null; }
 export function stickyNow() { return stickyProvider; }
 export const OIL_ALL_IDS = OIL_PROVIDERS.map(p => p.id);
+export { BRENT_INDEPENDENT, YAHOO_IDS, BRENT_CROSS };
 
 function pickFresh(cands, key, frozenVal) {
   const usable = cands.filter(x => x[key] > 0);
