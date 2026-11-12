@@ -26,6 +26,10 @@ import { ARTICLES, articlesFor, relatedFor, blogStr } from './articles.js';
 const TROY_OZ = 31.1034768;   // 1 金衡盎司 = 31.1034768 克（国际精确定义，非近似值）
 
 const BEAT_CORE = `
+  /* A60: shared back-navigation flag, see head() in ui.js.
+     On a swipe-back the SSR numbers are already on screen; defer all
+     fetches / interval boots so the restore frame stays responsive. */
+  var PS_BACK = !!(window.__psBack);
   /* ================================================================
    * ★★★ 行情节拍核心（三个页面共用，唯一真相来源）
    * ---------------------------------------------------------------
@@ -99,8 +103,8 @@ const BEAT_CORE = `
   /* ★ A59: a bfcache restore also fires visibilitychange. Waking the beat
    * there fires two extra fetches on the very frame the user swipes back.
    * Skip it for 1.5s after a persisted restore; the timers are still live. */
-  var _bfRestoredAt=0;
-  try{ window.addEventListener('pageshow',function(e){ if(e&&e.persisted) _bfRestoredAt=Date.now(); }); }catch(e){}
+  var _bfRestoredAt = PS_BACK ? Date.now() : 0;
+  try{ window.addEventListener('pageshow',function(e){ if((e&&e.persisted)||PS_BACK) _bfRestoredAt=Date.now(); }); }catch(e){}
   try{ document.addEventListener('visibilitychange',function(){
     if(!document.hidden && Date.now()-_bfRestoredAt>1500) bWakeAll();
   }); }catch(e){}
@@ -485,12 +489,14 @@ const GOLD_LIVE_JS = `
   /* 首屏：优先用已有快照（与首页同一个数），没有才用 SSR 值 */
   var o0=bGet('gold');
   if(o0&&o0.v!=null) usdOz=o0.v;
-  srvLoad();          /* 读服务端 Cron 判定的休市状态 */
-  paint(); render();
-  bOnWake(tick);      /* 切回前台立刻补一拍 */
-  schedule();
-  /* 秒数 1 秒一跳：纯前端计时，不发请求 */
-  setInterval(render,1000);
+  paint(); render();  /* A60: 首屏先用 SSR / 快照数字，返回帧零请求 */
+  var bootGold=function(){
+    srvLoad();        /* 读服务端 Cron 判定的休市状态 */
+    bOnWake(tick);    /* 切回前台立刻补一拍 */
+    schedule();
+    setInterval(render,1000);   /* 秒数 1 秒一跳：纯前端计时 */
+  };
+  if(PS_BACK) setTimeout(bootGold,1200); else bootGold();
 })();
 
 `;
@@ -1059,12 +1065,14 @@ const HOME_LIVE_JS = `
     var o=bGet(it.k);
     if(o&&o.v!=null) showVal(it,o.v);
   });
-  renderAll();
-  srvLoad();          /* 读服务端 Cron 判定的休市状态 */
-  bOnWake(tickOil); bOnWake(tickGold);   /* 切回前台立刻补一拍 */
-  schedOil(); schedGold();
-  /* 秒数 1 秒一跳：纯前端计时，不发请求 */
-  setInterval(renderAll,1000);
+  renderAll();        /* A60: 返回落点，先只画 SSR / 快照数字 */
+  var bootHome=function(){
+    srvLoad();        /* 读服务端 Cron 判定的休市状态 */
+    bOnWake(tickOil); bOnWake(tickGold);   /* 切回前台立刻补一拍 */
+    schedOil(); schedGold();
+    setInterval(renderAll,1000);          /* 秒数 1 秒一跳：纯前端计时 */
+  };
+  if(PS_BACK) setTimeout(bootHome,1200); else bootHome();
 })();`;
 
 /* 实时徽标的多语言文案：直接复用黄金页那套，七语言齐全 */
@@ -1158,10 +1166,14 @@ function oilLiveJs(kind) {
   /* 首屏：优先用已有快照（与首页同一个数），没有就留 SSR 渲染的值 */
   var o0=bGet(KEY);
   if(o0&&o0.v!=null) el.textContent=fm(o0.v);
-  srvLoad();          /* 读服务端 Cron 判定的休市状态 */
-  paint(); bOnWake(tick);   /* 切回前台立刻补一拍 */
-  schedule();
-  setInterval(paint,1000);
+  paint();            /* A60: 首屏先用 SSR / 快照数字 */
+  var bootOil=function(){
+    srvLoad();        /* 读服务端 Cron 判定的休市状态 */
+    bOnWake(tick);    /* 切回前台立刻补一拍 */
+    schedule();
+    setInterval(paint,1000);
+  };
+  if(PS_BACK) setTimeout(bootOil,1200); else bootOil();
 })();`;
 }
 

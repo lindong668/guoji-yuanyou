@@ -126,7 +126,7 @@ function withTimeout(p, ms) {
 }
 
 /* ★ A58：把 SSR 两项数据抓取从「返回页面」关键路径上挪开。
- *   no-store 禁用 bfcache，点卡片→返回会整页重新请求。
+ *   A60：HTML 允许短时私有缓存；返回帧由前端 __psBack 直接识别。
  *   已有快照→最多等 900ms，超时用上一份真数字；
  *   冷实例无快照→完整等待，不留空页、不差异对待爬虫。
  *   无论哪种，刷新都挂 ctx.waitUntil 在响应后继统跑完。 */
@@ -732,7 +732,13 @@ Sitemap: ${SITE.domain}/sitemap.xml
           // no-cache keeps every NEW navigation revalidated (cookie language
           // and timezone are still rendered server-side) while allowing a
           // back/forward restore straight from memory. APIs stay no-store.
-          'cache-control': 'private, no-cache, max-age=0',
+          // A60: no-store AND no-cache both keep Safari from reusing a
+          // back/forward page. 60s private cache lets a swipe-back restore
+          // without another SSR round-trip; language lives in the URL path
+          // (and is varied by cookie) so nothing leaks between locales.
+          // APIs / diag / probe keep their own no-store headers.
+          'cache-control': 'private, max-age=60',
+          'vary': 'Cookie',
           'x-content-type-options': 'nosniff',
         },
       });
@@ -962,7 +968,7 @@ ${goldRows}
      * 链接全部按 URL 走，行为一字不变），但对【带 cookie 的真人访客】
      * 直接按他选过的语言渲染内容，200 原地返回：
      *   · 没有跳转 → 不闪、不被弹回、不会被困住
-     *   · no-store 已禁用 bfcache → 按返回必重新请求 → 拿到正确语言
+     *   · A60：返回帧复用缓存文档，服务端语言按 cookie 现渲染，不跳转
      * 爬虫从不带 cookie，因此 canonical / hreflang / SEO 完全不受影响。 */
     if (langCookie && langCookie !== lang) lang = langCookie;
 
@@ -1017,7 +1023,13 @@ ${goldRows}
           // no-cache keeps every NEW navigation revalidated (cookie language
           // and timezone are still rendered server-side) while allowing a
           // back/forward restore straight from memory. APIs stay no-store.
-          'cache-control': 'private, no-cache, max-age=0',
+          // A60: no-store AND no-cache both keep Safari from reusing a
+          // back/forward page. 60s private cache lets a swipe-back restore
+          // without another SSR round-trip; language lives in the URL path
+          // (and is varied by cookie) so nothing leaks between locales.
+          // APIs / diag / probe keep their own no-store headers.
+          'cache-control': 'private, max-age=60',
+          'vary': 'Cookie',
           'x-content-type-options': 'nosniff',
         },
       });

@@ -467,6 +467,7 @@ export function head({ lang, title, desc, path, noindex }) {
 <html lang="${L.htmlLang}" dir="ltr">
 <head>
 <meta charset="utf-8">
+<style>html{background:#070b18}</style>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <!-- ★ A22i：语言偏好在【任何渲染之前】同步决定。
      放在 head 最前面、同步阻塞执行，必要时在画第一帧之前就 replace 走，
@@ -475,6 +476,19 @@ export function head({ lang, title, desc, path, noindex }) {
      第三方 cookie 限制），localStorage 仍能给出正确语言。 -->
 <script>
 (function(){
+  /* A60: recognise a BACK/FORWARD navigation at parse time.
+     iOS Safari often does NOT restore via bfcache (e.persisted=false),
+     so A59's persisted-only guard never ran. navigation.type still says
+     back_forward on a full reload, which is exactly the swipe-back case. */
+  window.__psBack=(function(){
+    try{
+      var nt=(performance&&performance.getEntriesByType)?performance.getEntriesByType('navigation'):null;
+      if(nt&&nt[0]&&nt[0].type==='back_forward') return true;
+      var pn=performance&&performance.navigation;
+      if(pn&&pn.type===2) return true;
+    }catch(e){}
+    return false;
+  })();
   var OK={en:1,zh:1,ja:1,es:1,fr:1,de:1,pt:1};
 
   /* ★★ 切语言的核心：必须【替换】当前历史条目，绝不能新增。
@@ -508,6 +522,9 @@ export function head({ lang, title, desc, path, noindex }) {
     location.reload();   // reload 不新增历史条目 —— 栈始终只有两层
   };
 
+  /* A60: a swipe-back must NOT language-redirect. The server already
+     rendered by cookie; a replace() here restarts the whole document. */
+  if(window.__psBack) return;
   // 渲染前同步决定语言（无闪烁；也是 cookie 通道的兜底）
   try{
     var want=localStorage.getItem('ps_lang');
@@ -708,9 +725,10 @@ document.addEventListener('click',function(e){
   }
   /* ★ A58：pageshow 与 visibilitychange 会在「返回页面」时前后脚触发，
    *   1 秒内只跑一次，避免两次全量重排把主线程占住 1~2 秒。 */
-  var _lastAll=0, _restoredAt=0;
+  var _lastAll=0, _restoredAt=0, _bootAt=Date.now();
   function all(){
     var n=Date.now();
+    if(window.__psBack && n-_bootAt<1500) return;
     if(n-_lastAll<1000) return;
     /* ★ A59: a back/forward restore already shows a fully rendered snapshot.
      * Re-running the timestamp pass there only occupies the main thread. */
@@ -724,7 +742,7 @@ document.addEventListener('click',function(e){
    * Do NOT re-render, re-read cookies, or force a repaint. That extra work on
    * the restore frame is exactly the "black frame then 1-3s freeze" on iOS. */
   window.addEventListener('pageshow',function(e){
-    if(e && e.persisted){ _restoredAt=Date.now(); return; }
+    if((e && e.persisted) || window.__psBack){ _restoredAt=Date.now(); return; }
     all();
   });
 
@@ -737,7 +755,7 @@ document.addEventListener('click',function(e){
    * 根本不会运行，所以既造成闪烁、又没真正解决问题。
    *
    * 现在语言由【服务端】读 cookie 决定后 200 原地渲染（见 index.js），
-   * 配合 no-store 禁用 bfcache：按返回必定重新请求，直接拿到正确语言。
+   * A60：HTML 允许短时缓存，返回帧由 __psBack 识别，前端不再跳转。
    * 前端不再做任何跳转 —— 无闪烁、无二次加载。 */
 
   // Home card: show the per-gram figure in the currency the visitor last
