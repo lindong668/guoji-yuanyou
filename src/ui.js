@@ -130,16 +130,28 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--txt);
   font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans","Noto Sans CJK",Roboto,sans-serif;
   line-height:1.65;-webkit-font-smoothing:antialiased}
+/* A63: the fixed bar leaves the document flow; keep the exact 65px it used
+   to occupy as a sticky element (64px wrap + 1px bottom border). Only
+   shell() pages carry the bar, so diag / probe / 403 / locked are untouched. */
+body.ps-hasbar{padding-top:65px}
 a{color:inherit;text-decoration:none}
 img{max-width:100%}
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px}
 
 /* ---------- top bar ---------- */
-.topbar{position:sticky;top:0;z-index:60;
-  /* A61: iOS Safari repaints a sticky + blurred bar on every document
-     navigation; an opaque solid avoids the top-row flash. */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:60;
+  /* A61: opaque solid, no blur.
+     A63: a sticky bar lives IN the document flow. When iOS Safari restores
+     a saved scroll offset on swipe-back it paints one frame with the bar
+     at document y=0 (off-screen) before the sticky recalculation lands,
+     so the bar vanishes and the scrolled-up text shows through, then it
+     comes back. That only happens when scrollY>0 -- exactly the report.
+     A fixed bar is positioned against the viewport and never takes part
+     in the scroll-restoration recalculation. */
   background:#070b18;
-  border-bottom:1px solid var(--line)}
+  border-bottom:1px solid var(--line);
+  -webkit-transform:translateZ(0);transform:translateZ(0);
+  -webkit-backface-visibility:hidden;backface-visibility:hidden}
 .topbar .wrap{display:flex;align-items:center;gap:18px;height:64px}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.15rem;letter-spacing:-.02em;white-space:nowrap}
 .logo .mark{width:30px;height:30px;border-radius:9px;display:block;flex-shrink:0;
@@ -690,7 +702,7 @@ export function esc(s) {
 export function page({ lang, title, desc, path, active, body, noindex }) {
   const year = new Date().getUTCFullYear();
   return `${head({ lang, title, desc, path, noindex })}
-<body>
+<body class="ps-hasbar">
 ${topbar(lang, active)}
 ${body}
 ${footer(lang, year)}
