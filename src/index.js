@@ -403,7 +403,19 @@ export { sessionOpenAt, sessionState };
  *   但节假日 / 特殊休市时，Cron 写下的新鲜 closed 仍然优先于 UTC 时段表。 */
 const KV_FRESH_MS = 30 * 60 * 1000;
 function kvFresh(s) { return !!(s && s.at && (Date.now() - s.at) < KV_FRESH_MS); }
-function kvClosed(s, k) { return kvFresh(s) && !!(s[k] && s[k].st === 'closed'); }
+/* ★ A64：开市时段，「一个品种价格冻结」不等于休市。
+ *   实拍 2026-11-13：新浪 hf_OIL 停更在 95.98，hf_CL 还在成交（88.45 实时），
+ *   Cron 的 mktStep 却把 brent 单独写成 closed → 首页误标「休市中」。
+ *   只有当三个品种【同时】被判冻结，才认这条 KV 休市结论；
+ *   UTC 时段表判定的真休市时段（周末/结算）不走这里，照旧全 closed。 */
+function kvClosed(s, k) {
+  if (!kvFresh(s) || !(s[k] && s[k].st === 'closed')) return false;
+  if (sessionOpenAt()) {
+    return ['brent', 'wti', 'gold'].every(x => s[x] && s[x].st === 'closed');
+  }
+  return true;
+}
+export { kvClosed };
 
 function mktKV(env) { return (env && env.MKT_STATE_KV) ? env.MKT_STATE_KV : null; }
 
@@ -478,6 +490,17 @@ async function mktTick(env, grab) {
     wti:   mktStep(prev.wti,   oil && oil.wti),
     gold:  mktStep(prev.gold,  gold && gold.usdOz),
   };
+  /* ★ A64：开市时段只有【三品种同时冻结满 20 分钟】才写 closed。
+   *   单条源（hf_OIL）停更时，WTI / 黄金仍在变价，市场明显开着，
+   *   这时把 brent 标成休市就是误报。保留 v/mv 继续跟踪，只复位 st。 */
+  if (sessionOpenAt()) {
+    const allFrozen = ['brent', 'wti', 'gold'].every(k => next[k] && next[k].st === 'closed');
+    if (!allFrozen) {
+      for (const k of ['brent', 'wti', 'gold']) {
+        if (next[k]) next[k] = { ...next[k], st: 'live' };
+      }
+    }
+  }
   const need = ['brent', 'wti', 'gold'].some(k => mktNeedWrite(prev[k], next[k]));
   if (need) await mktWrite(env, next);
   return next;

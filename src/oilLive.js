@@ -395,6 +395,20 @@ let stickyProvider = null;
  * 失败一次就冷却 60 秒，期间直接走 A51 原有链路；到点自动重试。 */
 let hfCooldownUntil = 0;
 
+/* ★ A64：sinahf 的「布伦特符号停更」检测。
+ * --------------------------------------------------------------
+ * 2026-11-13 实拍：hf_OIL 冻在 95.98 不动，hf_CL 还在 88.45 实时跳，
+ *   但 sinahf 每拍都回 ok:true 且两个价都齐 —— 第 -1 步「给全就收工」
+ *   于是永远吃那个冻死的值，2 号首页和 3 号秒级页一起卡住。
+ * 判据（与 3 号 B25 同一口径）：布伦特连续 2 分钟同价、
+ *   且同期 WTI 变过价（市场明显开着）→ 认定 hf_OIL 停更，
+ *   这一拍额外问一次 yahoo BZ=F，用不同价覆盖。
+ * 正常拍仍是 1 个子请求；只在停更时多 1 个源。isolate 级状态，
+ *   冷启动需要重新累计约 2 分钟，属可接受范围。 */
+const HF_BRENT_STUCK_MS = 120000;
+let __hfBrentVal = 0, __hfBrentSameAt = 0;
+let __hfWtiVal = 0, __hfWtiChangedAt = 0;
+
 /* 单品种旧值最多沿用多久（毫秒）。brent / wti 各自独立计时。
  * ★ 上一版没有时效，形成自我循环：brent 拿不到 → 用上次的值 →
  *   这个值又被写回缓存 → 下次还是拿它 → 数字永久锁死不动。
@@ -542,6 +556,45 @@ export async function getOilLive(order) {
 
   if (order && order.length) { await fanout(order); return finish() || { brent: 0, wti: 0, tried }; }
 
+  /* ★ A64：观察 sinahf 这一拍，判「布伦特符号停更但市场开着」 */
+  const observeHf = (nowMs) => {
+    if (!merged) return false;
+    const b = +merged.brent || 0, w = +merged.wti || 0;
+    if (!b) return false;
+    if (b !== __hfBrentVal) { __hfBrentVal = b; __hfBrentSameAt = nowMs; }
+    if (w && w !== __hfWtiVal) { __hfWtiVal = w; __hfWtiChangedAt = nowMs; }
+    const marketMoving = __hfWtiChangedAt > 0 &&
+      (nowMs - __hfWtiChangedAt) < HF_BRENT_STUCK_MS;
+    return merged.brentSrc === 'sinahf' && marketMoving &&
+      __hfBrentSameAt > 0 && (nowMs - __hfBrentSameAt) >= HF_BRENT_STUCK_MS;
+  };
+
+  /* ★ A64：只在停更时多问这一家；push() 是先到先占，所以取到值后
+   *   直接改 merged 的 brent，而不是再走一次 fanout（会被旧值丢掉）。 */
+  const recoverBrent = async () => {
+    const yp = byId('yahoo');
+    if (!yp) return false;
+    try {
+      const yr = await yp.fn();
+      const yb = Number(yr && yr.brent) || 0;
+      if (!yb || Math.abs(yb - merged.brent) < 1e-9) return false;
+      const frozen = merged.brent;
+      merged = {
+        ...merged,
+        brent: yb,
+        brentSrc: 'yahoo',
+        brentFrozenVal: frozen,
+        brentRecovered: true,
+        providers: [...merged.providers, 'yahoo'],
+      };
+      tried.push({ id: 'yahoo', ok: true, error: 'brent 冻结覆盖' });
+      return true;
+    } catch (e) {
+      tried.push({ id: 'yahoo', ok: false, error: String(e && e.message || e) });
+      return false;
+    }
+  };
+
   /* ★★ A57 第 -1 步：秒级快源每拍前置单发（只此一处，不并发多源）
    * --------------------------------------------------------------
    * 为什么落在这里、而不是改「第 0 步 sticky 早退判定」：
@@ -553,7 +606,14 @@ export async function getOilLive(order) {
    *   顺序走，行为与 A56 一致，不会断线、不会 1101。 */
   if (Date.now() >= hfCooldownUntil) {
     await fanout(['sinahf']);
-    if (complete()) { hfCooldownUntil = 0; setSticky(); return finish(); }
+    if (complete()) {
+      hfCooldownUntil = 0;
+      /* ★ A64：先观察、再决定是否用独立源覆盖。覆盖只改这一拍的返回值，
+       *   不改 5 秒节拍、不改快批结构、不动 Cron / KV / 收录面。 */
+      if (observeHf(Date.now())) await recoverBrent();
+      setSticky();
+      return finish();
+    }
     /* 只给一半也算成功（另一半由后面的源补上），不进冷却。 */
     const gaveHalf = !!(merged &&
       (merged.brentSrc === 'sinahf' || merged.wtiSrc === 'sinahf'));
